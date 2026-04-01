@@ -817,8 +817,8 @@ const CONFIG = {
 };
 
 // Seuils internes calculés depuis CONFIG
-const getThreshold = () => Math.round(18 - CONFIG.sensitivity * 1.4); // pixel diff threshold
-const getSpeedMult = () => CONFIG.speed * 1.8;                         // scroll multiplier
+const getThreshold = () => Math.max(3, Math.round(12 - CONFIG.sensitivity * 1.0)); // pixel diff threshold
+const getSpeedMult = () => CONFIG.speed * 3.5;                         // scroll multiplier
 
 /* ── STATE ── */
 let stream = null;
@@ -827,7 +827,7 @@ let prevData = null;
 let isDetecting = false;
 let lastScrollTime = 0;
 let consecutiveFrames = 0;
-const MIN_CONSECUTIVE = 2; // frames consécutives avant de scroller
+const MIN_CONSECUTIVE = 1; // frames consécutives avant de scroller
 
 /* ── DOM ── */
 const scrollArea   = document.getElementById('scroll-area');
@@ -973,69 +973,79 @@ function detectFrame() {
     return;
   }
 
-  const threshold = getThreshold();
+  /* ── ALGORITHME : GRADIENT DE LUMINOSITÉ PAR BANDES ──────────────────
+     Le doigt collé sur l'objectif agit comme un obturateur partiel.
+     On divise l'image en BANDES HORIZONTALES et on calcule la luminosité
+     moyenne de chaque bande. Le gradient vertical de luminosité révèle
+     la position et le mouvement du bord du doigt.
+     Si le doigt monte → zone sombre remonte → bord détecté plus haut
+     Si le doigt descend → zone sombre descend → bord détecté plus bas
+  ──────────────────────────────────────────────────────────────────────── */
 
-  // Frame differencing + calcul du centroïde de mouvement
-  let sumX = 0, sumY = 0, count = 0;
+  const BANDS = 12;
+  const bandH = Math.floor(H / BANDS);
+  const brightness = new Float32Array(BANDS);
 
-  for (let i = 0; i < frameData.length; i += 4) {
-    const dr = Math.abs(frameData[i]   - prevData[i]);
-    const dg = Math.abs(frameData[i+1] - prevData[i+1]);
-    const db = Math.abs(frameData[i+2] - prevData[i+2]);
-    const diff = (dr + dg + db) / 3;
-
-    if (diff > threshold) {
-      const pixelIndex = i / 4;
-      const px = pixelIndex % W;
-      const py = Math.floor(pixelIndex / W);
-      sumX += px;
-      sumY += py;
-      count++;
+  for (let b = 0; b < BANDS; b++) {
+    let sum = 0, cnt = 0;
+    const yStart = b * bandH;
+    const yEnd = yStart + bandH;
+    for (let y = yStart; y < yEnd; y++) {
+      for (let x = 0; x < W; x++) {
+        const i = (y * W + x) * 4;
+        sum += frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
+        cnt++;
+      }
     }
+    brightness[b] = sum / cnt;
   }
 
   prevData = frameData.slice();
 
-  // Surface minimale de mouvement (évite le bruit aléatoire)
-  const minPixels = Math.round(W * H * 0.005); // 0.5% de l'image
-  if (count < minPixels) {
+  // Trouver le gradient maximal entre bandes adjacentes (bord du doigt)
+  let maxGradient = 0, gradientBand = -1;
+  for (let b = 1; b < BANDS; b++) {
+    const grad = brightness[b] - brightness[b-1];
+    if (Math.abs(grad) > Math.abs(maxGradient)) {
+      maxGradient = grad;
+      gradientBand = b;
+    }
+  }
+
+  // Le bord du doigt doit créer un gradient suffisamment fort
+  const sensitivityThreshold = Math.max(2, 20 - CONFIG.sensitivity * 1.8);
+  if (Math.abs(maxGradient) < sensitivityThreshold) {
     consecutiveFrames = 0;
     prevCentroid = null;
     setDetecting(false);
     return;
   }
 
-  const centX = sumX / count;
-  const centY = sumY / count;
+  // Position normalisée du bord (0=haut, 1=bas)
+  const edgePos = gradientBand / BANDS;
 
   if (!prevCentroid) {
-    prevCentroid = { x: centX, y: centY };
+    prevCentroid = { x: 0, y: edgePos };
     return;
   }
 
-  const deltaY = centY - prevCentroid.y;
-  const deltaX = centX - prevCentroid.x;
-  prevCentroid = { x: centX, y: centY };
+  const deltaY = edgePos - prevCentroid.y;
+  prevCentroid = { x: 0, y: edgePos };
 
-  // Filtrer : mouvement vertical doit être dominant (ratio > 1.5)
-  if (Math.abs(deltaY) < 2) { consecutiveFrames = 0; return; }
-  if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) { consecutiveFrames = 0; return; }
+  if (Math.abs(deltaY) < 0.015) { consecutiveFrames = 0; return; }
 
   consecutiveFrames++;
   if (consecutiveFrames < MIN_CONSECUTIVE) return;
 
   // ── SCROLLER ──
   setDetecting(true);
-  const mult = getSpeedMult();
-  const scrollDelta = deltaY * mult;
+  const scrollDelta = deltaY * getSpeedMult() * 80;
 
   scrollArea.scrollBy({ top: scrollDelta, behavior: 'auto' });
   updateScrollBar();
   updateDirectionArrows(deltaY);
 
-  // Haptic au premier frame valide d'une séquence
   if (consecutiveFrames === MIN_CONSECUTIVE) vibrate(15);
-
   lastScrollTime = Date.now();
 }
 
