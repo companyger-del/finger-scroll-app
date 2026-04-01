@@ -1068,10 +1068,10 @@ function detectFrame() {
     if (Math.abs(inertia) < 0.5) { inertia = 0; setDetecting(false); }
   } else if (direction !== 0) {
     const offset = Math.abs(smoothX - 0.5) - deadBand;
-    const lumFactor = Math.min(smoothLum / 80, 1.5);
-    const speed = offset * lumFactor * getSpeedMult() * 12;
+    const lumFactor = Math.min(smoothLum / 40, 3.0);  // luminosité pèse plus
+    const speed = offset * lumFactor * getSpeedMult() * 28;
     lastScrollDir = direction;
-    inertia = direction * Math.min(speed, 8);
+    inertia = direction * Math.min(speed, 20); // plafond relevé
     setDetecting(true);
     updateDirectionArrows(direction);
   } else {
