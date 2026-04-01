@@ -1035,7 +1035,7 @@ function detectFrame() {
   // Lissage exponentiel réactif
   if (smoothLum < 0) { smoothLum = totalLum; prevTotalLum = totalLum; }
   const rawLumDelta = Math.abs(totalLum - prevTotalLum); // variation brute frame/frame
-  lumSpeed = lumSpeed * 0.60 + rawLumDelta * 0.40;       // lissée pour éviter les pics
+  lumSpeed = lumSpeed * 0.92 + rawLumDelta * 0.08;       // très lissée = accélération progressive
   prevTotalLum = totalLum;
   smoothLum = smoothLum * 0.60 + totalLum * 0.40;
   smoothX   = smoothX   * 0.55 + rawX     * 0.45;
@@ -1077,11 +1077,12 @@ function detectFrame() {
   } else if (direction !== 0) {
     const offset = Math.abs(smoothX - 0.5) - deadBand;
     const lumFactor = Math.min(smoothLum / 40, 3.0);
-    // Accélérateur : si la lumière change vite → boost de vitesse
-    const accel = 1.0 + Math.min(lumSpeed / 8, 3.0); // 1x normal → 4x max
-    const speed = offset * lumFactor * getSpeedMult() * 28 * accel;
+    // Accélérateur progressif : lumSpeed très lissée → montée douce
+    const accel = 1.0 + Math.min(lumSpeed / 20, 1.5); // 1x → 2.5x max, progressif
+    const targetInertia = direction * Math.min(offset * lumFactor * getSpeedMult() * 28 * accel, 30);
+    // L'inertie se rapproche doucement de la cible → pas d'à-coup
+    inertia = inertia * 0.75 + targetInertia * 0.25;
     lastScrollDir = direction;
-    inertia = direction * Math.min(speed, 40); // plafond relevé pour l'accélération
     setDetecting(true);
     updateDirectionArrows(direction);
   } else {
