@@ -913,6 +913,8 @@ async function startCamera() {
     smoothX = 0.5;
     smoothLum = -1;
     lastScrollDir = 0;
+    prevTotalLum = -1;
+    lumSpeed = 0;
 
     showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
     vibrate(30);
@@ -986,9 +988,11 @@ function showUI(visible) {
 ══════════════════════════════════════════════════════════════════════ */
 
 let inertia = 0;
-let smoothX = 0.5;    // centre de gravité X lissé (0=gauche, 1=droite)
-let smoothLum = -1;   // luminosité globale lissée
+let smoothX = 0.5;      // balance haut/bas lissée
+let smoothLum = -1;     // luminosité globale lissée
 let lastScrollDir = 0;
+let prevTotalLum = -1;  // luminosité frame précédente pour mesurer la vitesse
+let lumSpeed = 0;       // vitesse de changement de luminosité (lissée)
 
 function detectFrame() {
   if (!stream) return;
@@ -1029,7 +1033,10 @@ function detectFrame() {
     : 0.5;
 
   // Lissage exponentiel réactif
-  if (smoothLum < 0) smoothLum = totalLum;
+  if (smoothLum < 0) { smoothLum = totalLum; prevTotalLum = totalLum; }
+  const rawLumDelta = Math.abs(totalLum - prevTotalLum); // variation brute frame/frame
+  lumSpeed = lumSpeed * 0.60 + rawLumDelta * 0.40;       // lissée pour éviter les pics
+  prevTotalLum = totalLum;
   smoothLum = smoothLum * 0.60 + totalLum * 0.40;
   smoothX   = smoothX   * 0.55 + rawX     * 0.45;
 
@@ -1060,7 +1067,8 @@ function detectFrame() {
     debugInfo.innerHTML =
       `Haut: <b style="color:#00f5c4">${Math.round(avgTop)}</b> | Bas: <b style="color:#7b61ff">${Math.round(avgBot)}</b><br>` +
       `Balance: <b>${smoothX.toFixed(2)}</b> | Lum: ${Math.round(smoothLum)}<br>` +
-      `Direction: ${direction===1 ? '⬇ DESCEND (bas lumineux)' : direction===-1 ? '⬆ REMONTE (haut lumineux)' : '⏸ ÉQUILIBRÉ'}`;
+      `Vitesse lum: <b style="color:#ff6b35">${lumSpeed.toFixed(1)}</b> | Accel: ${(1+Math.min(lumSpeed/8,3)).toFixed(1)}x<br>` +
+      `Direction: ${direction===1 ? '⬇ DESCEND' : direction===-1 ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ'}`;
   }
 
   if (smoothLum < minLum) {
@@ -1068,10 +1076,12 @@ function detectFrame() {
     if (Math.abs(inertia) < 0.5) { inertia = 0; setDetecting(false); }
   } else if (direction !== 0) {
     const offset = Math.abs(smoothX - 0.5) - deadBand;
-    const lumFactor = Math.min(smoothLum / 40, 3.0);  // luminosité pèse plus
-    const speed = offset * lumFactor * getSpeedMult() * 28;
+    const lumFactor = Math.min(smoothLum / 40, 3.0);
+    // Accélérateur : si la lumière change vite → boost de vitesse
+    const accel = 1.0 + Math.min(lumSpeed / 8, 3.0); // 1x normal → 4x max
+    const speed = offset * lumFactor * getSpeedMult() * 28 * accel;
     lastScrollDir = direction;
-    inertia = direction * Math.min(speed, 20); // plafond relevé
+    inertia = direction * Math.min(speed, 40); // plafond relevé pour l'accélération
     setDetecting(true);
     updateDirectionArrows(direction);
   } else {
