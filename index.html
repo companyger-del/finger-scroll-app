@@ -290,8 +290,8 @@
       position: absolute;
       bottom: 20px;
       right: 20px;
-      width: 90px;
-      height: 90px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       overflow: hidden;
       border: 2px solid var(--border);
@@ -909,6 +909,8 @@ async function startCamera() {
     btnCamera.classList.add('active');
     prevData = null;
     consecutiveFrames = 0;
+    lumHistory = [];
+    inertia = 0;
 
     showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
     vibrate(30);
@@ -960,112 +962,96 @@ function showUI(visible) {
    7. Si |deltaY| > dead zone ET axe vertical dominant → scroller
 ══════════════════════════════════════════════════════════ */
 
-let prevCentroid = null;
+/* ── ALGORITHME LUMINOSITÉ GLOBALE ────────────────────────────────────
+   Le doigt appuie sur l'objectif comme un obturateur :
+   - Luminosité qui BAISSE  → écran descend  (vitesse = rapidité du changement)
+   - Luminosité qui MONTE   → écran remonte  (vitesse = rapidité du changement)
+   - Luminosité STABLE      → arrêt
+   On mesure la DÉRIVÉE de la luminosité globale dans le temps.
+   Plus le changement est rapide, plus le défilement est rapide.
+────────────────────────────────────────────────────────────────────── */
+
+// Historique de luminosité pour calculer la dérivée (fenêtre glissante)
+const LUM_HISTORY = 6;
+let lumHistory = [];
+let inertia = 0; // inertie pour continuer légèrement après l'arrêt
+
+function calcLuminosity(data) {
+  let sum = 0;
+  // Échantillonner 1 pixel sur 4 pour la performance
+  for (let i = 0; i < data.length; i += 16) {
+    sum += data[i] * 0.2126 + data[i+1] * 0.7152 + data[i+2] * 0.0722;
+  }
+  return sum / (data.length / 16);
+}
 
 function detectFrame() {
   if (!stream) return;
   animFrame = requestAnimationFrame(detectFrame);
-
   if (camVideo.readyState < 2) return;
 
   const W = camCanvas.width;
   const H = camCanvas.height;
 
-  // Dessiner la frame courante sur le canvas (invisible)
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  if (!prevData) {
-    prevData = frameData.slice();
-    return;
-  }
-
-  /* ── ALGORITHME : GRADIENT DE LUMINOSITÉ PAR BANDES ──────────────────
-     Le doigt collé sur l'objectif agit comme un obturateur partiel.
-     On divise l'image en BANDES HORIZONTALES et on calcule la luminosité
-     moyenne de chaque bande. Le gradient vertical de luminosité révèle
-     la position et le mouvement du bord du doigt.
-     Si le doigt monte → zone sombre remonte → bord détecté plus haut
-     Si le doigt descend → zone sombre descend → bord détecté plus bas
-  ──────────────────────────────────────────────────────────────────────── */
-
-  const BANDS = 12;
-  const bandH = Math.floor(H / BANDS);
-  const brightness = new Float32Array(BANDS);
-
-  for (let b = 0; b < BANDS; b++) {
-    let sum = 0, cnt = 0;
-    const yStart = b * bandH;
-    const yEnd = yStart + bandH;
-    for (let y = yStart; y < yEnd; y++) {
-      for (let x = 0; x < W; x++) {
-        const i = (y * W + x) * 4;
-        sum += frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-        cnt++;
-      }
-    }
-    brightness[b] = sum / cnt;
-  }
-
-  prevData = frameData.slice();
+  // Luminosité globale de cette frame
+  const lum = calcLuminosity(frameData);
+  lumHistory.push(lum);
+  if (lumHistory.length > LUM_HISTORY) lumHistory.shift();
 
   // ── DEBUG VISUEL ──
   const debugPanel = document.getElementById('debug-panel');
   const debugBands = document.getElementById('debug-bands');
   const debugInfo  = document.getElementById('debug-info');
-  if (debugPanel && debugPanel.style.display !== 'none' && debugBands) {
-    const maxB = Math.max(...brightness);
-    debugBands.innerHTML = Array.from(brightness).map((v,i) =>
-      `<div style="flex:1;background:#00f5c4;opacity:${0.2+0.8*(v/Math.max(maxB,1))};border-radius:2px;min-height:2px;height:${Math.round(4+(v/Math.max(maxB,1))*46)}px;"></div>`
+  if (debugPanel && debugPanel.style.display !== 'none') {
+    // Afficher la courbe de luminosité
+    const maxL = Math.max(...lumHistory, 1);
+    if (debugBands) debugBands.innerHTML = lumHistory.map(v =>
+      `<div style="flex:1;background:#00f5c4;opacity:0.8;border-radius:2px;height:${Math.round(4+(v/maxL)*46)}px;"></div>`
     ).join('');
   }
 
-  // Trouver le gradient maximal entre bandes adjacentes (bord du doigt)
-  let maxGradient = 0, gradientBand = -1;
-  for (let b = 1; b < BANDS; b++) {
-    const grad = brightness[b] - brightness[b-1];
-    if (Math.abs(grad) > Math.abs(maxGradient)) {
-      maxGradient = grad;
-      gradientBand = b;
+  // Pas assez d'historique encore
+  if (lumHistory.length < LUM_HISTORY) return;
+
+  // Dérivée : différence entre moyenne récente et moyenne ancienne
+  const recent = (lumHistory[5] + lumHistory[4]) / 2;
+  const older  = (lumHistory[1] + lumHistory[0]) / 2;
+  const delta  = recent - older; // positif = lumière monte, négatif = lumière baisse
+
+  // Seuil mort : ignorer les variations ambiantes faibles
+  const deadZone = Math.max(0.3, 4 - CONFIG.sensitivity * 0.3);
+
+  if (debugInfo) {
+    debugInfo.innerHTML = `Lum: <b style="color:#00f5c4">${Math.round(lum)}</b> | Delta: <b style="color:${Math.abs(delta)>deadZone?'#00f5c4':'#ff6b35'}">${delta.toFixed(2)}</b> | Seuil: ${deadZone.toFixed(1)}<br>Direction: ${delta < -deadZone ? '⬇ DESCEND' : delta > deadZone ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
+  }
+
+  if (Math.abs(delta) > deadZone) {
+    // delta négatif = lumière baisse = doigt appuie = descendre
+    // delta positif = lumière monte = doigt relâche = remonter
+    const speed = getSpeedMult() * Math.abs(delta) * 2.5;
+    const direction = delta < 0 ? 1 : -1; // 1=descendre, -1=remonter
+    inertia = direction * speed;
+
+    setDetecting(true);
+    updateDirectionArrows(direction);
+    vibrate(10);
+  } else {
+    // Pas de changement → appliquer inertie décroissante
+    inertia *= 0.75;
+    if (Math.abs(inertia) < 0.5) {
+      inertia = 0;
+      setDetecting(false);
     }
   }
 
-  // Le bord du doigt doit créer un gradient suffisamment fort
-  const sensitivityThreshold = Math.max(2, 20 - CONFIG.sensitivity * 1.8);
-  if (debugInfo) debugInfo.innerHTML = `Gradient: <b style="color:#00f5c4">${Math.round(maxGradient)}</b> | Seuil: ${Math.round(sensitivityThreshold)} | Bande: ${gradientBand}<br>Bord détecté: ${Math.abs(maxGradient) >= sensitivityThreshold ? '<b style="color:#00f5c4">OUI ✓</b>' : '<span style="color:#ff6b35">NON ✗</span>'}`;
-  if (Math.abs(maxGradient) < sensitivityThreshold) {
-    consecutiveFrames = 0;
-    prevCentroid = null;
-    setDetecting(false);
-    return;
+  if (inertia !== 0) {
+    scrollArea.scrollBy({ top: inertia, behavior: 'auto' });
+    updateScrollBar();
+    lastScrollTime = Date.now();
   }
-
-  // Position normalisée du bord (0=haut, 1=bas)
-  const edgePos = gradientBand / BANDS;
-
-  if (!prevCentroid) {
-    prevCentroid = { x: 0, y: edgePos };
-    return;
-  }
-
-  const deltaY = edgePos - prevCentroid.y;
-  prevCentroid = { x: 0, y: edgePos };
-
-  if (Math.abs(deltaY) < 0.015) { consecutiveFrames = 0; return; }
-
-  consecutiveFrames++;
-  if (consecutiveFrames < MIN_CONSECUTIVE) return;
-
-  // ── SCROLLER ──
-  setDetecting(true);
-  const scrollDelta = deltaY * getSpeedMult() * 80;
-
-  scrollArea.scrollBy({ top: scrollDelta, behavior: 'auto' });
-  updateScrollBar();
-  updateDirectionArrows(deltaY);
-
-  if (consecutiveFrames === MIN_CONSECUTIVE) vibrate(15);
-  lastScrollTime = Date.now();
 }
 
 /* ── UI : indication visuelle ── */
