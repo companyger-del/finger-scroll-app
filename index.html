@@ -909,8 +909,8 @@ async function startCamera() {
     btnCamera.classList.add('active');
     prevData = null;
     consecutiveFrames = 0;
-    lumHistory = [];
     inertia = 0;
+    smoothX = 0.5;
     smoothLum = -1;
     lastScrollDir = 0;
 
@@ -973,21 +973,22 @@ function showUI(visible) {
    Plus le changement est rapide, plus le défilement est rapide.
 ────────────────────────────────────────────────────────────────────── */
 
-// Historique de luminosité — fenêtre longue pour lisser le bruit
-const LUM_HISTORY = 20;       // ~650ms à 30fps — lisse les fluctuations
-let lumHistory = [];
-let smoothLum = -1;            // luminosité lissée (moyenne exponentielle)
-let inertia = 0;               // inertie de défilement
-let lastScrollDir = 0;         // direction courante pour éviter le grésilllement
+/* ══════════════════════════════════════════════════════════════════════
+   ALGORITHME : POSITION HORIZONTALE DE LA LUMIÈRE (style horloge)
+   ─────────────────────────────────────────────────────────────────────
+   Le doigt couvre partiellement l'objectif laissant passer la lumière
+   d'un côté ou de l'autre :
+   • Lumière à GAUCHE (8h20)  → écran DESCEND
+   • Lumière à DROITE (10h10) → écran REMONTE
+   • Lumière centrée / absente → ARRÊT
+   La VITESSE est proportionnelle à l'intensité lumineuse de la zone.
+   Le centre de gravité horizontal de la luminosité donne la direction.
+══════════════════════════════════════════════════════════════════════ */
 
-function calcLuminosity(data) {
-  let sum = 0;
-  // Échantillonner 1 pixel sur 8 pour la performance
-  for (let i = 0; i < data.length; i += 32) {
-    sum += data[i] * 0.2126 + data[i+1] * 0.7152 + data[i+2] * 0.0722;
-  }
-  return sum / (data.length / 32);
-}
+let inertia = 0;
+let smoothX = 0.5;    // centre de gravité X lissé (0=gauche, 1=droite)
+let smoothLum = -1;   // luminosité globale lissée
+let lastScrollDir = 0;
 
 function detectFrame() {
   if (!stream) return;
@@ -1000,63 +1001,86 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // Luminosité brute de cette frame
-  const rawLum = calcLuminosity(frameData);
+  // ── Calculer le centre de gravité horizontal de la luminosité ──
+  // On divise l'image en 2 moitiés gauche/droite et on mesure
+  // la luminosité moyenne de chacune
+  let lumLeft = 0, lumRight = 0;
+  let countLeft = 0, countRight = 0;
+  const midX = Math.floor(W / 2);
 
-  // Lissage exponentiel fort (alpha=0.15 = très lent à réagir)
-  if (smoothLum < 0) smoothLum = rawLum;
-  smoothLum = smoothLum * 0.85 + rawLum * 0.15;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x += 2) { // 1 pixel sur 2 pour perf
+      const i = (y * W + x) * 4;
+      const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
+      if (x < midX) { lumLeft += lum; countLeft++; }
+      else           { lumRight += lum; countRight++; }
+    }
+  }
 
-  lumHistory.push(smoothLum);
-  if (lumHistory.length > LUM_HISTORY) lumHistory.shift();
+  const avgLeft  = lumLeft  / Math.max(countLeft, 1);
+  const avgRight = lumRight / Math.max(countRight, 1);
+  const totalLum = (avgLeft + avgRight) / 2;
+
+  // Centre de gravité X normalisé (0=tout à gauche, 1=tout à droite)
+  const rawX = avgLeft + avgRight > 0
+    ? avgLeft / (avgLeft + avgRight)
+    : 0.5;
+
+  // Lissage exponentiel — lent et stable
+  if (smoothLum < 0) smoothLum = totalLum;
+  smoothLum = smoothLum * 0.80 + totalLum * 0.20;
+  smoothX   = smoothX   * 0.80 + rawX     * 0.20;
 
   // ── DEBUG VISUEL ──
   const debugPanel = document.getElementById('debug-panel');
   const debugBands = document.getElementById('debug-bands');
   const debugInfo  = document.getElementById('debug-info');
   if (debugPanel && debugPanel.style.display !== 'none') {
-    const maxL = Math.max(...lumHistory, 1);
-    if (debugBands) debugBands.innerHTML = lumHistory.map(v =>
-      `<div style="flex:1;background:#00f5c4;opacity:0.8;border-radius:2px;height:${Math.round(4+(v/maxL)*46)}px;"></div>`
-    ).join('');
+    // Afficher barre gauche vs droite
+    if (debugBands) debugBands.innerHTML =
+      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(avgLeft/255)*46)}px;"></div>`.repeat(6) +
+      `<div style="flex:1;background:#444;border-radius:2px;height:4px;"></div>` +
+      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+(avgRight/255)*46)}px;"></div>`.repeat(6);
   }
 
-  if (lumHistory.length < LUM_HISTORY) return;
+  // ── DÉCISION ──
+  // Zone morte centrale : si lumière équilibrée → arrêt
+  // deadBand : à quelle distance du centre (0.5) on commence à réagir
+  const deadBand = Math.max(0.04, 0.15 - CONFIG.sensitivity * 0.01);
 
-  // Dérivée lente : comparer la moyenne des 5 dernières frames
-  // avec la moyenne des 5 frames d'il y a 10 frames
-  const recentAvg = lumHistory.slice(-5).reduce((a,b)=>a+b,0) / 5;
-  const olderAvg  = lumHistory.slice(5,10).reduce((a,b)=>a+b,0) / 5;
-  const delta = recentAvg - olderAvg;
-
-  // Seuil mort élevé : ignore les petites variations ambiantes
-  // sensitivity=5 → deadZone=6, sensitivity=10 → deadZone=1
-  const deadZone = Math.max(1, 8 - CONFIG.sensitivity * 0.7);
+  // Vérifier que la lumière est suffisante (doigt présent)
+  const minLum = 8; // en dessous → trop sombre, doigt couvre tout
+  const direction = smoothX < (0.5 - deadBand) ? 1   // gauche → descend
+                  : smoothX > (0.5 + deadBand) ? -1  // droite → remonte
+                  : 0;                                // centré → arrêt
 
   if (debugInfo) {
-    debugInfo.innerHTML = `Lum lissée: <b style="color:#00f5c4">${Math.round(smoothLum)}</b><br>Delta: <b style="color:${Math.abs(delta)>deadZone?'#00f5c4':'#ff6b35'}">${delta.toFixed(2)}</b> | Seuil: ${deadZone.toFixed(1)}<br>Direction: ${delta < -deadZone ? '⬇ DESCEND' : delta > deadZone ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
+    debugInfo.innerHTML =
+      `G: <b style="color:#7b61ff">${Math.round(avgLeft)}</b> | D: <b style="color:#00f5c4">${Math.round(avgRight)}</b><br>` +
+      `CentreX: <b>${smoothX.toFixed(2)}</b> | Lum: ${Math.round(smoothLum)}<br>` +
+      `Direction: ${direction===1 ? '⬇ DESCEND (gauche)' : direction===-1 ? '⬆ REMONTE (droite)' : '⏸ CENTRÉ'}`;
   }
 
-  if (Math.abs(delta) > deadZone) {
-    const direction = delta < 0 ? 1 : -1;
+  if (smoothLum < minLum) {
+    // Trop sombre = doigt couvre tout = arrêt progressif
+    inertia *= 0.85;
+    if (Math.abs(inertia) < 0.3) { inertia = 0; setDetecting(false); }
+  } else if (direction !== 0) {
+    // Vitesse proportionnelle à l'écart par rapport au centre
+    // ET à la luminosité globale (plus c'est lumineux = plus vite)
+    const offset = Math.abs(smoothX - 0.5) - deadBand; // 0 à ~0.46
+    const lumFactor = Math.min(smoothLum / 80, 1.5);   // plafonné
+    const speed = offset * lumFactor * getSpeedMult() * 12;
 
-    // Anti-grésilllement : on ne change de direction que si le signal
-    // est franc dans le nouveau sens (évite les oscillations)
-    if (direction !== lastScrollDir) {
-      // Changement de direction : exiger un delta plus fort
-      if (Math.abs(delta) < deadZone * 2) return;
-      lastScrollDir = direction;
-    }
-
-    // Vitesse très modérée — proportionnelle au delta mais plafonnée
-    const rawSpeed = Math.min(Math.abs(delta) * 0.4, 3) * getSpeedMult() * 0.5;
-    inertia = direction * rawSpeed;
+    // Anti-grésilllement : changer de direction seulement si signal clair
+    if (direction !== lastScrollDir && Math.abs(offset) < deadBand * 1.5) return;
+    lastScrollDir = direction;
+    inertia = direction * Math.min(speed, 8); // plafonné à 8px/frame
 
     setDetecting(true);
     updateDirectionArrows(direction);
-
   } else {
-    // Signal faible → décélération douce
+    // Zone morte → décélération douce
     inertia *= 0.88;
     if (Math.abs(inertia) < 0.3) {
       inertia = 0;
