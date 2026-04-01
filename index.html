@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a12" />
+  <title>FingerScroll</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Fira+Code:wght@300;400&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a12;
+      --surface: #12121e;
+      --surface2: #1a1a2e;
+      --accent: #00f5c4;
+      --accent2: #7b61ff;
+      --warn: #ff6b35;
+      --text: #e8e8f0;
+      --muted: #6b6b8a;
+      --border: rgba(255,255,255,0.07);
+      --glow: 0 0 30px rgba(0,245,196,0.15);
+      --radius: 16px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── LAYOUT ── */
+    #app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent);
+      position: relative;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
+    .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
+
+    /* ── SCROLL CONTENT ── */
+    #scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 20px 120px;
+      will-change: scroll-position;
+    }
+
+    #scroll-area::-webkit-scrollbar { display: none; }
+
+    .article-hero {
+      margin: 8px 0 28px;
+      padding: 28px 24px;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .article-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(0,245,196,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,245,196,0.2);
+      margin-bottom: 14px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .article-hero h1 {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .article-hero p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .meta span { display: flex; align-items: center; gap: 5px; }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 28px 0 14px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:active { transform: scale(0.98); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .quote-block {
+      border-left: 3px solid var(--accent);
+      padding: 16px 20px;
+      background: rgba(0,245,196,0.04);
+      border-radius: 0 12px 12px 0;
+      margin: 16px 0;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── CAMERA OVERLAY ── */
+    #cam-overlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    #cam-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    #cam-panel.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    #cam-panel.detecting {
+      border-color: var(--accent);
+      animation: pulse-ring 1.5s ease infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(0,245,196,0.4), 0 8px 32px rgba(0,0,0,0.4); }
+      70% { box-shadow: 0 0 0 12px rgba(0,245,196,0), 0 8px 32px rgba(0,0,0,0.4); }
+      100% { box-shadow: 0 0 0 0 rgba(0,245,196,0), 0 8px 32px rgba(0,0,0,0.4); }
+    }
+
+    #cam-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: none;
+    }
+
+    #cam-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #cam-placeholder .cam-emoji { font-size: 22px; }
+    #cam-placeholder .cam-label {
+      font-size: 9px;
+      color: var(--muted);
+      font-family: 'Fira Code', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    #cam-canvas { display: none; }
+
+    /* Scroll indicator bar */
+    #scroll-bar {
+      position: fixed;
+      right: 4px;
+      top: 60px;
+      bottom: 140px;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--surface2);
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #scroll-thumb {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+      position: absolute;
+      top: 0;
+      height: 40px;
+      transition: top 0.1s;
+    }
+
+    /* Direction indicator */
+    #direction-hint {
+      position: fixed;
+      right: 122px;
+      bottom: 45px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .dir-arrow {
+      font-size: 18px;
+      transition: transform 0.2s, opacity 0.2s;
+      opacity: 0.3;
+    }
+
+    .dir-arrow.active { opacity: 1; transform: scale(1.4); }
+
+    /* Status toast */
+    #status-toast {
+      position: fixed;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 10px 20px;
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      color: var(--muted);
+      white-space: nowrap;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 60;
+    }
+
+    #status-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #status-toast.ok { color: var(--accent); border-color: rgba(0,245,196,0.2); }
+    #status-toast.warn { color: var(--warn); border-color: rgba(255,107,53,0.2); }
+
+    /* ── SETTINGS DRAWER ── */
+    #settings-drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+    }
+
+    #settings-drawer.open { display: block; }
+
+    .drawer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .drawer-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 20px 24px 40px;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1);
+    }
+
+    #settings-drawer.open .drawer-panel { transform: translateY(0); }
+
+    .drawer-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+
+    .drawer-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-info h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .setting-info p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Toggle */
+    .toggle {
+      width: 50px;
+      height: 28px;
+      border-radius: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle.on { background: var(--accent); border-color: var(--accent); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .toggle.on::after { transform: translateX(22px); }
+
+    /* Slider */
+    .slider-wrap {
+      width: 130px;
+    }
+
+    .slider-wrap input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .slider-wrap input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0,245,196,0.4);
+    }
+
+    .slider-val {
+      font-size: 11px;
+      font-family: 'Fira Code', monospace;
+      color: var(--accent);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* Noise texture overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.02;
+      z-index: 999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="logo">
+      <div class="logo-icon">👆</div>
+      <span class="logo-text">FingerScroll</span>
+    </div>
+    <div class="header-actions">
+      <div class="icon-btn" id="btn-camera" title="Activer la caméra">📷</div>
+      <div class="icon-btn" id="btn-settings" title="Paramètres">⚙️</div>
+    </div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div id="scroll-area">
+
+    <div class="article-hero">
+      <div class="tag">✦ Technologie</div>
+      <h1>L'interface sans contact : l'avenir de l'interaction mobile</h1>
+      <p>Contrôlez votre téléphone sans le toucher — grâce à la caméra dorsale et à la détection de mouvement en temps réel, une nouvelle ère d'accessibilité commence.</p>
+      <div class="meta">
+        <span>📅 2025</span>
+        <span>⏱ 8 min</span>
+        <span>👁 12k vues</span>
+      </div>
+    </div>
+
+    <div class="section-title">// En chiffres</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent)">50ms</div>
+        <div class="stat-label">Latence cible</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent2)">30fps</div>
+        <div class="stat-label">Analyse caméra</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--warn)">2%</div>
+        <div class="stat-label">CPU utilisé</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--accent)">∞</div>
+        <div class="stat-label">Possibilités</div>
+      </div>
+    </div>
+
+    <div class="section-title">// Algorithme</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(0,245,196,0.1)">🔬</div>
+        <div>
+          <h3>Différence de frames</h3>
+          <p>Chaque image est comparée à la précédente. Les zones de différence révèlent le mouvement. Le centroïde de ces zones traque la position du doigt.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div>
+        <div>
+          <h3>Filtre à seuil adaptatif</h3>
+          <p>Un seuil de bruit (configurable) élimine les micro-mouvements parasites — lumière, tremblement de main, variations d'exposition.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div>
+        <div>
+          <h3>Isolation axe vertical</h3>
+          <p>Seule la composante Y du vecteur de déplacement est transmise au scroller. Les mouvements horizontaux sont ignorés via un ratio de dominance.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-block">
+      « La meilleure interface est celle qui disparaît. Quand votre doigt contrôle l'écran sans le toucher, l'outil s'efface — seul le contenu demeure. »
+    </div>
+
+    <div class="section-title">// Cas d'usage</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(0,245,196,0.08)">♿</div>
+        <div>
+          <h3>Accessibilité motrice</h3>
+          <p>Permet à des personnes avec mobilité réduite de naviguer sans toucher l'écran — particulièrement utile en situation de cuisine, sport, ou mains occupées.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(123,97,255,0.08)">🏃</div>
+        <div>
+          <h3>Mode sportif</h3>
+          <p>Lecture d'un programme d'entraînement ou d'une recette avec les mains gantées ou humides — zéro contact nécessaire.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(255,107,53,0.08)">🎤</div>
+        <div>
+          <h3>Présentations & téléprompteur</h3>
+          <p>Faire défiler un script sans télécommande ni assistant — juste un geste discret hors champ.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">// Confidentialité</div>
+
+    <div class="card">
+      <p>✅ <strong>Aucun stockage vidéo.</strong> Le flux est traité en mémoire vive, frame par frame. Aucune image n'est sauvegardée, transmise, ou journalisée.</p>
+    </div>
+
+    <div class="card">
+      <p>✅ <strong>Traitement 100% local.</strong> Aucune API distante. Aucun cloud. L'analyse se fait entièrement sur votre appareil, hors ligne.</p>
+    </div>
+
+    <div class="card">
+      <p>✅ <strong>Arrêt automatique.</strong> La caméra se coupe dès que l'application passe en arrière-plan ou que l'onglet perd le focus.</p>
+    </div>
+
+    <div class="section-title">// Pour commencer</div>
+
+    <div class="card">
+      <h3 style="margin-bottom:10px">📱 Instructions</h3>
+      <p style="line-height:2">
+        1. Appuyez sur 📷 en haut à droite<br>
+        2. Accordez l'accès à la caméra<br>
+        3. Placez votre doigt devant l'objectif<br>
+        4. Bougez-le vers le haut ou le bas<br>
+        5. La page défile automatiquement ✨
+      </p>
+    </div>
+
+  </div><!-- /scroll-area -->
+
+  <!-- SCROLL BAR -->
+  <div id="scroll-bar"><div id="scroll-thumb"></div></div>
+
+  <!-- DIRECTION HINTS -->
+  <div id="direction-hint">
+    <div class="dir-arrow" id="arrow-up">↑</div>
+    <div class="dir-arrow" id="arrow-down">↓</div>
+  </div>
+
+  <!-- CAMERA PANEL -->
+  <div id="cam-overlay">
+    <div id="cam-panel" id="cam-panel">
+      <div id="cam-placeholder">
+        <span class="cam-emoji">📷</span>
+        <span class="cam-label">ACTIVER</span>
+      </div>
+      <video id="cam-video" autoplay playsinline muted></video>
+      <canvas id="cam-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- STATUS TOAST -->
+  <div id="status-toast"></div>
+
+  <!-- SETTINGS DRAWER -->
+  <div id="settings-drawer">
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <div class="drawer-panel">
+      <div class="drawer-handle"></div>
+      <div class="drawer-title">Paramètres</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Détection par caméra</h4>
+          <p>Active le défilement gestuel</p>
+        </div>
+        <div class="toggle on" id="toggle-cam" data-target="camEnabled"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Caméra frontale</h4>
+          <p>Utiliser selfie au lieu du dos</p>
+        </div>
+        <div class="toggle" id="toggle-front" data-target="useFront"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Retour haptique</h4>
+          <p>Vibration lors de la détection</p>
+        </div>
+        <div class="toggle on" id="toggle-haptic" data-target="haptic"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Mode économie d'énergie</h4>
+          <p>Réduit la résolution (15fps)</p>
+        </div>
+        <div class="toggle" id="toggle-eco" data-target="ecoMode"></div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Sensibilité</h4>
+          <p>Seuil de détection du mouvement</p>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-sensitivity" min="1" max="10" value="5" />
+          <div class="slider-val" id="sensitivity-val">5</div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Vitesse de défilement</h4>
+          <p>Amplification du mouvement</p>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-speed" min="1" max="10" value="5" />
+          <div class="slider-val" id="speed-val">5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   FingerScroll — Moteur de détection de mouvement par caméra
+   Algorithme : Frame Differencing + Centroid Tracking
+   Traitement 100% local, aucun stockage de données
+═══════════════════════════════════════════════════════════ */
+
+const CONFIG = {
+  camEnabled: true,
+  useFront: false,
+  haptic: true,
+  ecoMode: false,
+  sensitivity: 5,     // 1-10 : seuil de différence de pixel
+  speed: 5,           // 1-10 : multiplicateur de défilement
+};
+
+// Seuils internes calculés depuis CONFIG
+const getThreshold = () => Math.round(18 - CONFIG.sensitivity * 1.4); // pixel diff threshold
+const getSpeedMult = () => CONFIG.speed * 1.8;                         // scroll multiplier
+
+/* ── STATE ── */
+let stream = null;
+let animFrame = null;
+let prevData = null;
+let isDetecting = false;
+let lastScrollTime = 0;
+let consecutiveFrames = 0;
+const MIN_CONSECUTIVE = 2; // frames consécutives avant de scroller
+
+/* ── DOM ── */
+const scrollArea   = document.getElementById('scroll-area');
+const camPanel     = document.getElementById('cam-panel');
+const camVideo     = document.getElementById('cam-video');
+const camCanvas    = document.getElementById('cam-canvas');
+const camPlaceholder = document.getElementById('cam-placeholder');
+const statusToast  = document.getElementById('status-toast');
+const scrollBar    = document.getElementById('scroll-bar');
+const scrollThumb  = document.getElementById('scroll-thumb');
+const directionHint = document.getElementById('direction-hint');
+const arrowUp      = document.getElementById('arrow-up');
+const arrowDown    = document.getElementById('arrow-down');
+const btnCamera    = document.getElementById('btn-camera');
+const ctx          = camCanvas.getContext('2d', { willReadFrequently: true });
+
+/* ── TOAST ── */
+let toastTimer = null;
+function showToast(msg, type = '', duration = 2500) {
+  clearTimeout(toastTimer);
+  statusToast.textContent = msg;
+  statusToast.className = 'show ' + type;
+  toastTimer = setTimeout(() => { statusToast.className = ''; }, duration);
+}
+
+/* ── SCROLL BAR ── */
+function updateScrollBar() {
+  const maxScroll = scrollArea.scrollHeight - scrollArea.clientHeight;
+  if (maxScroll <= 0) return;
+  const progress = scrollArea.scrollTop / maxScroll;
+  const barHeight = scrollBar.clientHeight;
+  const thumbH = Math.max(30, barHeight * (scrollArea.clientHeight / scrollArea.scrollHeight));
+  scrollThumb.style.height = thumbH + 'px';
+  scrollThumb.style.top = progress * (barHeight - thumbH) + 'px';
+}
+
+scrollArea.addEventListener('scroll', updateScrollBar);
+
+/* ── HAPTIC ── */
+function vibrate(pattern) {
+  if (!CONFIG.haptic) return;
+  if ('vibrate' in navigator) navigator.vibrate(pattern);
+}
+
+/* ── CAMÉRA : DÉMARRAGE ── */
+async function startCamera() {
+  if (stream) return;
+
+  const fps = CONFIG.ecoMode ? 15 : 30;
+  const res = CONFIG.ecoMode ? { width: 160, height: 120 } : { width: 320, height: 240 };
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
+        width:  { ideal: res.width },
+        height: { ideal: res.height },
+        frameRate: { ideal: fps }
+      },
+      audio: false
+    });
+
+    camVideo.srcObject = stream;
+    await camVideo.play();
+
+    camCanvas.width  = res.width;
+    camCanvas.height = res.height;
+
+    camVideo.style.display = 'block';
+    camPlaceholder.style.display = 'none';
+    camPanel.classList.add('active');
+    btnCamera.classList.add('active');
+    prevData = null;
+    consecutiveFrames = 0;
+
+    showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
+    vibrate(30);
+    startDetection();
+    showUI(true);
+
+  } catch (err) {
+    console.error('Camera error:', err);
+    const msg = err.name === 'NotAllowedError'
+      ? '⚠️ Permission caméra refusée'
+      : '⚠️ Caméra indisponible sur cet appareil';
+    showToast(msg, 'warn', 4000);
+    stream = null;
+  }
+}
+
+/* ── CAMÉRA : ARRÊT ── */
+function stopCamera() {
+  if (!stream) return;
+  stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  cancelAnimationFrame(animFrame);
+  camVideo.srcObject = null;
+  camVideo.style.display = 'none';
+  camPlaceholder.style.display = 'flex';
+  camPanel.classList.remove('active', 'detecting');
+  btnCamera.classList.remove('active');
+  prevData = null;
+  isDetecting = false;
+  consecutiveFrames = 0;
+  showUI(false);
+  showToast('Caméra désactivée', '', 1500);
+}
+
+function showUI(visible) {
+  scrollBar.style.opacity = visible ? '1' : '0';
+  directionHint.style.opacity = visible ? '1' : '0';
+}
+
+/* ══════════════════════════════════════════════════════════
+   ALGORITHME DE DÉTECTION
+   ─────────────────────────────────────────────────────────
+   1. Capturer frame → canvas (résolution réduite)
+   2. Extraire imageData (RGBA)
+   3. Calculer différence absolue pixel par pixel avec frame N-1
+   4. Seuiller → masque binaire de mouvement
+   5. Calculer centroïde Y de la zone de mouvement
+   6. Comparer centroïde Y actuel vs précédent → vecteur delta Y
+   7. Si |deltaY| > dead zone ET axe vertical dominant → scroller
+══════════════════════════════════════════════════════════ */
+
+let prevCentroid = null;
+
+function detectFrame() {
+  if (!stream) return;
+  animFrame = requestAnimationFrame(detectFrame);
+
+  if (camVideo.readyState < 2) return;
+
+  const W = camCanvas.width;
+  const H = camCanvas.height;
+
+  // Dessiner la frame courante sur le canvas (invisible)
+  ctx.drawImage(camVideo, 0, 0, W, H);
+  const frameData = ctx.getImageData(0, 0, W, H).data;
+
+  if (!prevData) {
+    prevData = frameData.slice();
+    return;
+  }
+
+  const threshold = getThreshold();
+
+  // Frame differencing + calcul du centroïde de mouvement
+  let sumX = 0, sumY = 0, count = 0;
+
+  for (let i = 0; i < frameData.length; i += 4) {
+    const dr = Math.abs(frameData[i]   - prevData[i]);
+    const dg = Math.abs(frameData[i+1] - prevData[i+1]);
+    const db = Math.abs(frameData[i+2] - prevData[i+2]);
+    const diff = (dr + dg + db) / 3;
+
+    if (diff > threshold) {
+      const pixelIndex = i / 4;
+      const px = pixelIndex % W;
+      const py = Math.floor(pixelIndex / W);
+      sumX += px;
+      sumY += py;
+      count++;
+    }
+  }
+
+  prevData = frameData.slice();
+
+  // Surface minimale de mouvement (évite le bruit aléatoire)
+  const minPixels = Math.round(W * H * 0.005); // 0.5% de l'image
+  if (count < minPixels) {
+    consecutiveFrames = 0;
+    prevCentroid = null;
+    setDetecting(false);
+    return;
+  }
+
+  const centX = sumX / count;
+  const centY = sumY / count;
+
+  if (!prevCentroid) {
+    prevCentroid = { x: centX, y: centY };
+    return;
+  }
+
+  const deltaY = centY - prevCentroid.y;
+  const deltaX = centX - prevCentroid.x;
+  prevCentroid = { x: centX, y: centY };
+
+  // Filtrer : mouvement vertical doit être dominant (ratio > 1.5)
+  if (Math.abs(deltaY) < 2) { consecutiveFrames = 0; return; }
+  if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) { consecutiveFrames = 0; return; }
+
+  consecutiveFrames++;
+  if (consecutiveFrames < MIN_CONSECUTIVE) return;
+
+  // ── SCROLLER ──
+  setDetecting(true);
+  const mult = getSpeedMult();
+  const scrollDelta = deltaY * mult;
+
+  scrollArea.scrollBy({ top: scrollDelta, behavior: 'auto' });
+  updateScrollBar();
+  updateDirectionArrows(deltaY);
+
+  // Haptic au premier frame valide d'une séquence
+  if (consecutiveFrames === MIN_CONSECUTIVE) vibrate(15);
+
+  lastScrollTime = Date.now();
+}
+
+/* ── UI : indication visuelle ── */
+let detectingTimeout = null;
+function setDetecting(active) {
+  if (active) {
+    camPanel.classList.add('detecting');
+    clearTimeout(detectingTimeout);
+    detectingTimeout = setTimeout(() => {
+      camPanel.classList.remove('detecting');
+      isDetecting = false;
+    }, 400);
+    isDetecting = true;
+  }
+}
+
+function updateDirectionArrows(deltaY) {
+  arrowUp.classList.toggle('active', deltaY < -1);
+  arrowDown.classList.toggle('active', deltaY > 1);
+  setTimeout(() => {
+    arrowUp.classList.remove('active');
+    arrowDown.classList.remove('active');
+  }, 300);
+}
+
+function startDetection() {
+  prevCentroid = null;
+  prevData = null;
+  animFrame = requestAnimationFrame(detectFrame);
+}
+
+/* ── VISIBILITÉ : arrêt automatique en arrière-plan ── */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && stream) {
+    stopCamera();
+    showToast('Caméra suspendue (arrière-plan)', '', 2000);
+  }
+});
+
+/* ── BOUTON CAMÉRA ── */
+btnCamera.addEventListener('click', () => {
+  if (stream) stopCamera();
+  else if (CONFIG.camEnabled) startCamera();
+  else showToast('Activez la caméra dans les paramètres', 'warn');
+});
+
+/* ── CAM PANEL CLICK (raccourci) ── */
+camPanel.addEventListener('click', () => {
+  if (!stream && CONFIG.camEnabled) startCamera();
+});
+
+/* ── SETTINGS ── */
+const settingsDrawer = document.getElementById('settings-drawer');
+document.getElementById('btn-settings').addEventListener('click', () => {
+  settingsDrawer.classList.add('open');
+});
+document.getElementById('drawer-backdrop').addEventListener('click', () => {
+  settingsDrawer.classList.remove('open');
+});
+
+// Toggles
+document.querySelectorAll('.toggle').forEach(toggle => {
+  const key = toggle.dataset.target;
+  if (CONFIG[key]) toggle.classList.add('on');
+
+  toggle.addEventListener('click', () => {
+    CONFIG[key] = !CONFIG[key];
+    toggle.classList.toggle('on', CONFIG[key]);
+
+    if (key === 'camEnabled' && !CONFIG[key] && stream) stopCamera();
+    if (key === 'useFront' && stream) { stopCamera(); setTimeout(startCamera, 300); }
+    if (key === 'ecoMode' && stream)  { stopCamera(); setTimeout(startCamera, 300); }
+    vibrate(20);
+  });
+});
+
+// Sliders
+const sliderSens = document.getElementById('slider-sensitivity');
+const sliderSpeed = document.getElementById('slider-speed');
+const sensVal = document.getElementById('sensitivity-val');
+const speedVal = document.getElementById('speed-val');
+
+sliderSens.addEventListener('input', () => {
+  CONFIG.sensitivity = parseInt(sliderSens.value);
+  sensVal.textContent = sliderSens.value;
+});
+
+sliderSpeed.addEventListener('input', () => {
+  CONFIG.speed = parseInt(sliderSpeed.value);
+  speedVal.textContent = sliderSpeed.value;
+});
+
+/* ── INIT ── */
+updateScrollBar();
+showUI(false);
+
+// Message d'accueil
+setTimeout(() => {
+  showToast('👆 Appuyez sur 📷 pour démarrer', '', 4000);
+}, 500);
+</script>
+</body>
+</html>

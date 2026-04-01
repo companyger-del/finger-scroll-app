@@ -1,0 +1,22 @@
+{
+  "name": "FingerScroll",
+  "short_name": "FingerScroll",
+  "description": "Défilement par détection de mouvement via la caméra dorsale",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a12",
+  "theme_color": "#0a0a12",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230a0a12'/><text y='130' x='36' font-size='110'>👆</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "accessibility"],
+  "screenshots": [],
+  "features": ["cross-platform", "camera", "gesture-control"]
+}
