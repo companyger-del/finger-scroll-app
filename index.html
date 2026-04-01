@@ -911,6 +911,8 @@ async function startCamera() {
     consecutiveFrames = 0;
     lumHistory = [];
     inertia = 0;
+    smoothLum = -1;
+    lastScrollDir = 0;
 
     showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
     vibrate(30);
@@ -971,18 +973,20 @@ function showUI(visible) {
    Plus le changement est rapide, plus le défilement est rapide.
 ────────────────────────────────────────────────────────────────────── */
 
-// Historique de luminosité pour calculer la dérivée (fenêtre glissante)
-const LUM_HISTORY = 6;
+// Historique de luminosité — fenêtre longue pour lisser le bruit
+const LUM_HISTORY = 20;       // ~650ms à 30fps — lisse les fluctuations
 let lumHistory = [];
-let inertia = 0; // inertie pour continuer légèrement après l'arrêt
+let smoothLum = -1;            // luminosité lissée (moyenne exponentielle)
+let inertia = 0;               // inertie de défilement
+let lastScrollDir = 0;         // direction courante pour éviter le grésilllement
 
 function calcLuminosity(data) {
   let sum = 0;
-  // Échantillonner 1 pixel sur 4 pour la performance
-  for (let i = 0; i < data.length; i += 16) {
+  // Échantillonner 1 pixel sur 8 pour la performance
+  for (let i = 0; i < data.length; i += 32) {
     sum += data[i] * 0.2126 + data[i+1] * 0.7152 + data[i+2] * 0.0722;
   }
-  return sum / (data.length / 16);
+  return sum / (data.length / 32);
 }
 
 function detectFrame() {
@@ -996,9 +1000,14 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // Luminosité globale de cette frame
-  const lum = calcLuminosity(frameData);
-  lumHistory.push(lum);
+  // Luminosité brute de cette frame
+  const rawLum = calcLuminosity(frameData);
+
+  // Lissage exponentiel fort (alpha=0.15 = très lent à réagir)
+  if (smoothLum < 0) smoothLum = rawLum;
+  smoothLum = smoothLum * 0.85 + rawLum * 0.15;
+
+  lumHistory.push(smoothLum);
   if (lumHistory.length > LUM_HISTORY) lumHistory.shift();
 
   // ── DEBUG VISUEL ──
@@ -1006,43 +1015,52 @@ function detectFrame() {
   const debugBands = document.getElementById('debug-bands');
   const debugInfo  = document.getElementById('debug-info');
   if (debugPanel && debugPanel.style.display !== 'none') {
-    // Afficher la courbe de luminosité
     const maxL = Math.max(...lumHistory, 1);
     if (debugBands) debugBands.innerHTML = lumHistory.map(v =>
       `<div style="flex:1;background:#00f5c4;opacity:0.8;border-radius:2px;height:${Math.round(4+(v/maxL)*46)}px;"></div>`
     ).join('');
   }
 
-  // Pas assez d'historique encore
   if (lumHistory.length < LUM_HISTORY) return;
 
-  // Dérivée : différence entre moyenne récente et moyenne ancienne
-  const recent = (lumHistory[5] + lumHistory[4]) / 2;
-  const older  = (lumHistory[1] + lumHistory[0]) / 2;
-  const delta  = recent - older; // positif = lumière monte, négatif = lumière baisse
+  // Dérivée lente : comparer la moyenne des 5 dernières frames
+  // avec la moyenne des 5 frames d'il y a 10 frames
+  const recentAvg = lumHistory.slice(-5).reduce((a,b)=>a+b,0) / 5;
+  const olderAvg  = lumHistory.slice(5,10).reduce((a,b)=>a+b,0) / 5;
+  const delta = recentAvg - olderAvg;
 
-  // Seuil mort : ignorer les variations ambiantes faibles
-  const deadZone = Math.max(0.3, 4 - CONFIG.sensitivity * 0.3);
+  // Seuil mort élevé : ignore les petites variations ambiantes
+  // sensitivity=5 → deadZone=6, sensitivity=10 → deadZone=1
+  const deadZone = Math.max(1, 8 - CONFIG.sensitivity * 0.7);
 
   if (debugInfo) {
-    debugInfo.innerHTML = `Lum: <b style="color:#00f5c4">${Math.round(lum)}</b> | Delta: <b style="color:${Math.abs(delta)>deadZone?'#00f5c4':'#ff6b35'}">${delta.toFixed(2)}</b> | Seuil: ${deadZone.toFixed(1)}<br>Direction: ${delta < -deadZone ? '⬇ DESCEND' : delta > deadZone ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
+    debugInfo.innerHTML = `Lum lissée: <b style="color:#00f5c4">${Math.round(smoothLum)}</b><br>Delta: <b style="color:${Math.abs(delta)>deadZone?'#00f5c4':'#ff6b35'}">${delta.toFixed(2)}</b> | Seuil: ${deadZone.toFixed(1)}<br>Direction: ${delta < -deadZone ? '⬇ DESCEND' : delta > deadZone ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
   }
 
   if (Math.abs(delta) > deadZone) {
-    // delta négatif = lumière baisse = doigt appuie = descendre
-    // delta positif = lumière monte = doigt relâche = remonter
-    const speed = getSpeedMult() * Math.abs(delta) * 2.5;
-    const direction = delta < 0 ? 1 : -1; // 1=descendre, -1=remonter
-    inertia = direction * speed;
+    const direction = delta < 0 ? 1 : -1;
+
+    // Anti-grésilllement : on ne change de direction que si le signal
+    // est franc dans le nouveau sens (évite les oscillations)
+    if (direction !== lastScrollDir) {
+      // Changement de direction : exiger un delta plus fort
+      if (Math.abs(delta) < deadZone * 2) return;
+      lastScrollDir = direction;
+    }
+
+    // Vitesse très modérée — proportionnelle au delta mais plafonnée
+    const rawSpeed = Math.min(Math.abs(delta) * 0.4, 3) * getSpeedMult() * 0.5;
+    inertia = direction * rawSpeed;
 
     setDetecting(true);
     updateDirectionArrows(direction);
-    vibrate(10);
+
   } else {
-    // Pas de changement → appliquer inertie décroissante
-    inertia *= 0.75;
-    if (Math.abs(inertia) < 0.5) {
+    // Signal faible → décélération douce
+    inertia *= 0.88;
+    if (Math.abs(inertia) < 0.3) {
       inertia = 0;
+      lastScrollDir = 0;
       setDetecting(false);
     }
   }
