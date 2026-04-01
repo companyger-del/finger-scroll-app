@@ -805,12 +805,23 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <h4>Angle du doigt</h4>
-          <p id="angle-desc">Nord / Sud — 0°</p>
+          <h4>Zone ⬇ Descendre</h4>
+          <p id="angle-down-desc">Haut de l'objectif — 0°</p>
         </div>
         <div class="slider-wrap">
-          <input type="range" id="slider-angle" min="-45" max="45" value="0" step="5" />
-          <div class="slider-val" id="angle-val">0°</div>
+          <input type="range" id="slider-angle-down" min="-45" max="45" value="0" step="5" />
+          <div class="slider-val" id="angle-down-val">0°</div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Zone ⬆ Remonter</h4>
+          <p id="angle-up-desc">Bas de l'objectif — 180°</p>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-angle-up" min="135" max="225" value="180" step="5" />
+          <div class="slider-val" id="angle-up-val">180°</div>
         </div>
       </div>
     </div>
@@ -832,7 +843,8 @@ const CONFIG = {
   ecoMode: false,
   sensitivity: 5,     // 1-10 : seuil de détection
   speed: 5,           // 1-10 : multiplicateur de défilement
-  angle: 0,           // -45 à +45 degrés : inclinaison de l'axe de détection
+  angleDown: 0,       // zone déclenchant le DESCEND (-45 à +45°)
+  angleUp: 0,         // zone déclenchant le REMONTE (-45 à +45°)
 };
 
 // Seuils internes calculés depuis CONFIG
@@ -1017,29 +1029,40 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // ── Calculer la luminosité selon l'AXE ORIENTABLE (angle CONFIG) ──
-  // L'angle permet de calibrer la position naturelle du doigt :
-  // 0° = haut/bas pur, +45° = coin haut-gauche / bas-droite, etc.
-  // On projette chaque pixel sur l'axe défini par l'angle
-  // et on compare la moitié "positive" vs "négative" de cet axe.
-  const angleRad = (CONFIG.angle * Math.PI) / 180;
-  const axisX = Math.sin(angleRad);  // composante X de l'axe
-  const axisY = -Math.cos(angleRad); // composante Y (négatif car Y image inversé)
-  const cx = W / 2, cy = H / 2;     // centre de l'image
+  // ── Deux zones INDÉPENDANTES avec leurs propres angles ──
+  // Zone DESCEND : angle CONFIG.angleDown — ex. haut de l'objectif
+  // Zone REMONTE : angle CONFIG.angleUp   — ex. bas de l'objectif
+  // Chaque zone mesure la luminosité dans SON propre secteur angulaire.
 
-  let lumTop = 0, lumBot = 0, countTop = 0, countBot = 0;
+  const cx = W / 2, cy = H / 2;
+  const limit = Math.max(W, H) * 0.28; // taille du secteur (28% depuis le bord)
+
+  // Zone DESCEND
+  const radDown = (CONFIG.angleDown * Math.PI) / 180;
+  const axDx = Math.sin(radDown);
+  const axDy = -Math.cos(radDown);
+
+  // Zone REMONTE
+  const radUp = (CONFIG.angleUp * Math.PI) / 180;
+  const axUx = Math.sin(radUp);
+  const axUy = -Math.cos(radUp);
+
+  let lumBot = 0, countBot = 0; // zone DESCEND (lumineuse = descendre)
+  let lumTop = 0, countTop = 0; // zone REMONTE (lumineuse = remonter)
 
   for (let y = 0; y < H; y += 2) {
     for (let x = 0; x < W; x += 2) {
-      // Projection du pixel sur l'axe orienté
-      const proj = (x - cx) * axisX + (y - cy) * axisY;
-      // Garder seulement le quart extrême (25% de chaque côté)
-      const limit = Math.max(W, H) * 0.25;
-      if (Math.abs(proj) < limit) continue;
+      const dx = x - cx, dy = y - cy;
       const i = (y * W + x) * 4;
       const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-      if (proj < 0) { lumTop += lum; countTop++; } // côté "haut" de l'axe
-      else          { lumBot += lum; countBot++; } // côté "bas" de l'axe
+
+      // Projection sur l'axe DESCEND — on prend le secteur positif
+      const projD = dx * axDx + dy * axDy;
+      if (projD > limit) { lumBot += lum; countBot++; }
+
+      // Projection sur l'axe REMONTE — on prend le secteur positif
+      const projU = dx * axUx + dy * axUy;
+      if (projU > limit) { lumTop += lum; countTop++; }
     }
   }
 
@@ -1211,28 +1234,45 @@ sliderSpeed.addEventListener('input', () => {
   speedVal.textContent = sliderSpeed.value;
 });
 
-const sliderAngle = document.getElementById('slider-angle');
-const angleVal    = document.getElementById('angle-val');
-const angleDesc   = document.getElementById('angle-desc');
+// Noms de position style horloge
+function clockLabel(deg) {
+  const d = ((deg % 360) + 360) % 360;
+  if (d <= 15)  return 'Haut (12h)';
+  if (d <= 37)  return 'Haut-droite (1h)';
+  if (d <= 60)  return '2h';
+  if (d <= 82)  return 'Droite (3h)';
+  if (d <= 105) return '4h';
+  if (d <= 127) return 'Bas-droite (5h)';
+  if (d <= 150) return 'Bas (6h)';
+  if (d <= 172) return 'Bas-gauche (7h)';
+  if (d <= 195) return '8h';
+  if (d <= 217) return 'Gauche (9h)';
+  if (d <= 240) return '10h';
+  if (d <= 262) return 'Haut-gauche (11h)';
+  return 'Haut (12h)';
+}
 
-const angleLabels = {
-  '-45': 'Nord-Ouest / Sud-Est',
-  '-30': 'Nord-NordOuest / Sud-SudEst',
-  '-15': 'Légèrement à gauche',
-    '0': 'Nord / Sud — vertical pur',
-   '15': 'Légèrement à droite',
-   '30': 'Nord-NordEst / Sud-SudOuest',
-   '45': 'Nord-Est / Sud-Ouest',
-};
+const sliderAngleDown = document.getElementById('slider-angle-down');
+const angleDownVal    = document.getElementById('angle-down-val');
+const angleDownDesc   = document.getElementById('angle-down-desc');
 
-sliderAngle.addEventListener('input', () => {
-  CONFIG.angle = parseInt(sliderAngle.value);
-  const v = sliderAngle.value;
-  angleVal.textContent = v + '°';
-  // Trouver le label le plus proche
-  const closest = Object.keys(angleLabels).reduce((a,b) =>
-    Math.abs(b - v) < Math.abs(a - v) ? b : a);
-  angleDesc.textContent = angleLabels[closest] || v + '°';
+sliderAngleDown.addEventListener('input', () => {
+  CONFIG.angleDown = parseInt(sliderAngleDown.value);
+  angleDownVal.textContent = sliderAngleDown.value + '°';
+  angleDownDesc.textContent = 'Zone ⬇ : ' + clockLabel(parseInt(sliderAngleDown.value));
+});
+
+const sliderAngleUp = document.getElementById('slider-angle-up');
+const angleUpVal    = document.getElementById('angle-up-val');
+const angleUpDesc   = document.getElementById('angle-up-desc');
+
+// angleUp en CONFIG est stocké en offset depuis 180°
+sliderAngleUp.addEventListener('input', () => {
+  // Le slider va de 135 à 225 (autour de 180°)
+  // On convertit en angle relatif pour l'axe : 180° = bas pur
+  CONFIG.angleUp = parseInt(sliderAngleUp.value) - 180;
+  angleUpVal.textContent = sliderAngleUp.value + '°';
+  angleUpDesc.textContent = 'Zone ⬆ : ' + clockLabel(parseInt(sliderAngleUp.value));
 });
 
 /* ── INIT ── */
