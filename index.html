@@ -802,6 +802,17 @@
           <div class="slider-val" id="speed-val">5</div>
         </div>
       </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Angle du doigt</h4>
+          <p id="angle-desc">Nord / Sud — 0°</p>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-angle" min="-45" max="45" value="0" step="5" />
+          <div class="slider-val" id="angle-val">0°</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -819,8 +830,9 @@ const CONFIG = {
   useFront: false,
   haptic: true,
   ecoMode: false,
-  sensitivity: 5,     // 1-10 : seuil de différence de pixel
+  sensitivity: 5,     // 1-10 : seuil de détection
   speed: 5,           // 1-10 : multiplicateur de défilement
+  angle: 0,           // -45 à +45 degrés : inclinaison de l'axe de détection
 };
 
 // Seuils internes calculés depuis CONFIG
@@ -1005,21 +1017,29 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // ── Calculer la luminosité du quart HAUT et du quart BAS ──
-  // Image divisée en 4 bandes verticales égales (25% chacune)
-  // On mesure seulement le quart haut (bande 0) et le quart bas (bande 3)
-  const bandH = Math.floor(H / 4);
+  // ── Calculer la luminosité selon l'AXE ORIENTABLE (angle CONFIG) ──
+  // L'angle permet de calibrer la position naturelle du doigt :
+  // 0° = haut/bas pur, +45° = coin haut-gauche / bas-droite, etc.
+  // On projette chaque pixel sur l'axe défini par l'angle
+  // et on compare la moitié "positive" vs "négative" de cet axe.
+  const angleRad = (CONFIG.angle * Math.PI) / 180;
+  const axisX = Math.sin(angleRad);  // composante X de l'axe
+  const axisY = -Math.cos(angleRad); // composante Y (négatif car Y image inversé)
+  const cx = W / 2, cy = H / 2;     // centre de l'image
+
   let lumTop = 0, lumBot = 0, countTop = 0, countBot = 0;
 
-  for (let y = 0; y < H; y++) {
-    const inTop = y < bandH;
-    const inBot = y >= H - bandH;
-    if (!inTop && !inBot) continue;
+  for (let y = 0; y < H; y += 2) {
     for (let x = 0; x < W; x += 2) {
+      // Projection du pixel sur l'axe orienté
+      const proj = (x - cx) * axisX + (y - cy) * axisY;
+      // Garder seulement le quart extrême (25% de chaque côté)
+      const limit = Math.max(W, H) * 0.25;
+      if (Math.abs(proj) < limit) continue;
       const i = (y * W + x) * 4;
       const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-      if (inTop) { lumTop += lum; countTop++; }
-      else       { lumBot += lum; countBot++; }
+      if (proj < 0) { lumTop += lum; countTop++; } // côté "haut" de l'axe
+      else          { lumBot += lum; countBot++; } // côté "bas" de l'axe
     }
   }
 
@@ -1189,6 +1209,30 @@ sliderSens.addEventListener('input', () => {
 sliderSpeed.addEventListener('input', () => {
   CONFIG.speed = parseInt(sliderSpeed.value);
   speedVal.textContent = sliderSpeed.value;
+});
+
+const sliderAngle = document.getElementById('slider-angle');
+const angleVal    = document.getElementById('angle-val');
+const angleDesc   = document.getElementById('angle-desc');
+
+const angleLabels = {
+  '-45': 'Nord-Ouest / Sud-Est',
+  '-30': 'Nord-NordOuest / Sud-SudEst',
+  '-15': 'Légèrement à gauche',
+    '0': 'Nord / Sud — vertical pur',
+   '15': 'Légèrement à droite',
+   '30': 'Nord-NordEst / Sud-SudOuest',
+   '45': 'Nord-Est / Sud-Ouest',
+};
+
+sliderAngle.addEventListener('input', () => {
+  CONFIG.angle = parseInt(sliderAngle.value);
+  const v = sliderAngle.value;
+  angleVal.textContent = v + '°';
+  // Trouver le label le plus proche
+  const closest = Object.keys(angleLabels).reduce((a,b) =>
+    Math.abs(b - v) < Math.abs(a - v) ? b : a);
+  angleDesc.textContent = angleLabels[closest] || v + '°';
 });
 
 /* ── INIT ── */
