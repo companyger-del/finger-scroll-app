@@ -1028,8 +1028,8 @@ function detectFrame() {
 
   // Lissage exponentiel — lent et stable
   if (smoothLum < 0) smoothLum = totalLum;
-  smoothLum = smoothLum * 0.80 + totalLum * 0.20;
-  smoothX   = smoothX   * 0.80 + rawX     * 0.20;
+  smoothLum = smoothLum * 0.60 + totalLum * 0.40;
+  smoothX   = smoothX   * 0.55 + rawX     * 0.45;
 
   // ── DEBUG VISUEL ──
   const debugPanel = document.getElementById('debug-panel');
@@ -1046,7 +1046,7 @@ function detectFrame() {
   // ── DÉCISION ──
   // Zone morte centrale : si lumière équilibrée → arrêt
   // deadBand : à quelle distance du centre (0.5) on commence à réagir
-  const deadBand = Math.max(0.04, 0.15 - CONFIG.sensitivity * 0.01);
+  const deadBand = Math.max(0.02, 0.08 - CONFIG.sensitivity * 0.005);
 
   // Vérifier que la lumière est suffisante (doigt présent)
   const minLum = 8; // en dessous → trop sombre, doigt couvre tout
@@ -1063,8 +1063,8 @@ function detectFrame() {
 
   if (smoothLum < minLum) {
     // Trop sombre = doigt couvre tout = arrêt progressif
-    inertia *= 0.85;
-    if (Math.abs(inertia) < 0.3) { inertia = 0; setDetecting(false); }
+    inertia *= 0.70;
+    if (Math.abs(inertia) < 0.5) { inertia = 0; setDetecting(false); }
   } else if (direction !== 0) {
     // Vitesse proportionnelle à l'écart par rapport au centre
     // ET à la luminosité globale (plus c'est lumineux = plus vite)
@@ -1072,8 +1072,6 @@ function detectFrame() {
     const lumFactor = Math.min(smoothLum / 80, 1.5);   // plafonné
     const speed = offset * lumFactor * getSpeedMult() * 12;
 
-    // Anti-grésilllement : changer de direction seulement si signal clair
-    if (direction !== lastScrollDir && Math.abs(offset) < deadBand * 1.5) return;
     lastScrollDir = direction;
     inertia = direction * Math.min(speed, 8); // plafonné à 8px/frame
 
@@ -1081,8 +1079,8 @@ function detectFrame() {
     updateDirectionArrows(direction);
   } else {
     // Zone morte → décélération douce
-    inertia *= 0.88;
-    if (Math.abs(inertia) < 0.3) {
+    inertia *= 0.70;
+    if (Math.abs(inertia) < 0.5) {
       inertia = 0;
       lastScrollDir = 0;
       setDetecting(false);
