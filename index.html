@@ -734,6 +734,13 @@
 
   <!-- STATUS TOAST -->
   <div id="status-toast"></div>
+  
+  <!-- DEBUG PANEL -->
+  <div id="debug-panel" style="display:none; position:fixed; top:60px; left:10px; right:10px; background:rgba(0,0,0,0.92); border:1px solid #00f5c4; border-radius:12px; padding:12px; z-index:200; font-family:monospace; font-size:11px; color:#00f5c4;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-weight:bold; font-size:13px;">📊 DEBUG CAMÉRA</span><span id="debug-close" style="cursor:pointer; color:#ff6b35; font-size:16px;">✕</span></div>
+    <div id="debug-bands" style="display:flex; align-items:flex-end; gap:2px; height:50px; margin-bottom:8px; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px;"></div>
+    <div id="debug-info" style="line-height:2; color:#e8e8f0; font-size:12px;"></div>
+  </div>
 
   <!-- SETTINGS DRAWER -->
   <div id="settings-drawer">
@@ -1002,6 +1009,17 @@ function detectFrame() {
 
   prevData = frameData.slice();
 
+  // ── DEBUG VISUEL ──
+  const debugPanel = document.getElementById('debug-panel');
+  const debugBands = document.getElementById('debug-bands');
+  const debugInfo  = document.getElementById('debug-info');
+  if (debugPanel && debugPanel.style.display !== 'none' && debugBands) {
+    const maxB = Math.max(...brightness);
+    debugBands.innerHTML = Array.from(brightness).map((v,i) =>
+      `<div style="flex:1;background:#00f5c4;opacity:${0.2+0.8*(v/Math.max(maxB,1))};border-radius:2px;min-height:2px;height:${Math.round(4+(v/Math.max(maxB,1))*46)}px;"></div>`
+    ).join('');
+  }
+
   // Trouver le gradient maximal entre bandes adjacentes (bord du doigt)
   let maxGradient = 0, gradientBand = -1;
   for (let b = 1; b < BANDS; b++) {
@@ -1014,6 +1032,7 @@ function detectFrame() {
 
   // Le bord du doigt doit créer un gradient suffisamment fort
   const sensitivityThreshold = Math.max(2, 20 - CONFIG.sensitivity * 1.8);
+  if (debugInfo) debugInfo.innerHTML = `Gradient: <b style="color:#00f5c4">${Math.round(maxGradient)}</b> | Seuil: ${Math.round(sensitivityThreshold)} | Bande: ${gradientBand}<br>Bord détecté: ${Math.abs(maxGradient) >= sensitivityThreshold ? '<b style="color:#00f5c4">OUI ✓</b>' : '<span style="color:#ff6b35">NON ✗</span>'}`;
   if (Math.abs(maxGradient) < sensitivityThreshold) {
     consecutiveFrames = 0;
     prevCentroid = null;
@@ -1147,6 +1166,27 @@ showUI(false);
 setTimeout(() => {
   showToast('👆 Appuyez sur 📷 pour démarrer', '', 4000);
 }, 500);
+
+// Debug panel
+document.getElementById('debug-close').addEventListener('click', () => {
+  document.getElementById('debug-panel').style.display = 'none';
+});
+// Appui long sur le bouton caméra (2s) pour ouvrir le debug
+let camHoldTimer = null;
+btnCamera.addEventListener('touchstart', () => {
+  camHoldTimer = setTimeout(() => {
+    document.getElementById('debug-panel').style.display = 'block';
+    showToast('Mode debug activé', 'ok');
+  }, 2000);
+});
+btnCamera.addEventListener('touchend', () => clearTimeout(camHoldTimer));
+btnCamera.addEventListener('mousedown', () => {
+  camHoldTimer = setTimeout(() => {
+    document.getElementById('debug-panel').style.display = 'block';
+    showToast('Mode debug activé', 'ok');
+  }, 2000);
+});
+btnCamera.addEventListener('mouseup', () => clearTimeout(camHoldTimer));
 </script>
 </body>
 </html>
