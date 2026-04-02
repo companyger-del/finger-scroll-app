@@ -884,15 +884,12 @@ const CONFIG = {
 // ── VITESSE : pixels scrollés par frame, direct et linéaire ──
 // Cran 1=2px, 2=4px, 3=6px, 4=8px, 5=10px, 6=14px, 7=20px, 8=28px, 9=40px, 10=56px
 // De 5→7 : ×2 exact. De 5→9 : ×4 exact.
-const SPEED_PX = [2, 4, 6, 8, 10, 14, 20, 28, 40, 56];
+// Vitesse : cran 5=40px, cran 7=80px (×2), cran 10=200px
+const SPEED_PX = [5, 10, 18, 28, 40, 56, 80, 112, 155, 200];
 const getScrollPx = () => SPEED_PX[Math.min(CONFIG.speed - 1, 9)];
 
-// ── SENSIBILITÉ : seuil de déclenchement uniquement ──
-// Cran 1 = très difficile à déclencher (seuil 0.20)
-// Cran 5 = normal (seuil 0.06)
-// Cran 10 = très facile (seuil 0.01)
-// Formule linéaire simple, aucun lien avec la vitesse
-const SENS_THRESHOLD = [0.20, 0.16, 0.12, 0.09, 0.06, 0.045, 0.032, 0.022, 0.014, 0.008];
+// Sensibilité : cran 5=0.04, cran 10=0.002 (très réactif)
+const SENS_THRESHOLD = [0.30, 0.22, 0.15, 0.08, 0.04, 0.025, 0.015, 0.008, 0.004, 0.002];
 const getDeadBand = () => SENS_THRESHOLD[Math.min(CONFIG.sensitivity - 1, 9)];
 
 /* ── STATE ── */
