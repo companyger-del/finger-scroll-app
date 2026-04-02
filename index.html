@@ -807,14 +807,25 @@
         </div>
       </div>
 
-      <div class="setting-row">
+      <div class="setting-row" style="flex-direction:column; align-items:stretch; gap:12px;">
         <div class="setting-info">
           <h4>Angle du doigt</h4>
-          <p id="angle-desc">Haut / Bas — 0°</p>
+          <p id="angle-desc">Position 12h / 6h — 0°</p>
         </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-angle" min="-45" max="45" value="0" step="5" />
-          <div class="slider-val" id="angle-val">0°</div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:16px;">
+          <!-- Bouton rotatif -->
+          <div style="position:relative; width:100px; height:100px; flex-shrink:0;">
+            <canvas id="knob-canvas" width="100" height="100"
+              style="cursor:grab; touch-action:none; border-radius:50%;">
+            </canvas>
+          </div>
+          <div style="text-align:left;">
+            <div id="angle-val" style="font-size:22px; font-weight:800; font-family:'Fira Code',monospace; color:var(--accent);">0°</div>
+            <div id="angle-clock" style="font-size:12px; color:var(--muted); margin-top:2px;">⬇ 12h &nbsp; ⬆ 6h</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:8px; line-height:1.6;">
+              Tournez le bouton<br>pour ajuster l'axe
+            </div>
+          </div>
         </div>
       </div>
 
@@ -864,8 +875,14 @@ const CONFIG = {
 };
 
 // Seuils internes calculés depuis CONFIG
-const getThreshold = () => Math.max(3, Math.round(12 - CONFIG.sensitivity * 1.0)); // pixel diff threshold
-const getSpeedMult = () => CONFIG.speed * 3.5;                         // scroll multiplier
+// Vitesse : +1 cran = +25%, +2 = +35%, progression exponentielle
+// Base à cran 5 = référence. Courbe : 1.0, 1.25, 1.60, 2.0, 2.5, 3.0(ref×1), 3.75, 4.7, 5.9, 7.4, 9.2
+const SPEED_CURVE = [0.4, 0.55, 0.72, 0.88, 1.0, 1.25, 1.60, 2.05, 2.60, 3.30];
+const getSpeedMult = () => 3.5 * (SPEED_CURVE[Math.min(CONFIG.speed - 1, 9)] || 1.0);
+
+// Sensibilité : même progression exponentielle (deadBand se rétrécit vite)
+const SENS_CURVE  = [0.35, 0.50, 0.65, 0.80, 1.0, 1.25, 1.55, 1.90, 2.35, 2.85];
+const getSensMult = () => SENS_CURVE[Math.min(CONFIG.sensitivity - 1, 9)] || 1.0;
 
 /* ── STATE ── */
 let stream = null;
@@ -1094,7 +1111,7 @@ function detectFrame() {
   // ── DÉCISION ──
   // quart haut lumineux → lumière en haut → REMONTE
   // quart bas lumineux  → lumière en bas  → DESCEND
-  const deadBand = Math.max(0.02, 0.08 - CONFIG.sensitivity * 0.005);
+  const deadBand = Math.max(0.015, 0.12 / getSensMult());
   const minLum = 8;
 
   // smoothX > 0.5+dead = bas dominant = descendre (+1)
@@ -1265,17 +1282,143 @@ sliderRingOuter.addEventListener('input', () => {
   }
 });
 
-const sliderAngle = document.getElementById('slider-angle');
-const angleVal    = document.getElementById('angle-val');
-const angleDesc   = document.getElementById('angle-desc');
+/* ── KNOB ROTATIF ── */
+(function() {
+  const canvas = document.getElementById('knob-canvas');
+  if (!canvas) return;
+  const kctx = canvas.getContext('2d');
+  const SIZE = 100;
+  const cx = SIZE/2, cy = SIZE/2, R = 42;
 
-const angleLabels = {'-45':'11h / 5h', '-30':'11h30 / 5h30', '-15':'11h45 / 5h45', '0':'12h / 6h', '15':'12h15 / 6h15', '30':'12h30 / 6h30', '45':'1h / 7h'};
+  // Angle en degrés : -45 à +45, 0 = vertical haut/bas
+  let knobAngle = 0; // degrés
 
-sliderAngle.addEventListener('input', () => {
-  CONFIG.angle = parseInt(sliderAngle.value);
-  angleVal.textContent = sliderAngle.value + '°';
-  angleDesc.textContent = angleLabels[sliderAngle.value] || sliderAngle.value + '°';
-});
+  function clockLabel(a) {
+    // a = -45..+45 degrés d'inclinaison de l'axe
+    const topH = 12 + a/30; // heure du point haut
+    const botH = 6  + a/30; // heure du point bas
+    const fmt = h => {
+      const hh = ((Math.floor(h) % 12) + 12) % 12 || 12;
+      const mm = Math.round((h % 1) * 60);
+      return mm ? `${hh}h${mm.toString().padStart(2,'0')}` : `${hh}h`;
+    };
+    return `⬇ ${fmt(topH)} &nbsp; ⬆ ${fmt(botH)}`;
+  }
+
+  function drawKnob(a) {
+    kctx.clearRect(0, 0, SIZE, SIZE);
+
+    // Fond
+    kctx.beginPath();
+    kctx.arc(cx, cy, R+4, 0, Math.PI*2);
+    kctx.fillStyle = '#1a1a2e';
+    kctx.fill();
+
+    // Cercle extérieur
+    kctx.beginPath();
+    kctx.arc(cx, cy, R+4, 0, Math.PI*2);
+    kctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    kctx.lineWidth = 1;
+    kctx.stroke();
+
+    // Corps du bouton
+    const grad = kctx.createRadialGradient(cx-8, cy-8, 2, cx, cy, R);
+    grad.addColorStop(0, '#2a2a3e');
+    grad.addColorStop(1, '#12121e');
+    kctx.beginPath();
+    kctx.arc(cx, cy, R, 0, Math.PI*2);
+    kctx.fillStyle = grad;
+    kctx.fill();
+    kctx.strokeStyle = 'rgba(0,245,196,0.25)';
+    kctx.lineWidth = 1.5;
+    kctx.stroke();
+
+    // Axe incliné (ligne de l'angle)
+    const rad = (a - 90) * Math.PI / 180;
+    const rad2 = (a + 90) * Math.PI / 180;
+    const lineR = R - 8;
+    const x1 = cx + Math.cos(rad)  * lineR;
+    const y1 = cy + Math.sin(rad)  * lineR;
+    const x2 = cx + Math.cos(rad2) * lineR;
+    const y2 = cy + Math.sin(rad2) * lineR;
+
+    kctx.beginPath();
+    kctx.moveTo(x1, y1);
+    kctx.lineTo(x2, y2);
+    kctx.strokeStyle = 'rgba(0,245,196,0.3)';
+    kctx.lineWidth = 1;
+    kctx.setLineDash([3,3]);
+    kctx.stroke();
+    kctx.setLineDash([]);
+
+    // Point HAUT (descendre) — vert
+    kctx.beginPath();
+    kctx.arc(x1, y1, 6, 0, Math.PI*2);
+    kctx.fillStyle = '#00f5c4';
+    kctx.fill();
+    // Flèche ⬇
+    kctx.fillStyle = '#0a0a12';
+    kctx.font = 'bold 7px sans-serif';
+    kctx.textAlign = 'center';
+    kctx.textBaseline = 'middle';
+    kctx.fillText('↓', x1, y1);
+
+    // Point BAS (remonter) — violet
+    kctx.beginPath();
+    kctx.arc(x2, y2, 6, 0, Math.PI*2);
+    kctx.fillStyle = '#7b61ff';
+    kctx.fill();
+    kctx.fillStyle = '#fff';
+    kctx.fillText('↑', x2, y2);
+
+    // Marqueur central
+    kctx.beginPath();
+    kctx.arc(cx, cy, 3, 0, Math.PI*2);
+    kctx.fillStyle = 'rgba(0,245,196,0.4)';
+    kctx.fill();
+  }
+
+  function updateAngle(a) {
+    knobAngle = Math.max(-45, Math.min(45, Math.round(a/5)*5));
+    CONFIG.angle = knobAngle;
+    drawKnob(knobAngle);
+    document.getElementById('angle-val').textContent = knobAngle + '°';
+    document.getElementById('angle-clock').innerHTML = clockLabel(knobAngle);
+  }
+
+  // Interaction : drag pour tourner
+  let dragging = false, startY = 0, startAngle = 0;
+
+  canvas.addEventListener('mousedown', e => {
+    dragging = true; startY = e.clientY; startAngle = knobAngle;
+    canvas.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dy = startY - e.clientY; // vers le haut = angle positif
+    updateAngle(startAngle + dy * 0.8);
+  });
+  document.addEventListener('mouseup', () => {
+    dragging = false; canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('touchstart', e => {
+    dragging = true;
+    startY = e.touches[0].clientY;
+    startAngle = knobAngle;
+    e.preventDefault();
+  }, { passive: false });
+  canvas.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dy = startY - e.touches[0].clientY;
+    updateAngle(startAngle + dy * 0.8);
+    e.preventDefault();
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => { dragging = false; });
+
+  // Init
+  updateAngle(0);
+})();
 
 /* ── INIT ── */
 updateScrollBar();
