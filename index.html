@@ -1128,10 +1128,12 @@ function detectFrame() {
   const debugBands = document.getElementById('debug-bands');
   const debugInfo  = document.getElementById('debug-info');
   if (debugPanel && debugPanel.style.display !== 'none') {
+    const lumD = lumBot / Math.max(countBot, 1);
+    const lumU = lumTop / Math.max(countTop, 1);
     if (debugBands) debugBands.innerHTML =
-      `<div style="flex:1;background:#00f5c4;border-radius:2px 2px 0 0;height:${Math.round(4+(avgTop/255)*46)}px;" title="Haut"></div>`.repeat(6) +
-      `<div style="flex:1;background:#333;border-radius:2px;height:6px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#666">◯</div>` +
-      `<div style="flex:1;background:#7b61ff;border-radius:0 0 2px 2px;height:${Math.round(4+(avgBot/255)*46)}px;" title="Bas"></div>`.repeat(6);
+      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+(lumD/255)*46)}px;" title="Descend"></div>`.repeat(6) +
+      `<div style="flex:1;background:#333;border-radius:2px;height:6px;"></div>` +
+      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(lumU/255)*46)}px;" title="Remonte"></div>`.repeat(6);
   }
 
   // ── DÉCISION ──
@@ -1147,10 +1149,12 @@ function detectFrame() {
                   : 0;
 
   if (debugInfo) {
+    const lumD2 = lumBot / Math.max(countBot, 1);
+    const lumU2 = lumTop / Math.max(countTop, 1);
     debugInfo.innerHTML =
-      `Haut: <b style="color:#00f5c4">${Math.round(avgTop)}</b> | Bas: <b style="color:#7b61ff">${Math.round(avgBot)}</b><br>` +
-      `Balance: <b>${smoothX.toFixed(2)}</b> | Lum: ${Math.round(smoothLum)}<br>` +
-      `Vitesse lum: <b style="color:#ff6b35">${lumSpeed.toFixed(1)}</b> | Accel: ${(1+Math.min(lumSpeed/8,3)).toFixed(1)}x<br>` +
+      `↓ Descend: <b style="color:#00f5c4">${Math.round(lumD2)}</b> | ↑ Remonte: <b style="color:#7b61ff">${Math.round(lumU2)}</b><br>` +
+      `Balance: <b>${smoothX.toFixed(2)}</b> | Vitesse cran: ${CONFIG.speed}<br>` +
+      `SpeedMult: <b style="color:#ff6b35">${getSpeedMult().toFixed(1)}</b> | Inertia: ${inertia.toFixed(1)}<br>` +
       `Direction: ${direction===1 ? '⬇ DESCEND' : direction===-1 ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ'}`;
   }
 
@@ -1275,11 +1279,15 @@ const speedVal = document.getElementById('speed-val');
 sliderSens.addEventListener('input', () => {
   CONFIG.sensitivity = parseInt(sliderSens.value);
   sensVal.textContent = sliderSens.value;
+  inertia = 0;
+  smoothX = 0.5;
 });
 
 sliderSpeed.addEventListener('input', () => {
   CONFIG.speed = parseInt(sliderSpeed.value);
   speedVal.textContent = sliderSpeed.value;
+  inertia = 0; // reset pour éviter les à-coups
+  smoothX = 0.5;
 });
 
 const sliderRingInner = document.getElementById('slider-ring-inner');
