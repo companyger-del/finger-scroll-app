@@ -1136,45 +1136,64 @@ function detectFrame() {
       `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(lumU/255)*46)}px;" title="Remonte"></div>`.repeat(6);
   }
 
-  // ── DÉCISION ──
-  // quart haut lumineux → lumière en haut → REMONTE
-  // quart bas lumineux  → lumière en bas  → DESCEND
-  const deadBand = Math.max(0.015, 0.12 / getSensMult());
-  const minLum = 8;
+  // ── DÉCISION — réglages totalement isolés ──
+  //
+  // SENSIBILITÉ : contrôle uniquement le seuil de déclenchement
+  //   deadBand fixe (0.04) divisé par getSensMult()
+  //   cran 1 = zone morte large (difficile à déclencher)
+  //   cran 10 = zone morte très petite (très réactif)
+  //   N'influence PAS la vitesse
+  //
+  // VITESSE : contrôle uniquement la quantité de pixels scrollés
+  //   getSpeedMult() appliqué APRÈS la décision de direction
+  //   N'influence PAS le seuil de déclenchement
 
-  // smoothX > 0.5+dead = bas dominant = descendre (+1)
-  // smoothX < 0.5-dead = haut dominant = remonter (-1)
-  const direction = smoothX > (0.5 + deadBand) ?  1   // bas lumineux → descend
-                  : smoothX < (0.5 - deadBand) ? -1   // haut lumineux → remonte
+  const DEAD_BASE = 0.06; // zone morte de base (indépendante de la vitesse)
+  const deadBand  = Math.max(0.008, DEAD_BASE / getSensMult());
+
+  // Direction : basée uniquement sur smoothX vs deadBand
+  const imbalance = smoothX - 0.5; // positif = bas dominant, négatif = haut dominant
+  const direction = imbalance >  deadBand ?  1   // bas lumineux → descend
+                  : imbalance < -deadBand ? -1   // haut lumineux → remonte
                   : 0;
+
+  // Luminosité minimale — doigt doit être présent
+  const minLum = 6;
 
   if (debugInfo) {
     const lumD2 = lumBot / Math.max(countBot, 1);
     const lumU2 = lumTop / Math.max(countTop, 1);
     debugInfo.innerHTML =
-      `↓ Descend: <b style="color:#00f5c4">${Math.round(lumD2)}</b> | ↑ Remonte: <b style="color:#7b61ff">${Math.round(lumU2)}</b><br>` +
-      `Balance: <b>${smoothX.toFixed(2)}</b> | Vitesse cran: ${CONFIG.speed}<br>` +
-      `SpeedMult: <b style="color:#ff6b35">${getSpeedMult().toFixed(1)}</b> | Inertia: ${inertia.toFixed(1)}<br>` +
-      `Direction: ${direction===1 ? '⬇ DESCEND' : direction===-1 ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ'}`;
+      `↓: <b style="color:#00f5c4">${Math.round(lumD2)}</b> | ↑: <b style="color:#7b61ff">${Math.round(lumU2)}</b> | Lum: ${Math.round(smoothLum)}<br>` +
+      `Déséquilibre: <b>${imbalance.toFixed(3)}</b> | Seuil: ±${deadBand.toFixed(3)}<br>` +
+      `Vitesse ×${getSpeedMult().toFixed(1)} | Inertie: ${inertia.toFixed(1)}<br>` +
+      `${direction===1 ? '⬇ DESCEND' : direction===-1 ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
   }
 
   if (smoothLum < minLum) {
-    inertia *= 0.70;
-    if (Math.abs(inertia) < 0.5) { inertia = 0; setDetecting(false); }
+    // Trop sombre → arrêt progressif
+    inertia *= 0.75;
+    if (Math.abs(inertia) < 0.3) { inertia = 0; setDetecting(false); }
+
   } else if (direction !== 0) {
-    const offset = Math.abs(smoothX - 0.5) - deadBand;
-    const lumFactor = Math.min(smoothLum / 40, 3.0);
-    // Accélérateur progressif : lumSpeed très lissée → montée douce
-    const accel = 1.0 + Math.min(lumSpeed / 20, 1.5); // 1x → 2.5x max, progressif
-    const targetInertia = direction * Math.min(offset * lumFactor * getSpeedMult() * 28 * accel, 80);
-    // L'inertie se rapproche doucement de la cible → pas d'à-coup
-    inertia = inertia * 0.75 + targetInertia * 0.25;
+    // Vitesse = luminosité × getSpeedMult() UNIQUEMENT
+    // lumFactor : luminosité normalisée 0→1 (plus c'est lumineux = plus vite)
+    // Complètement indépendant de getSensMult()
+    const lumFactor = Math.min(smoothLum / 120, 1.0); // normalisé 0-1
+    const accel = 1.0 + Math.min(lumSpeed / 20, 1.5); // bonus si changement rapide
+    const targetSpeed = lumFactor * getSpeedMult() * accel;
+    const targetInertia = direction * Math.max(targetSpeed, 1.0); // minimum 1px
+
+    // Convergence douce vers la cible
+    inertia = inertia * 0.70 + targetInertia * 0.30;
     lastScrollDir = direction;
     setDetecting(true);
     updateDirectionArrows(direction);
+
   } else {
-    inertia *= 0.70;
-    if (Math.abs(inertia) < 0.5) {
+    // Zone morte → décélération douce
+    inertia *= 0.72;
+    if (Math.abs(inertia) < 0.3) {
       inertia = 0;
       lastScrollDir = 0;
       setDetecting(false);
