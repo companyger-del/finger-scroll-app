@@ -30,6 +30,11 @@
     .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
     #scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 0 20px 120px; }
     #scroll-area::-webkit-scrollbar { display: none; }
+    #scroll-area.no-select {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
     .article-hero { margin: 8px 0 28px; padding: 28px 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border-radius: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; }
     .article-hero::before { content: ''; position: absolute; top: -50%; right: -30%; width: 250px; height: 250px; background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%); pointer-events: none; }
     .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(0,245,196,0.1); color: var(--accent); border: 1px solid rgba(0,245,196,0.2); margin-bottom: 14px; font-family: 'Fira Code', monospace; }
@@ -257,10 +262,11 @@ const NOIR = 8; // luminosité absolue en dessous de laquelle on stoppe
 
 /* ── STATE ── */
 let stream = null, animFrame = null;
-let touchActive = false;    // doigt sur l'écran = pause
-let scrollStartTime = 0;    // timestamp début du défilement pour accélération
-let currentPx = 0;          // vitesse courante lissée (anti-sautillement)
-const ACCEL_DURATION = 2000; // ms pour atteindre la vitesse max
+let touchActive = false;       // doigt sur l'écran = pause défilement
+let selectionAllowed = false;  // sélection/copie autorisée seulement si objectif noir
+let scrollStartTime = 0;
+let currentPx = 0;
+const ACCEL_DURATION = 2000;
 
 /* ── DOM ── */
 const scrollArea    = document.getElementById('scroll-area');
@@ -295,10 +301,38 @@ function updateScrollBar() {
 }
 scrollArea.addEventListener('scroll', updateScrollBar);
 
-// Doigt sur l'écran = pause du défilement caméra
-scrollArea.addEventListener('touchstart', () => { touchActive = true;  scrollStartTime = 0; currentPx = 0; }, { passive: true });
-scrollArea.addEventListener('touchend',   () => { touchActive = false; scrollStartTime = 0; currentPx = 0; }, { passive: true });
-scrollArea.addEventListener('touchcancel',() => { touchActive = false; scrollStartTime = 0; currentPx = 0; }, { passive: true });
+// Doigt sur l'écran = pause défilement
+// Sélection bloquée SAUF si objectif était noir (selectionAllowed)
+scrollArea.addEventListener('touchstart', (e) => {
+  touchActive = true;
+  scrollStartTime = 0;
+  currentPx = 0;
+  if (!selectionAllowed) {
+    // Objectif pas noir = on bloque sélection et copie
+    scrollArea.classList.add('no-select');
+    e.preventDefault(); // bloque le long-press copier/coller
+  }
+}, { passive: false });
+
+scrollArea.addEventListener('touchend', () => {
+  touchActive = false;
+  scrollStartTime = 0;
+  currentPx = 0;
+  // Remettre sélection possible après relâche
+  setTimeout(() => scrollArea.classList.remove('no-select'), 100);
+}, { passive: true });
+
+scrollArea.addEventListener('touchcancel', () => {
+  touchActive = false;
+  scrollStartTime = 0;
+  currentPx = 0;
+  scrollArea.classList.remove('no-select');
+}, { passive: true });
+
+// Bloquer le menu contextuel si défilement actif
+scrollArea.addEventListener('contextmenu', (e) => {
+  if (!selectionAllowed) e.preventDefault();
+});
 
 function vibrate(p) { if (CONFIG.haptic && 'vibrate' in navigator) navigator.vibrate(p); }
 
@@ -427,13 +461,15 @@ function detectFrame() {
   const targetPx = getScrollPx(); // vitesse cible définie par le réglage uniquement
 
   if (lumD < NOIR && lumU < NOIR) {
-    // Noir total = arrêt BRUTAL immédiat
+    // Noir total = arrêt BRUTAL immédiat + sélection autorisée
     currentPx = 0;
     scrollStartTime = 0;
+    selectionAllowed = true;  // objectif noir = copie/sélection OK
     camPanel.classList.remove('detecting');
 
   } else if (lumD > lumU + getSeuil()) {
     // Lumière côté DESCEND → descend
+    selectionAllowed = false; // objectif lumineux = sélection bloquée
     if (scrollStartTime === 0) scrollStartTime = Date.now();
     // Accélération progressive sur 2 secondes
     const elapsed = Date.now() - scrollStartTime;
@@ -450,6 +486,7 @@ function detectFrame() {
 
   } else if (lumU > lumD + getSeuil()) {
     // Lumière côté REMONTE → remonte
+    selectionAllowed = false; // objectif lumineux = sélection bloquée
     if (scrollStartTime === 0) scrollStartTime = Date.now();
     const elapsed = Date.now() - scrollStartTime;
     const ratio = Math.min(elapsed / ACCEL_DURATION, 1.0);
@@ -463,9 +500,10 @@ function detectFrame() {
     setTimeout(() => arrowUp.classList.remove('active'), 200);
 
   } else {
-    // Équilibré = arrêt progressif (reset accélération pour prochain départ)
+    // Équilibré = arrêt
     currentPx = 0;
     scrollStartTime = 0;
+    selectionAllowed = false;
     camPanel.classList.remove('detecting');
   }
 }
