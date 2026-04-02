@@ -11,997 +11,314 @@
   <link rel="manifest" href="manifest.json" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Fira+Code:wght@300;400&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0a0a12;
-      --surface: #12121e;
-      --surface2: #1a1a2e;
-      --accent: #00f5c4;
-      --accent2: #7b61ff;
-      --warn: #ff6b35;
-      --text: #e8e8f0;
-      --muted: #6b6b8a;
-      --border: rgba(255,255,255,0.07);
-      --glow: 0 0 30px rgba(0,245,196,0.15);
-      --radius: 16px;
+      --bg: #0a0a12; --surface: #12121e; --surface2: #1a1a2e;
+      --accent: #00f5c4; --accent2: #7b61ff; --warn: #ff6b35;
+      --text: #e8e8f0; --muted: #6b6b8a;
+      --border: rgba(255,255,255,0.07); --radius: 16px;
     }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── LAYOUT ── */
-    #app {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    /* ── HEADER ── */
-    #header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent);
-      position: relative;
-      z-index: 10;
-      flex-shrink: 0;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      transition: all 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; }
+    #header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent); position: relative; z-index: 10; flex-shrink: 0; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-actions { display: flex; gap: 10px; }
+    .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
     .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
     .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
-
-    /* ── SCROLL CONTENT ── */
-    #scroll-area {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-      padding: 0 20px 120px;
-      will-change: scroll-position;
-    }
-
+    #scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 0 20px 120px; }
     #scroll-area::-webkit-scrollbar { display: none; }
-
-    .article-hero {
-      margin: 8px 0 28px;
-      padding: 28px 24px;
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .article-hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -30%;
-      width: 250px;
-      height: 250px;
-      background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      background: rgba(0,245,196,0.1);
-      color: var(--accent);
-      border: 1px solid rgba(0,245,196,0.2);
-      margin-bottom: 14px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .article-hero h1 {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.25;
-      letter-spacing: -0.5px;
-      margin-bottom: 12px;
-    }
-
-    .article-hero p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    .meta {
-      display: flex;
-      gap: 16px;
-      margin-top: 16px;
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'Fira Code', monospace;
-    }
-
-    .meta span { display: flex; align-items: center; gap: 5px; }
-
-    .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 28px 0 14px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 12px;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .card:active { transform: scale(0.98); }
-
-    .card-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 10px;
-    }
-
-    .card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    .card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      letter-spacing: -0.3px;
-    }
-
-    .card p {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .quote-block {
-      border-left: 3px solid var(--accent);
-      padding: 16px 20px;
-      background: rgba(0,245,196,0.04);
-      border-radius: 0 12px 12px 0;
-      margin: 16px 0;
-      font-style: italic;
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    /* ── CAMERA OVERLAY ── */
-    #cam-overlay {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 50;
-      pointer-events: none;
-    }
-
-    #cam-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid var(--border);
-      background: var(--surface);
-      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      pointer-events: all;
-      cursor: pointer;
-    }
-
-    #cam-panel.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4);
-    }
-
-    #cam-panel.detecting {
-      border-color: var(--accent);
-      animation: pulse-ring 1.5s ease infinite;
-    }
-
-    @keyframes pulse-ring {
-      0% { box-shadow: 0 0 0 0 rgba(0,245,196,0.4), 0 8px 32px rgba(0,0,0,0.4); }
-      70% { box-shadow: 0 0 0 12px rgba(0,245,196,0), 0 8px 32px rgba(0,0,0,0.4); }
-      100% { box-shadow: 0 0 0 0 rgba(0,245,196,0), 0 8px 32px rgba(0,0,0,0.4); }
-    }
-
-    #cam-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-      display: none;
-    }
-
-    #cam-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    #cam-placeholder .cam-emoji { font-size: 22px; }
-    #cam-placeholder .cam-label {
-      font-size: 9px;
-      color: var(--muted);
-      font-family: 'Fira Code', monospace;
-      letter-spacing: 0.5px;
-    }
-
+    .article-hero { margin: 8px 0 28px; padding: 28px 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border-radius: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .article-hero::before { content: ''; position: absolute; top: -50%; right: -30%; width: 250px; height: 250px; background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%); pointer-events: none; }
+    .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(0,245,196,0.1); color: var(--accent); border: 1px solid rgba(0,245,196,0.2); margin-bottom: 14px; font-family: 'Fira Code', monospace; }
+    .article-hero h1 { font-size: 26px; font-weight: 800; line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 12px; }
+    .article-hero p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .meta { display: flex; gap: 16px; margin-top: 16px; font-size: 12px; color: var(--muted); font-family: 'Fira Code', monospace; }
+    .section-title { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 28px 0 14px; font-family: 'Fira Code', monospace; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
+    .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+    .card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; font-family: 'Fira Code', monospace; }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .quote-block { border-left: 3px solid var(--accent); padding: 16px 20px; background: rgba(0,245,196,0.04); border-radius: 0 12px 12px 0; margin: 16px 0; font-style: italic; font-size: 15px; line-height: 1.7; }
+    #cam-overlay { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; pointer-events: none; }
+    #cam-panel { position: absolute; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border); background: var(--surface); transition: all 0.4s; box-shadow: 0 8px 32px rgba(0,0,0,0.4); pointer-events: all; cursor: pointer; }
+    #cam-panel.active { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4); }
+    #cam-panel.detecting { border-color: var(--accent); animation: pulse-ring 1.5s ease infinite; }
+    @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(0,245,196,0.4); } 70% { box-shadow: 0 0 0 12px rgba(0,245,196,0); } 100% { box-shadow: 0 0 0 0 rgba(0,245,196,0); } }
+    #cam-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+    #cam-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
+    #cam-placeholder .cam-emoji { font-size: 18px; }
+    #cam-placeholder .cam-label { font-size: 8px; color: var(--muted); font-family: 'Fira Code', monospace; }
     #cam-canvas { display: none; }
-
-    /* Scroll indicator bar */
-    #scroll-bar {
-      position: fixed;
-      right: 4px;
-      top: 60px;
-      bottom: 140px;
-      width: 3px;
-      border-radius: 2px;
-      background: var(--surface2);
-      z-index: 20;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    #scroll-thumb {
-      width: 3px;
-      border-radius: 2px;
-      background: var(--accent);
-      position: absolute;
-      top: 0;
-      height: 40px;
-      transition: top 0.1s;
-    }
-
-    /* Direction indicator */
-    #direction-hint {
-      position: fixed;
-      right: 122px;
-      bottom: 45px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-
-    .dir-arrow {
-      font-size: 18px;
-      transition: transform 0.2s, opacity 0.2s;
-      opacity: 0.3;
-    }
-
+    #scroll-bar { position: fixed; right: 4px; top: 60px; bottom: 140px; width: 3px; border-radius: 2px; background: var(--surface2); z-index: 20; opacity: 0; transition: opacity 0.3s; }
+    #scroll-thumb { width: 3px; border-radius: 2px; background: var(--accent); position: absolute; top: 0; height: 40px; }
+    #direction-hint { position: fixed; right: 60px; bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .dir-arrow { font-size: 18px; opacity: 0.3; transition: transform 0.2s, opacity 0.2s; }
     .dir-arrow.active { opacity: 1; transform: scale(1.4); }
-
-    /* Status toast */
-    #status-toast {
-      position: fixed;
-      bottom: 130px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 10px 20px;
-      font-size: 12px;
-      font-family: 'Fira Code', monospace;
-      color: var(--muted);
-      white-space: nowrap;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 60;
-    }
-
-    #status-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
+    #status-toast { position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); border-radius: 30px; padding: 10px 20px; font-size: 12px; font-family: 'Fira Code', monospace; color: var(--muted); white-space: nowrap; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 60; }
+    #status-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #status-toast.ok { color: var(--accent); border-color: rgba(0,245,196,0.2); }
     #status-toast.warn { color: var(--warn); border-color: rgba(255,107,53,0.2); }
-
-    /* ── SETTINGS DRAWER ── */
-    #settings-drawer {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      pointer-events: none;
-    }
-
+    #debug-panel { display:none; position:fixed; top:60px; left:10px; right:10px; background:rgba(0,0,0,0.92); border:1px solid #00f5c4; border-radius:12px; padding:12px; z-index:200; font-family:monospace; font-size:11px; color:#00f5c4; }
+    #settings-drawer { position: fixed; inset: 0; z-index: 100; display: none; pointer-events: none; }
     #settings-drawer.open { display: block; pointer-events: all; }
-
-    .drawer-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
-    .drawer-panel {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-radius: 24px 24px 0 0;
-      border-top: 1px solid var(--border);
-      padding: 20px 24px 40px;
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1);
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
+    .drawer-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+    .drawer-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--surface); border-radius: 24px 24px 0 0; border-top: 1px solid var(--border); padding: 20px 24px 40px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1); max-height: 80vh; overflow-y: auto; }
     #settings-drawer.open .drawer-panel { transform: translateY(0); }
-    #settings-drawer.open { pointer-events: all; }
-
-    .drawer-handle {
-      width: 36px;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0 auto 20px;
-    }
-
-    .drawer-title {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 24px;
-      letter-spacing: -0.5px;
-    }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
+    .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; cursor: pointer; }
+    .drawer-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
     .setting-row:last-child { border-bottom: none; }
-
-    .setting-info h4 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .setting-info p {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* Toggle */
-    .toggle {
-      width: 50px;
-      height: 28px;
-      border-radius: 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-
+    .setting-row.col { flex-direction: column; align-items: stretch; gap: 12px; }
+    .setting-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .setting-info p { font-size: 12px; color: var(--muted); }
+    .toggle { width: 50px; height: 28px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
     .toggle.on { background: var(--accent); border-color: var(--accent); }
-
-    .toggle::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: white;
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
     .toggle.on::after { transform: translateX(22px); }
-
-    /* Slider */
-    .slider-wrap {
-      width: 130px;
-    }
-
-    .slider-wrap input[type=range] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--surface2);
-      outline: none;
-      cursor: pointer;
-    }
-
-    .slider-wrap input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      box-shadow: 0 0 8px rgba(0,245,196,0.4);
-    }
-
-    .slider-val {
-      font-size: 11px;
-      font-family: 'Fira Code', monospace;
-      color: var(--accent);
-      text-align: right;
-      margin-top: 4px;
-    }
-
-    /* Noise texture overlay */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.02;
-      z-index: 999;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 180px;
-    }
+    .slider-wrap { width: 130px; }
+    .slider-wrap input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--surface2); outline: none; cursor: pointer; }
+    .slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+    .slider-val { font-size: 11px; font-family: 'Fira Code', monospace; color: var(--accent); text-align: right; margin-top: 4px; }
   </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- HEADER -->
   <div id="header">
     <div class="logo">
       <div class="logo-icon">👆</div>
       <span class="logo-text">FingerScroll</span>
     </div>
     <div class="header-actions">
-      <div class="icon-btn" id="btn-camera" title="Activer la caméra">📷</div>
-      <div class="icon-btn" id="btn-settings" title="Paramètres">⚙️</div>
+      <div class="icon-btn" id="btn-camera">📷</div>
+      <div class="icon-btn" id="btn-settings">⚙️</div>
     </div>
   </div>
 
-  <!-- SCROLL AREA -->
   <div id="scroll-area">
-
     <div class="article-hero">
       <div class="tag">✦ Technologie</div>
       <h1>L'interface sans contact : l'avenir de l'interaction mobile</h1>
-      <p>Contrôlez votre téléphone sans le toucher — grâce à la caméra dorsale et à la détection de mouvement en temps réel, une nouvelle ère d'accessibilité commence.</p>
-      <div class="meta">
-        <span>📅 2025</span>
-        <span>⏱ 8 min</span>
-        <span>👁 12k vues</span>
-      </div>
+      <p>Contrôlez votre téléphone sans le toucher — grâce à la caméra dorsale et à la détection de lumière en temps réel.</p>
+      <div class="meta"><span>📅 2025</span><span>⏱ 8 min</span><span>👁 12k vues</span></div>
     </div>
-
     <div class="section-title">// En chiffres</div>
     <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--accent)">50ms</div>
-        <div class="stat-label">Latence cible</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--accent2)">30fps</div>
-        <div class="stat-label">Analyse caméra</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--warn)">2%</div>
-        <div class="stat-label">CPU utilisé</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--accent)">∞</div>
-        <div class="stat-label">Possibilités</div>
-      </div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">50ms</div><div class="stat-label">Latence</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">30fps</div><div class="stat-label">Caméra</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--warn)">2%</div><div class="stat-label">CPU</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">∞</div><div class="stat-label">Possibilités</div></div>
     </div>
-
-    <div class="section-title">// Algorithme</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(0,245,196,0.1)">🔬</div>
-        <div>
-          <h3>Différence de frames</h3>
-          <p>Chaque image est comparée à la précédente. Les zones de différence révèlent le mouvement. Le centroïde de ces zones traque la position du doigt.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div>
-        <div>
-          <h3>Filtre à seuil adaptatif</h3>
-          <p>Un seuil de bruit (configurable) élimine les micro-mouvements parasites — lumière, tremblement de main, variations d'exposition.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div>
-        <div>
-          <h3>Isolation axe vertical</h3>
-          <p>Seule la composante Y du vecteur de déplacement est transmise au scroller. Les mouvements horizontaux sont ignorés via un ratio de dominance.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="quote-block">
-      « La meilleure interface est celle qui disparaît. Quand votre doigt contrôle l'écran sans le toucher, l'outil s'efface — seul le contenu demeure. »
-    </div>
-
-    <div class="section-title">// Cas d'usage</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(0,245,196,0.08)">♿</div>
-        <div>
-          <h3>Accessibilité motrice</h3>
-          <p>Permet à des personnes avec mobilité réduite de naviguer sans toucher l'écran — particulièrement utile en situation de cuisine, sport, ou mains occupées.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(123,97,255,0.08)">🏃</div>
-        <div>
-          <h3>Mode sportif</h3>
-          <p>Lecture d'un programme d'entraînement ou d'une recette avec les mains gantées ou humides — zéro contact nécessaire.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(255,107,53,0.08)">🎤</div>
-        <div>
-          <h3>Présentations & téléprompteur</h3>
-          <p>Faire défiler un script sans télécommande ni assistant — juste un geste discret hors champ.</p>
-        </div>
-      </div>
-    </div>
-
+    <div class="section-title">// Comment ça marche</div>
+    <div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(0,245,196,0.1)">💡</div><div><h3>Lumière = direction</h3><p>Lumière en haut de l'objectif → descend. Lumière en bas → remonte. Noir total → arrêt.</p></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div><div><h3>Vitesse = réglage</h3><p>La vitesse de défilement est définie uniquement par le curseur vitesse. La luminosité ne l'influence pas.</p></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div><div><h3>Position = bouton rotatif</h3><p>Réglez où se trouve la lumière sur votre objectif selon la façon dont vous tenez votre téléphone.</p></div></div></div>
+    <div class="quote-block">« La meilleure interface est celle qui disparaît. »</div>
     <div class="section-title">// Confidentialité</div>
+    <div class="card"><p>✅ Aucun stockage vidéo. Traitement 100% local. Arrêt automatique en arrière-plan.</p></div>
+    <div class="section-title">// Instructions</div>
+    <div class="card"><h3 style="margin-bottom:10px">📱 Comment utiliser</h3><p style="line-height:2">1. Appuyez sur 📷 pour activer la caméra<br>2. Placez votre doigt sur l'objectif dorsal<br>3. Laissez passer la lumière d'un côté<br>4. Haut = descend &nbsp; Bas = remonte<br>5. Noir total = arrêt ✨</p></div>
+    <div class="card"><p style="line-height:2">Réglez la position dans ⚙️ selon comment vous tenez votre téléphone.<br>Ajustez la vitesse et la sensibilité indépendamment.</p></div>
+  </div>
 
-    <div class="card">
-      <p>✅ <strong>Aucun stockage vidéo.</strong> Le flux est traité en mémoire vive, frame par frame. Aucune image n'est sauvegardée, transmise, ou journalisée.</p>
-    </div>
-
-    <div class="card">
-      <p>✅ <strong>Traitement 100% local.</strong> Aucune API distante. Aucun cloud. L'analyse se fait entièrement sur votre appareil, hors ligne.</p>
-    </div>
-
-    <div class="card">
-      <p>✅ <strong>Arrêt automatique.</strong> La caméra se coupe dès que l'application passe en arrière-plan ou que l'onglet perd le focus.</p>
-    </div>
-
-    <div class="section-title">// Pour commencer</div>
-
-    <div class="card">
-      <h3 style="margin-bottom:10px">📱 Instructions</h3>
-      <p style="line-height:2">
-        1. Appuyez sur 📷 en haut à droite<br>
-        2. Accordez l'accès à la caméra<br>
-        3. Placez votre doigt devant l'objectif<br>
-        4. Bougez-le vers le haut ou le bas<br>
-        5. La page défile automatiquement ✨
-      </p>
-    </div>
-
-  </div><!-- /scroll-area -->
-
-  <!-- SCROLL BAR -->
   <div id="scroll-bar"><div id="scroll-thumb"></div></div>
-
-  <!-- DIRECTION HINTS -->
   <div id="direction-hint">
     <div class="dir-arrow" id="arrow-up">↑</div>
     <div class="dir-arrow" id="arrow-down">↓</div>
   </div>
 
-  <!-- CAMERA PANEL -->
   <div id="cam-overlay">
-    <div id="cam-panel" id="cam-panel">
-      <div id="cam-placeholder">
-        <span class="cam-emoji">📷</span>
-        <span class="cam-label">ACTIVER</span>
-      </div>
+    <div id="cam-panel">
+      <div id="cam-placeholder"><span class="cam-emoji">📷</span><span class="cam-label">ON</span></div>
       <video id="cam-video" autoplay playsinline muted></video>
       <canvas id="cam-canvas"></canvas>
     </div>
   </div>
 
-  <!-- STATUS TOAST -->
   <div id="status-toast"></div>
-  
-  <!-- DEBUG PANEL -->
-  <div id="debug-panel" style="display:none; position:fixed; top:60px; left:10px; right:10px; background:rgba(0,0,0,0.92); border:1px solid #00f5c4; border-radius:12px; padding:12px; z-index:200; font-family:monospace; font-size:11px; color:#00f5c4;">
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-weight:bold; font-size:13px;">📊 DEBUG CAMÉRA</span><span id="debug-close" style="cursor:pointer; color:#ff6b35; font-size:16px;">✕</span></div>
-    <div id="debug-bands" style="display:flex; align-items:flex-end; gap:2px; height:50px; margin-bottom:8px; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px;"></div>
-    <div id="debug-info" style="line-height:2; color:#e8e8f0; font-size:12px;"></div>
+
+  <div id="debug-panel">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-weight:bold">📊 DEBUG</span>
+      <span id="debug-close" style="cursor:pointer;color:#ff6b35;font-size:16px;">✕</span>
+    </div>
+    <div id="debug-bands" style="display:flex;align-items:flex-end;gap:2px;height:50px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:6px;padding:4px;"></div>
+    <div id="debug-info" style="line-height:2;color:#e8e8f0;font-size:12px;"></div>
   </div>
 
-  <!-- SETTINGS DRAWER -->
   <div id="settings-drawer">
     <div class="drawer-backdrop" id="drawer-backdrop"></div>
     <div class="drawer-panel">
-      <div class="drawer-handle"></div>
+      <div class="drawer-handle" id="drawer-handle"></div>
       <div class="drawer-title">Paramètres</div>
 
       <div class="setting-row">
-        <div class="setting-info">
-          <h4>Détection par caméra</h4>
-          <p>Active le défilement gestuel</p>
-        </div>
-        <div class="toggle on" id="toggle-cam" data-target="camEnabled"></div>
+        <div class="setting-info"><h4>Détection caméra</h4><p>Active le défilement gestuel</p></div>
+        <div class="toggle on" data-target="camEnabled"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><h4>Caméra frontale</h4><p>Selfie au lieu du dos</p></div>
+        <div class="toggle" data-target="useFront"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><h4>Retour haptique</h4><p>Vibration à la détection</p></div>
+        <div class="toggle on" data-target="haptic"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><h4>Mode économie</h4><p>Réduit le framerate (15fps)</p></div>
+        <div class="toggle" data-target="ecoMode"></div>
       </div>
 
+      <!-- VITESSE — indépendante -->
       <div class="setting-row">
-        <div class="setting-info">
-          <h4>Caméra frontale</h4>
-          <p>Utiliser selfie au lieu du dos</p>
-        </div>
-        <div class="toggle" id="toggle-front" data-target="useFront"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Retour haptique</h4>
-          <p>Vibration lors de la détection</p>
-        </div>
-        <div class="toggle on" id="toggle-haptic" data-target="haptic"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Mode économie d'énergie</h4>
-          <p>Réduit la résolution (15fps)</p>
-        </div>
-        <div class="toggle" id="toggle-eco" data-target="ecoMode"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Sensibilité</h4>
-          <p>Seuil de détection du mouvement</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-sensitivity" min="1" max="10" value="5" />
-          <div class="slider-val" id="sensitivity-val">5</div>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Vitesse de défilement</h4>
-          <p>Amplification du mouvement</p>
-        </div>
+        <div class="setting-info"><h4>Vitesse de défilement</h4><p>Pixels scrollés par frame</p></div>
         <div class="slider-wrap">
           <input type="range" id="slider-speed" min="1" max="10" value="5" />
-          <div class="slider-val" id="speed-val">5</div>
+          <div class="slider-val" id="speed-val">5 — 50px</div>
         </div>
       </div>
 
-      <div class="setting-row" style="flex-direction:column; align-items:stretch; gap:12px;">
+      <!-- SENSIBILITÉ — indépendante -->
+      <div class="setting-row">
+        <div class="setting-info"><h4>Sensibilité</h4><p>Écart de lumière pour déclencher</p></div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-sensitivity" min="1" max="10" value="5" />
+          <div class="slider-val" id="sensitivity-val">5 — 15lux</div>
+        </div>
+      </div>
+
+      <!-- POSITION — bouton rotatif avec 2 points indépendants -->
+      <div class="setting-row col">
         <div class="setting-info">
           <h4>Position du doigt</h4>
-          <p>Glissez chaque point librement sur le cercle</p>
+          <p>Glissez chaque point sur le cercle</p>
         </div>
-        <div style="display:flex; align-items:center; justify-content:center; gap:16px;">
-          <canvas id="knob-canvas" width="120" height="120"
-            style="touch-action:none; flex-shrink:0;"></canvas>
-          <div style="text-align:left; font-family:'Fira Code',monospace; font-size:12px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+          <canvas id="knob-canvas" width="120" height="120" style="touch-action:none;flex-shrink:0;"></canvas>
+          <div style="font-family:'Fira Code',monospace;font-size:12px;">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
               <span style="width:10px;height:10px;border-radius:50%;background:#00f5c4;display:inline-block;"></span>
               <span style="color:var(--muted);">⬇ Descend</span>
-              <span id="pos-down" style="color:#00f5c4; margin-left:4px;">12h00</span>
+              <span id="pos-down" style="color:#00f5c4;margin-left:4px;">12h00</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <span style="width:10px;height:10px;border-radius:50%;background:#7b61ff;display:inline-block;"></span>
               <span style="color:var(--muted);">⬆ Remonte</span>
-              <span id="pos-up" style="color:#7b61ff; margin-left:4px;">6h00</span>
+              <span id="pos-up" style="color:#7b61ff;margin-left:4px;">6h00</span>
             </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">
-              Glissez les points<br>où la lumière passe
-            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">Glissez les points<br>où la lumière passe</div>
           </div>
         </div>
       </div>
 
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Zone intérieure ◯</h4>
-          <p>Bord interne de la couronne</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-ring-inner" min="20" max="80" value="55" step="5" />
-          <div class="slider-val" id="ring-inner-val">55%</div>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Zone extérieure ◉</h4>
-          <p>Bord externe de la couronne</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-ring-outer" min="70" max="99" value="96" step="3" />
-          <div class="slider-val" id="ring-outer-val">96%</div>
-        </div>
-      </div>
     </div>
   </div>
-
-</div><!-- /app -->
+</div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   FingerScroll — Moteur de détection de mouvement par caméra
-   Algorithme : Frame Differencing + Centroid Tracking
-   Traitement 100% local, aucun stockage de données
-═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   FingerScroll — Algorithme lumière pure
+   Lumière haut → descend | Lumière bas → remonte
+   Noir total → arrêt
+   Vitesse, sensibilité, position = totalement indépendants
+═══════════════════════════════════════════════════ */
 
 const CONFIG = {
   camEnabled: true,
   useFront: false,
   haptic: true,
   ecoMode: false,
-  sensitivity: 5,     // 1-10 : seuil de détection
-  speed: 5,           // 1-10 : multiplicateur de défilement
-  angle: 0,           // legacy
-  angleDown: 270,     // position point vert ↓ en degrés 0-360 (270=12h)
-  angleUp: 90,        // position point violet ↑ en degrés 0-360 (90=6h)
-  ringInner: 55,
-  ringOuter: 96,
+  speed: 5,        // 1-10 : vitesse de défilement UNIQUEMENT
+  sensitivity: 5,  // 1-10 : seuil de déclenchement UNIQUEMENT
+  angleDown: 270,  // degrés 0-360 : position secteur DESCEND (270=12h)
+  angleUp: 90,     // degrés 0-360 : position secteur REMONTE (90=6h)
 };
 
-// Seuils internes calculés depuis CONFIG
-// ── VITESSE : pixels scrollés par frame, direct et linéaire ──
-// Cran 1=2px, 2=4px, 3=6px, 4=8px, 5=10px, 6=14px, 7=20px, 8=28px, 9=40px, 10=56px
-// De 5→7 : ×2 exact. De 5→9 : ×4 exact.
-// Vitesse : progression linéaire forte
-// cran 1=10px, 2=20px, 3=30px, 4=40px, 5=50px
-// cran 6=100px, 7=150px, 8=200px, 9=250px, 10=300px
-const SPEED_PX = [10, 20, 30, 40, 50, 100, 150, 200, 250, 300];
+// ── VITESSE : pixels scrollés par frame — rien d'autre ──
+// Cran 5=50px, cran 7=100px (×2), cran 10=250px
+const SPEED_PX = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
 const getScrollPx = () => SPEED_PX[Math.min(CONFIG.speed - 1, 9)];
 
-// Sensibilité : progression linéaire forte
-// cran 1=0.40 (dur), cran 5=0.04, cran 6=0.02, cran 10=0.001 (extrême)
-const SENS_THRESHOLD = [0.40, 0.30, 0.20, 0.10, 0.04, 0.02, 0.012, 0.006, 0.003, 0.001];
-const getDeadBand = () => SENS_THRESHOLD[Math.min(CONFIG.sensitivity - 1, 9)];
+// ── SENSIBILITÉ : écart minimum de luminosité entre les deux secteurs ──
+// Plus le cran est élevé, plus petit est l'écart requis → plus réactif
+// Cran 1=80lux (dur), cran 5=15lux (normal), cran 10=2lux (extrême)
+const SENS_LUX = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
+const getSeuil = () => SENS_LUX[Math.min(CONFIG.sensitivity - 1, 9)];
+
+// ── SEUIL NOIR : en dessous = pas de doigt = arrêt ──
+const NOIR = 8; // luminosité absolue en dessous de laquelle on stoppe
 
 /* ── STATE ── */
-let stream = null;
-let animFrame = null;
-let prevData = null;
-let isDetecting = false;
-let lastScrollTime = 0;
-let consecutiveFrames = 0;
-const MIN_CONSECUTIVE = 1; // frames consécutives avant de scroller
+let stream = null, animFrame = null;
 
 /* ── DOM ── */
-const scrollArea   = document.getElementById('scroll-area');
-const camPanel     = document.getElementById('cam-panel');
-const camVideo     = document.getElementById('cam-video');
-const camCanvas    = document.getElementById('cam-canvas');
-const camPlaceholder = document.getElementById('cam-placeholder');
-const statusToast  = document.getElementById('status-toast');
-const scrollBar    = document.getElementById('scroll-bar');
-const scrollThumb  = document.getElementById('scroll-thumb');
-const directionHint = document.getElementById('direction-hint');
-const arrowUp      = document.getElementById('arrow-up');
-const arrowDown    = document.getElementById('arrow-down');
-const btnCamera    = document.getElementById('btn-camera');
-const ctx          = camCanvas.getContext('2d', { willReadFrequently: true });
+const scrollArea    = document.getElementById('scroll-area');
+const camPanel      = document.getElementById('cam-panel');
+const camVideo      = document.getElementById('cam-video');
+const camCanvas     = document.getElementById('cam-canvas');
+const camPlaceholder= document.getElementById('cam-placeholder');
+const statusToast   = document.getElementById('status-toast');
+const scrollBar     = document.getElementById('scroll-bar');
+const scrollThumb   = document.getElementById('scroll-thumb');
+const arrowUp       = document.getElementById('arrow-up');
+const arrowDown     = document.getElementById('arrow-down');
+const btnCamera     = document.getElementById('btn-camera');
+const ctx           = camCanvas.getContext('2d', { willReadFrequently: true });
 
-/* ── TOAST ── */
 let toastTimer = null;
-function showToast(msg, type = '', duration = 2500) {
+function showToast(msg, type='', dur=2500) {
   clearTimeout(toastTimer);
   statusToast.textContent = msg;
   statusToast.className = 'show ' + type;
-  toastTimer = setTimeout(() => { statusToast.className = ''; }, duration);
+  toastTimer = setTimeout(() => statusToast.className = '', dur);
 }
 
-/* ── SCROLL BAR ── */
 function updateScrollBar() {
-  const maxScroll = scrollArea.scrollHeight - scrollArea.clientHeight;
-  if (maxScroll <= 0) return;
-  const progress = scrollArea.scrollTop / maxScroll;
-  const barHeight = scrollBar.clientHeight;
-  const thumbH = Math.max(30, barHeight * (scrollArea.clientHeight / scrollArea.scrollHeight));
-  scrollThumb.style.height = thumbH + 'px';
-  scrollThumb.style.top = progress * (barHeight - thumbH) + 'px';
+  const max = scrollArea.scrollHeight - scrollArea.clientHeight;
+  if (max <= 0) return;
+  const p = scrollArea.scrollTop / max;
+  const bh = scrollBar.clientHeight;
+  const th = Math.max(30, bh * scrollArea.clientHeight / scrollArea.scrollHeight);
+  scrollThumb.style.height = th + 'px';
+  scrollThumb.style.top = p * (bh - th) + 'px';
 }
-
 scrollArea.addEventListener('scroll', updateScrollBar);
 
-/* ── HAPTIC ── */
-function vibrate(pattern) {
-  if (!CONFIG.haptic) return;
-  if ('vibrate' in navigator) navigator.vibrate(pattern);
-}
+function vibrate(p) { if (CONFIG.haptic && 'vibrate' in navigator) navigator.vibrate(p); }
 
-/* ── CAMÉRA : DÉMARRAGE ── */
+/* ── CAMÉRA ── */
 async function startCamera() {
   if (stream) return;
-
   const fps = CONFIG.ecoMode ? 15 : 30;
-  const res = { width: 320, height: 240 }; // résolution fixe — fps seul change en mode éco
-
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
-        width:  { ideal: res.width },
-        height: { ideal: res.height },
-        frameRate: { ideal: fps }
-      },
+      video: { facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' }, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: fps } },
       audio: false
     });
-
     camVideo.srcObject = stream;
     await camVideo.play();
-
-    camCanvas.width  = res.width;
-    camCanvas.height = res.height;
-
+    camCanvas.width = 320; camCanvas.height = 240;
     camVideo.style.display = 'block';
     camPlaceholder.style.display = 'none';
     camPanel.classList.add('active');
     btnCamera.classList.add('active');
-    prevData = null;
-    consecutiveFrames = 0;
-    inertia = 0;
-    smoothX = 0.5;
-    smoothLum = -1;
-    lastScrollDir = 0;
-    prevTotalLum = -1;
-    lumSpeed = 0;
-    // Réinitialiser l'historique de lissage
-    smoothX = 0.5;
-
-    showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
+    scrollBar.style.opacity = '1';
+    document.getElementById('direction-hint').style.opacity = '1';
+    showToast('📷 Caméra active', 'ok', 2000);
     vibrate(30);
-    startDetection();
-    showUI(true);
-
-  } catch (err) {
-    console.error('Camera error:', err);
-    const msg = err.name === 'NotAllowedError'
-      ? '⚠️ Permission caméra refusée'
-      : '⚠️ Caméra indisponible sur cet appareil';
-    showToast(msg, 'warn', 4000);
-    stream = null;
+    animFrame = requestAnimationFrame(detectFrame);
+  } catch(e) {
+    showToast(e.name === 'NotAllowedError' ? '⚠️ Permission refusée' : '⚠️ Caméra indisponible', 'warn', 4000);
   }
 }
 
-/* ── CAMÉRA : ARRÊT ── */
 function stopCamera() {
   if (!stream) return;
   stream.getTracks().forEach(t => t.stop());
@@ -1012,91 +329,60 @@ function stopCamera() {
   camPlaceholder.style.display = 'flex';
   camPanel.classList.remove('active', 'detecting');
   btnCamera.classList.remove('active');
-  prevData = null;
-  isDetecting = false;
-  consecutiveFrames = 0;
-  showUI(false);
+  scrollBar.style.opacity = '0';
+  document.getElementById('direction-hint').style.opacity = '0';
   showToast('Caméra désactivée', '', 1500);
 }
 
-function showUI(visible) {
-  scrollBar.style.opacity = visible ? '1' : '0';
-  directionHint.style.opacity = visible ? '1' : '0';
-}
-
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    ALGORITHME DE DÉTECTION
-   ─────────────────────────────────────────────────────────
-   1. Capturer frame → canvas (résolution réduite)
-   2. Extraire imageData (RGBA)
-   3. Calculer différence absolue pixel par pixel avec frame N-1
-   4. Seuiller → masque binaire de mouvement
-   5. Calculer centroïde Y de la zone de mouvement
-   6. Comparer centroïde Y actuel vs précédent → vecteur delta Y
-   7. Si |deltaY| > dead zone ET axe vertical dominant → scroller
-══════════════════════════════════════════════════════════ */
-
-/* ── ALGORITHME LUMINOSITÉ GLOBALE ────────────────────────────────────
-   Le doigt appuie sur l'objectif comme un obturateur :
-   - Luminosité qui BAISSE  → écran descend  (vitesse = rapidité du changement)
-   - Luminosité qui MONTE   → écran remonte  (vitesse = rapidité du changement)
-   - Luminosité STABLE      → arrêt
-   On mesure la DÉRIVÉE de la luminosité globale dans le temps.
-   Plus le changement est rapide, plus le défilement est rapide.
-────────────────────────────────────────────────────────────────────── */
-
-/* ══════════════════════════════════════════════════════════════════════
-   ALGORITHME : POSITION HORIZONTALE DE LA LUMIÈRE (style horloge)
-   ─────────────────────────────────────────────────────────────────────
-   Le doigt couvre partiellement l'objectif laissant passer la lumière
-   d'un côté ou de l'autre :
-   • Lumière à GAUCHE (8h20)  → écran DESCEND
-   • Lumière à DROITE (10h10) → écran REMONTE
-   • Lumière centrée / absente → ARRÊT
-   La VITESSE est proportionnelle à l'intensité lumineuse de la zone.
-   Le centre de gravité horizontal de la luminosité donne la direction.
-══════════════════════════════════════════════════════════════════════ */
-
-let inertia = 0;
-let smoothX = 0.5;      // balance haut/bas lissée
-let smoothLum = -1;     // luminosité globale lissée
-let lastScrollDir = 0;
-let prevTotalLum = -1;  // luminosité frame précédente pour mesurer la vitesse
-let lumSpeed = 0;       // vitesse de changement de luminosité (lissée)
-
+   ──────────────────────────────────────────────────────
+   1. Analyser deux secteurs angulaires au bord de l'objectif
+      Secteur DOWN : position CONFIG.angleDown
+      Secteur UP   : position CONFIG.angleUp
+   2. Calculer la luminosité moyenne de chaque secteur
+   3. DÉCISION (totalement indépendante de la vitesse) :
+      - Les deux < NOIR    → arrêt (pas de doigt)
+      - lumD > lumU + seuil → descend à scrollPx px
+      - lumU > lumD + seuil → remonte à scrollPx px
+      - Sinon               → arrêt (équilibré)
+   4. scrollPx = CONFIG.speed UNIQUEMENT, jamais la luminosité
+══════════════════════════════════════════════════════ */
 function detectFrame() {
   if (!stream) return;
   animFrame = requestAnimationFrame(detectFrame);
   if (camVideo.readyState < 2) return;
 
-  const W = camCanvas.width;
-  const H = camCanvas.height;
+  const W = camCanvas.width, H = camCanvas.height;
   ctx.drawImage(camVideo, 0, 0, W, H);
   const d = ctx.getImageData(0, 0, W, H).data;
 
-  // Calculer luminosité des deux secteurs angulaires
-  const cxI = W/2, cyI = H/2;
+  const cx = W/2, cy = H/2;
   const maxR = Math.min(W,H)/2;
   const innerR = maxR * 0.70;
-  const outerR = maxR * 0.98;
-  const SECTOR = Math.PI / 7;
+  const outerR = maxR * 0.97;
+  const SECTOR = Math.PI / 7; // ±25°
+
   const toRad = deg => (deg - 90) * Math.PI / 180;
-  const radDown = toRad(CONFIG.angleDown);
-  const radUp   = toRad(CONFIG.angleUp);
+  const radD = toRad(CONFIG.angleDown);
+  const radU = toRad(CONFIG.angleUp);
 
   let lumD = 0, nD = 0, lumU = 0, nU = 0;
 
   for (let y = 0; y < H; y += 2) {
-    const dy = y - cyI;
+    const dy = y - cy;
     for (let x = 0; x < W; x += 2) {
-      const dx = x - cxI;
+      const dx = x - cx;
       const r = Math.sqrt(dx*dx + dy*dy);
       if (r < innerR || r > outerR) continue;
       const a = Math.atan2(dy, dx);
-      const lum = d[(y*W+x)*4]*0.2126 + d[(y*W+x)*4+1]*0.7152 + d[(y*W+x)*4+2]*0.0722;
-      let dD = Math.abs(a - radDown); if (dD > Math.PI) dD = 2*Math.PI - dD;
-      let dU = Math.abs(a - radUp);   if (dU > Math.PI) dU = 2*Math.PI - dU;
+      const i = (y*W+x)*4;
+      const lum = d[i]*0.2126 + d[i+1]*0.7152 + d[i+2]*0.0722;
+
+      let dD = Math.abs(a - radD); if (dD > Math.PI) dD = 2*Math.PI - dD;
       if (dD < SECTOR) { lumD += lum; nD++; }
+
+      let dU = Math.abs(a - radU); if (dU > Math.PI) dU = 2*Math.PI - dU;
       if (dU < SECTOR) { lumU += lum; nU++; }
     }
   }
@@ -1104,1285 +390,78 @@ function detectFrame() {
   lumD = lumD / Math.max(nD, 1);
   lumU = lumU / Math.max(nU, 1);
 
-  // DEBUG
-  const dp = document.getElementById('debug-panel');
-  if (dp && dp.style.display !== 'none') {
+  // Debug
+  const dbg = document.getElementById('debug-panel');
+  if (dbg && dbg.style.display !== 'none') {
     const db = document.getElementById('debug-bands');
     const di = document.getElementById('debug-info');
     if (db) db.innerHTML =
-      `<div style="flex:1;background:#00f5c4;height:${Math.round(4+lumD/255*46)}px;border-radius:2px;"></div>`.repeat(6) +
-      `<div style="flex:1;background:#333;height:6px;border-radius:2px;"></div>` +
-      `<div style="flex:1;background:#7b61ff;height:${Math.round(4+lumU/255*46)}px;border-radius:2px;"></div>`.repeat(6);
+      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+lumD/255*46)}px;"></div>`.repeat(6) +
+      `<div style="flex:1;background:#444;height:6px;border-radius:2px;"></div>` +
+      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+lumU/255*46)}px;"></div>`.repeat(6);
     if (di) di.innerHTML =
-      `↓ ${Math.round(lumD)} | ↑ ${Math.round(lumU)} | Seuil noir: 12<br>` +
-      `Vitesse: ${getScrollPx()}px | Cran: ${CONFIG.speed}<br>` +
-      `${lumD < 12 && lumU < 12 ? '⬛ NOIR' : lumD >= lumU ? '⬇ DESCEND' : '⬆ REMONTE'}`;
+      `⬇ ${Math.round(lumD)} | ⬆ ${Math.round(lumU)} | Seuil: ${getSeuil()}<br>` +
+      `Vitesse: ${getScrollPx()}px (cran ${CONFIG.speed})<br>` +
+      `${lumD < NOIR && lumU < NOIR ? '⬛ NOIR=ARRÊT' : lumD > lumU + getSeuil() ? '⬇ DESCEND' : lumU > lumD + getSeuil() ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ'}`;
   }
 
-  // DÉCISION BRUTE
-  // Noir total → arrêt
-  if (lumD < 12 && lumU < 12) {
-    setDetecting(false);
-    return;
-  }
+  // ── DÉCISION — 3 paramètres 100% indépendants ──
+  const px = getScrollPx(); // vitesse fixe, jamais influencée par lumD/lumU
 
-  // Lumière en haut (secteur down) → descend
-  // Lumière en bas  (secteur up)   → remonte
-  // Vitesse = réglage uniquement
-  if (lumD >= lumU) {
-    scrollArea.scrollBy({ top: getScrollPx(), behavior: 'auto' });
+  if (lumD < NOIR && lumU < NOIR) {
+    // Noir total = pas de doigt = arrêt
+    camPanel.classList.remove('detecting');
+  } else if (lumD > lumU + getSeuil()) {
+    // Lumière côté DESCEND → descend à vitesse fixe
+    scrollArea.scrollBy({ top: px, behavior: 'auto' });
     updateScrollBar();
-    setDetecting(true);
-    updateDirectionArrows(1);
-  } else {
-    scrollArea.scrollBy({ top: -getScrollPx(), behavior: 'auto' });
-    updateScrollBar();
-    setDetecting(true);
-    updateDirectionArrows(-1);
-  }
-}
-</script>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0a0a12" />
-  <title>FingerScroll</title>
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Fira+Code:wght@300;400&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a12;
-      --surface: #12121e;
-      --surface2: #1a1a2e;
-      --accent: #00f5c4;
-      --accent2: #7b61ff;
-      --warn: #ff6b35;
-      --text: #e8e8f0;
-      --muted: #6b6b8a;
-      --border: rgba(255,255,255,0.07);
-      --glow: 0 0 30px rgba(0,245,196,0.15);
-      --radius: 16px;
-    }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── LAYOUT ── */
-    #app {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    /* ── HEADER ── */
-    #header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent);
-      position: relative;
-      z-index: 10;
-      flex-shrink: 0;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-
-    .logo-text {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      transition: all 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
-    .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
-
-    /* ── SCROLL CONTENT ── */
-    #scroll-area {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-      padding: 0 20px 120px;
-      will-change: scroll-position;
-    }
-
-    #scroll-area::-webkit-scrollbar { display: none; }
-
-    .article-hero {
-      margin: 8px 0 28px;
-      padding: 28px 24px;
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .article-hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -30%;
-      width: 250px;
-      height: 250px;
-      background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      background: rgba(0,245,196,0.1);
-      color: var(--accent);
-      border: 1px solid rgba(0,245,196,0.2);
-      margin-bottom: 14px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .article-hero h1 {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.25;
-      letter-spacing: -0.5px;
-      margin-bottom: 12px;
-    }
-
-    .article-hero p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    .meta {
-      display: flex;
-      gap: 16px;
-      margin-top: 16px;
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'Fira Code', monospace;
-    }
-
-    .meta span { display: flex; align-items: center; gap: 5px; }
-
-    .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 28px 0 14px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 12px;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .card:active { transform: scale(0.98); }
-
-    .card-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 10px;
-    }
-
-    .card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    .card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      letter-spacing: -0.3px;
-    }
-
-    .card p {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .quote-block {
-      border-left: 3px solid var(--accent);
-      padding: 16px 20px;
-      background: rgba(0,245,196,0.04);
-      border-radius: 0 12px 12px 0;
-      margin: 16px 0;
-      font-style: italic;
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    /* ── CAMERA OVERLAY ── */
-    #cam-overlay {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 50;
-      pointer-events: none;
-    }
-
-    #cam-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid var(--border);
-      background: var(--surface);
-      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      pointer-events: all;
-      cursor: pointer;
-    }
-
-    #cam-panel.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4);
-    }
-
-    #cam-panel.detecting {
-      border-color: var(--accent);
-      animation: pulse-ring 1.5s ease infinite;
-    }
-
-    @keyframes pulse-ring {
-      0% { box-shadow: 0 0 0 0 rgba(0,245,196,0.4), 0 8px 32px rgba(0,0,0,0.4); }
-      70% { box-shadow: 0 0 0 12px rgba(0,245,196,0), 0 8px 32px rgba(0,0,0,0.4); }
-      100% { box-shadow: 0 0 0 0 rgba(0,245,196,0), 0 8px 32px rgba(0,0,0,0.4); }
-    }
-
-    #cam-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-      display: none;
-    }
-
-    #cam-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    #cam-placeholder .cam-emoji { font-size: 22px; }
-    #cam-placeholder .cam-label {
-      font-size: 9px;
-      color: var(--muted);
-      font-family: 'Fira Code', monospace;
-      letter-spacing: 0.5px;
-    }
-
-    #cam-canvas { display: none; }
-
-    /* Scroll indicator bar */
-    #scroll-bar {
-      position: fixed;
-      right: 4px;
-      top: 60px;
-      bottom: 140px;
-      width: 3px;
-      border-radius: 2px;
-      background: var(--surface2);
-      z-index: 20;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    #scroll-thumb {
-      width: 3px;
-      border-radius: 2px;
-      background: var(--accent);
-      position: absolute;
-      top: 0;
-      height: 40px;
-      transition: top 0.1s;
-    }
-
-    /* Direction indicator */
-    #direction-hint {
-      position: fixed;
-      right: 122px;
-      bottom: 45px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-
-    .dir-arrow {
-      font-size: 18px;
-      transition: transform 0.2s, opacity 0.2s;
-      opacity: 0.3;
-    }
-
-    .dir-arrow.active { opacity: 1; transform: scale(1.4); }
-
-    /* Status toast */
-    #status-toast {
-      position: fixed;
-      bottom: 130px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 10px 20px;
-      font-size: 12px;
-      font-family: 'Fira Code', monospace;
-      color: var(--muted);
-      white-space: nowrap;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 60;
-    }
-
-    #status-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #status-toast.ok { color: var(--accent); border-color: rgba(0,245,196,0.2); }
-    #status-toast.warn { color: var(--warn); border-color: rgba(255,107,53,0.2); }
-
-    /* ── SETTINGS DRAWER ── */
-    #settings-drawer {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      pointer-events: none;
-    }
-
-    #settings-drawer.open { display: block; pointer-events: all; }
-
-    .drawer-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
-    .drawer-panel {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-radius: 24px 24px 0 0;
-      border-top: 1px solid var(--border);
-      padding: 20px 24px 40px;
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1);
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    #settings-drawer.open .drawer-panel { transform: translateY(0); }
-    #settings-drawer.open { pointer-events: all; }
-
-    .drawer-handle {
-      width: 36px;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0 auto 20px;
-    }
-
-    .drawer-title {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 24px;
-      letter-spacing: -0.5px;
-    }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .setting-row:last-child { border-bottom: none; }
-
-    .setting-info h4 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .setting-info p {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* Toggle */
-    .toggle {
-      width: 50px;
-      height: 28px;
-      border-radius: 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-
-    .toggle.on { background: var(--accent); border-color: var(--accent); }
-
-    .toggle::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: white;
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-
-    .toggle.on::after { transform: translateX(22px); }
-
-    /* Slider */
-    .slider-wrap {
-      width: 130px;
-    }
-
-    .slider-wrap input[type=range] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--surface2);
-      outline: none;
-      cursor: pointer;
-    }
-
-    .slider-wrap input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      box-shadow: 0 0 8px rgba(0,245,196,0.4);
-    }
-
-    .slider-val {
-      font-size: 11px;
-      font-family: 'Fira Code', monospace;
-      color: var(--accent);
-      text-align: right;
-      margin-top: 4px;
-    }
-
-    /* Noise texture overlay */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.02;
-      z-index: 999;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 180px;
-    }
-  </style>
-</head>
-<body>
-<div id="app">
-
-  <!-- HEADER -->
-  <div id="header">
-    <div class="logo">
-      <div class="logo-icon">👆</div>
-      <span class="logo-text">FingerScroll</span>
-    </div>
-    <div class="header-actions">
-      <div class="icon-btn" id="btn-camera" title="Activer la caméra">📷</div>
-      <div class="icon-btn" id="btn-settings" title="Paramètres">⚙️</div>
-    </div>
-  </div>
-
-  <!-- SCROLL AREA -->
-  <div id="scroll-area">
-
-    <div class="article-hero">
-      <div class="tag">✦ Technologie</div>
-      <h1>L'interface sans contact : l'avenir de l'interaction mobile</h1>
-      <p>Contrôlez votre téléphone sans le toucher — grâce à la caméra dorsale et à la détection de mouvement en temps réel, une nouvelle ère d'accessibilité commence.</p>
-      <div class="meta">
-        <span>📅 2025</span>
-        <span>⏱ 8 min</span>
-        <span>👁 12k vues</span>
-      </div>
-    </div>
-
-    <div class="section-title">// En chiffres</div>
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--accent)">50ms</div>
-        <div class="stat-label">Latence cible</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--accent2)">30fps</div>
-        <div class="stat-label">Analyse caméra</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--warn)">2%</div>
-        <div class="stat-label">CPU utilisé</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" style="color:var(--accent)">∞</div>
-        <div class="stat-label">Possibilités</div>
-      </div>
-    </div>
-
-    <div class="section-title">// Algorithme</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(0,245,196,0.1)">🔬</div>
-        <div>
-          <h3>Différence de frames</h3>
-          <p>Chaque image est comparée à la précédente. Les zones de différence révèlent le mouvement. Le centroïde de ces zones traque la position du doigt.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div>
-        <div>
-          <h3>Filtre à seuil adaptatif</h3>
-          <p>Un seuil de bruit (configurable) élimine les micro-mouvements parasites — lumière, tremblement de main, variations d'exposition.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div>
-        <div>
-          <h3>Isolation axe vertical</h3>
-          <p>Seule la composante Y du vecteur de déplacement est transmise au scroller. Les mouvements horizontaux sont ignorés via un ratio de dominance.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="quote-block">
-      « La meilleure interface est celle qui disparaît. Quand votre doigt contrôle l'écran sans le toucher, l'outil s'efface — seul le contenu demeure. »
-    </div>
-
-    <div class="section-title">// Cas d'usage</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(0,245,196,0.08)">♿</div>
-        <div>
-          <h3>Accessibilité motrice</h3>
-          <p>Permet à des personnes avec mobilité réduite de naviguer sans toucher l'écran — particulièrement utile en situation de cuisine, sport, ou mains occupées.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(123,97,255,0.08)">🏃</div>
-        <div>
-          <h3>Mode sportif</h3>
-          <p>Lecture d'un programme d'entraînement ou d'une recette avec les mains gantées ou humides — zéro contact nécessaire.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(255,107,53,0.08)">🎤</div>
-        <div>
-          <h3>Présentations & téléprompteur</h3>
-          <p>Faire défiler un script sans télécommande ni assistant — juste un geste discret hors champ.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-title">// Confidentialité</div>
-
-    <div class="card">
-      <p>✅ <strong>Aucun stockage vidéo.</strong> Le flux est traité en mémoire vive, frame par frame. Aucune image n'est sauvegardée, transmise, ou journalisée.</p>
-    </div>
-
-    <div class="card">
-      <p>✅ <strong>Traitement 100% local.</strong> Aucune API distante. Aucun cloud. L'analyse se fait entièrement sur votre appareil, hors ligne.</p>
-    </div>
-
-    <div class="card">
-      <p>✅ <strong>Arrêt automatique.</strong> La caméra se coupe dès que l'application passe en arrière-plan ou que l'onglet perd le focus.</p>
-    </div>
-
-    <div class="section-title">// Pour commencer</div>
-
-    <div class="card">
-      <h3 style="margin-bottom:10px">📱 Instructions</h3>
-      <p style="line-height:2">
-        1. Appuyez sur 📷 en haut à droite<br>
-        2. Accordez l'accès à la caméra<br>
-        3. Placez votre doigt devant l'objectif<br>
-        4. Bougez-le vers le haut ou le bas<br>
-        5. La page défile automatiquement ✨
-      </p>
-    </div>
-
-  </div><!-- /scroll-area -->
-
-  <!-- SCROLL BAR -->
-  <div id="scroll-bar"><div id="scroll-thumb"></div></div>
-
-  <!-- DIRECTION HINTS -->
-  <div id="direction-hint">
-    <div class="dir-arrow" id="arrow-up">↑</div>
-    <div class="dir-arrow" id="arrow-down">↓</div>
-  </div>
-
-  <!-- CAMERA PANEL -->
-  <div id="cam-overlay">
-    <div id="cam-panel" id="cam-panel">
-      <div id="cam-placeholder">
-        <span class="cam-emoji">📷</span>
-        <span class="cam-label">ACTIVER</span>
-      </div>
-      <video id="cam-video" autoplay playsinline muted></video>
-      <canvas id="cam-canvas"></canvas>
-    </div>
-  </div>
-
-  <!-- STATUS TOAST -->
-  <div id="status-toast"></div>
-  
-  <!-- DEBUG PANEL -->
-  <div id="debug-panel" style="display:none; position:fixed; top:60px; left:10px; right:10px; background:rgba(0,0,0,0.92); border:1px solid #00f5c4; border-radius:12px; padding:12px; z-index:200; font-family:monospace; font-size:11px; color:#00f5c4;">
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="font-weight:bold; font-size:13px;">📊 DEBUG CAMÉRA</span><span id="debug-close" style="cursor:pointer; color:#ff6b35; font-size:16px;">✕</span></div>
-    <div id="debug-bands" style="display:flex; align-items:flex-end; gap:2px; height:50px; margin-bottom:8px; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px;"></div>
-    <div id="debug-info" style="line-height:2; color:#e8e8f0; font-size:12px;"></div>
-  </div>
-
-  <!-- SETTINGS DRAWER -->
-  <div id="settings-drawer">
-    <div class="drawer-backdrop" id="drawer-backdrop"></div>
-    <div class="drawer-panel">
-      <div class="drawer-handle"></div>
-      <div class="drawer-title">Paramètres</div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Détection par caméra</h4>
-          <p>Active le défilement gestuel</p>
-        </div>
-        <div class="toggle on" id="toggle-cam" data-target="camEnabled"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Caméra frontale</h4>
-          <p>Utiliser selfie au lieu du dos</p>
-        </div>
-        <div class="toggle" id="toggle-front" data-target="useFront"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Retour haptique</h4>
-          <p>Vibration lors de la détection</p>
-        </div>
-        <div class="toggle on" id="toggle-haptic" data-target="haptic"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Mode économie d'énergie</h4>
-          <p>Réduit la résolution (15fps)</p>
-        </div>
-        <div class="toggle" id="toggle-eco" data-target="ecoMode"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Sensibilité</h4>
-          <p>Seuil de détection du mouvement</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-sensitivity" min="1" max="10" value="5" />
-          <div class="slider-val" id="sensitivity-val">5</div>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Vitesse de défilement</h4>
-          <p>Amplification du mouvement</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-speed" min="1" max="10" value="5" />
-          <div class="slider-val" id="speed-val">5</div>
-        </div>
-      </div>
-
-      <div class="setting-row" style="flex-direction:column; align-items:stretch; gap:12px;">
-        <div class="setting-info">
-          <h4>Position du doigt</h4>
-          <p>Glissez chaque point librement sur le cercle</p>
-        </div>
-        <div style="display:flex; align-items:center; justify-content:center; gap:16px;">
-          <canvas id="knob-canvas" width="120" height="120"
-            style="touch-action:none; flex-shrink:0;"></canvas>
-          <div style="text-align:left; font-family:'Fira Code',monospace; font-size:12px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#00f5c4;display:inline-block;"></span>
-              <span style="color:var(--muted);">⬇ Descend</span>
-              <span id="pos-down" style="color:#00f5c4; margin-left:4px;">12h00</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#7b61ff;display:inline-block;"></span>
-              <span style="color:var(--muted);">⬆ Remonte</span>
-              <span id="pos-up" style="color:#7b61ff; margin-left:4px;">6h00</span>
-            </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">
-              Glissez les points<br>où la lumière passe
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Zone intérieure ◯</h4>
-          <p>Bord interne de la couronne</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-ring-inner" min="20" max="80" value="55" step="5" />
-          <div class="slider-val" id="ring-inner-val">55%</div>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info">
-          <h4>Zone extérieure ◉</h4>
-          <p>Bord externe de la couronne</p>
-        </div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-ring-outer" min="70" max="99" value="96" step="3" />
-          <div class="slider-val" id="ring-outer-val">96%</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /app -->
-
-<script>
-/* ═══════════════════════════════════════════════════════════
-   FingerScroll — Moteur de détection de mouvement par caméra
-   Algorithme : Frame Differencing + Centroid Tracking
-   Traitement 100% local, aucun stockage de données
-═══════════════════════════════════════════════════════════ */
-
-const CONFIG = {
-  camEnabled: true,
-  useFront: false,
-  haptic: true,
-  ecoMode: false,
-  sensitivity: 5,     // 1-10 : seuil de détection
-  speed: 5,           // 1-10 : multiplicateur de défilement
-  angle: 0,           // legacy
-  angleDown: 270,     // position point vert ↓ en degrés 0-360 (270=12h)
-  angleUp: 90,        // position point violet ↑ en degrés 0-360 (90=6h)
-  ringInner: 55,
-  ringOuter: 96,
-};
-
-// Seuils internes calculés depuis CONFIG
-// ── VITESSE : pixels scrollés par frame, direct et linéaire ──
-// Cran 1=2px, 2=4px, 3=6px, 4=8px, 5=10px, 6=14px, 7=20px, 8=28px, 9=40px, 10=56px
-// De 5→7 : ×2 exact. De 5→9 : ×4 exact.
-// Vitesse : progression linéaire forte
-// cran 1=10px, 2=20px, 3=30px, 4=40px, 5=50px
-// cran 6=100px, 7=150px, 8=200px, 9=250px, 10=300px
-const SPEED_PX = [10, 20, 30, 40, 50, 100, 150, 200, 250, 300];
-const getScrollPx = () => SPEED_PX[Math.min(CONFIG.speed - 1, 9)];
-
-// Sensibilité : progression linéaire forte
-// cran 1=0.40 (dur), cran 5=0.04, cran 6=0.02, cran 10=0.001 (extrême)
-const SENS_THRESHOLD = [0.40, 0.30, 0.20, 0.10, 0.04, 0.02, 0.012, 0.006, 0.003, 0.001];
-const getDeadBand = () => SENS_THRESHOLD[Math.min(CONFIG.sensitivity - 1, 9)];
-
-/* ── STATE ── */
-let stream = null;
-let animFrame = null;
-let prevData = null;
-let isDetecting = false;
-let lastScrollTime = 0;
-let consecutiveFrames = 0;
-const MIN_CONSECUTIVE = 1; // frames consécutives avant de scroller
-
-/* ── DOM ── */
-const scrollArea   = document.getElementById('scroll-area');
-const camPanel     = document.getElementById('cam-panel');
-const camVideo     = document.getElementById('cam-video');
-const camCanvas    = document.getElementById('cam-canvas');
-const camPlaceholder = document.getElementById('cam-placeholder');
-const statusToast  = document.getElementById('status-toast');
-const scrollBar    = document.getElementById('scroll-bar');
-const scrollThumb  = document.getElementById('scroll-thumb');
-const directionHint = document.getElementById('direction-hint');
-const arrowUp      = document.getElementById('arrow-up');
-const arrowDown    = document.getElementById('arrow-down');
-const btnCamera    = document.getElementById('btn-camera');
-const ctx          = camCanvas.getContext('2d', { willReadFrequently: true });
-
-/* ── TOAST ── */
-let toastTimer = null;
-function showToast(msg, type = '', duration = 2500) {
-  clearTimeout(toastTimer);
-  statusToast.textContent = msg;
-  statusToast.className = 'show ' + type;
-  toastTimer = setTimeout(() => { statusToast.className = ''; }, duration);
-}
-
-/* ── SCROLL BAR ── */
-function updateScrollBar() {
-  const maxScroll = scrollArea.scrollHeight - scrollArea.clientHeight;
-  if (maxScroll <= 0) return;
-  const progress = scrollArea.scrollTop / maxScroll;
-  const barHeight = scrollBar.clientHeight;
-  const thumbH = Math.max(30, barHeight * (scrollArea.clientHeight / scrollArea.scrollHeight));
-  scrollThumb.style.height = thumbH + 'px';
-  scrollThumb.style.top = progress * (barHeight - thumbH) + 'px';
-}
-
-scrollArea.addEventListener('scroll', updateScrollBar);
-
-/* ── HAPTIC ── */
-function vibrate(pattern) {
-  if (!CONFIG.haptic) return;
-  if ('vibrate' in navigator) navigator.vibrate(pattern);
-}
-
-/* ── CAMÉRA : DÉMARRAGE ── */
-async function startCamera() {
-  if (stream) return;
-
-  const fps = CONFIG.ecoMode ? 15 : 30;
-  const res = { width: 320, height: 240 }; // résolution fixe — fps seul change en mode éco
-
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
-        width:  { ideal: res.width },
-        height: { ideal: res.height },
-        frameRate: { ideal: fps }
-      },
-      audio: false
-    });
-
-    camVideo.srcObject = stream;
-    await camVideo.play();
-
-    camCanvas.width  = res.width;
-    camCanvas.height = res.height;
-
-    camVideo.style.display = 'block';
-    camPlaceholder.style.display = 'none';
-    camPanel.classList.add('active');
-    btnCamera.classList.add('active');
-    prevData = null;
-    consecutiveFrames = 0;
-    inertia = 0;
-    smoothX = 0.5;
-    smoothLum = -1;
-    lastScrollDir = 0;
-    prevTotalLum = -1;
-    lumSpeed = 0;
-    // Réinitialiser l'historique de lissage
-    smoothX = 0.5;
-
-    showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
-    vibrate(30);
-    startDetection();
-    showUI(true);
-
-  } catch (err) {
-    console.error('Camera error:', err);
-    const msg = err.name === 'NotAllowedError'
-      ? '⚠️ Permission caméra refusée'
-      : '⚠️ Caméra indisponible sur cet appareil';
-    showToast(msg, 'warn', 4000);
-    stream = null;
-  }
-}
-
-/* ── CAMÉRA : ARRÊT ── */
-function stopCamera() {
-  if (!stream) return;
-  stream.getTracks().forEach(t => t.stop());
-  stream = null;
-  cancelAnimationFrame(animFrame);
-  camVideo.srcObject = null;
-  camVideo.style.display = 'none';
-  camPlaceholder.style.display = 'flex';
-  camPanel.classList.remove('active', 'detecting');
-  btnCamera.classList.remove('active');
-  prevData = null;
-  isDetecting = false;
-  consecutiveFrames = 0;
-  showUI(false);
-  showToast('Caméra désactivée', '', 1500);
-}
-
-function showUI(visible) {
-  scrollBar.style.opacity = visible ? '1' : '0';
-  directionHint.style.opacity = visible ? '1' : '0';
-}
-
-/* ══════════════════════════════════════════════════════════
-   ALGORITHME DE DÉTECTION
-   ─────────────────────────────────────────────────────────
-   1. Capturer frame → canvas (résolution réduite)
-   2. Extraire imageData (RGBA)
-   3. Calculer différence absolue pixel par pixel avec frame N-1
-   4. Seuiller → masque binaire de mouvement
-   5. Calculer centroïde Y de la zone de mouvement
-   6. Comparer centroïde Y actuel vs précédent → vecteur delta Y
-   7. Si |deltaY| > dead zone ET axe vertical dominant → scroller
-══════════════════════════════════════════════════════════ */
-
-/* ── ALGORITHME LUMINOSITÉ GLOBALE ────────────────────────────────────
-   Le doigt appuie sur l'objectif comme un obturateur :
-   - Luminosité qui BAISSE  → écran descend  (vitesse = rapidité du changement)
-   - Luminosité qui MONTE   → écran remonte  (vitesse = rapidité du changement)
-   - Luminosité STABLE      → arrêt
-   On mesure la DÉRIVÉE de la luminosité globale dans le temps.
-   Plus le changement est rapide, plus le défilement est rapide.
-────────────────────────────────────────────────────────────────────── */
-
-/* ══════════════════════════════════════════════════════════════════════
-   ALGORITHME : POSITION HORIZONTALE DE LA LUMIÈRE (style horloge)
-   ─────────────────────────────────────────────────────────────────────
-   Le doigt couvre partiellement l'objectif laissant passer la lumière
-   d'un côté ou de l'autre :
-   • Lumière à GAUCHE (8h20)  → écran DESCEND
-   • Lumière à DROITE (10h10) → écran REMONTE
-   • Lumière centrée / absente → ARRÊT
-   La VITESSE est proportionnelle à l'intensité lumineuse de la zone.
-   Le centre de gravité horizontal de la luminosité donne la direction.
-══════════════════════════════════════════════════════════════════════ */
-
-let inertia = 0;
-let smoothX = 0.5;      // balance haut/bas lissée
-let smoothLum = -1;     // luminosité globale lissée
-let lastScrollDir = 0;
-let prevTotalLum = -1;  // luminosité frame précédente pour mesurer la vitesse
-let lumSpeed = 0;       // vitesse de changement de luminosité (lissée)
-
-function detectFrame() {
-  if (!stream) return;
-  animFrame = requestAnimationFrame(detectFrame);
-  if (camVideo.readyState < 2) return;
-
-  const W = camCanvas.width;
-  const H = camCanvas.height;
-
-  ctx.drawImage(camVideo, 0, 0, W, H);
-  const frameData = ctx.getImageData(0, 0, W, H).data;
-
-  // ── Luminosité dans deux secteurs angulaires indépendants ──
-  // ── ANALYSE AU BORD DE L'OBJECTIF uniquement ──
-  // On combine deux filtres :
-  //   1. Filtre radial : garder uniquement les pixels dans la couronne
-  //      entre 70% et 98% du rayon → juste le bord de l'objectif
-  //   2. Filtre angulaire : secteur étroit de ±25° autour de chaque point
-  // Résultat : un petit arc au bord extrême — là où le contraste est maximal
-
-  const cxI = W/2, cyI = H/2;
-  const maxR   = Math.min(W, H) / 2;
-  const innerR = maxR * 0.70; // bord intérieur de la couronne (70%)
-  const outerR = maxR * 0.98; // bord extérieur (quasi le bord de l'image)
-  const SECTOR = Math.PI / 7; // ±25° — secteur étroit et précis
-
-  const toRad = deg => (deg - 90) * Math.PI / 180;
-  const radDown = toRad(CONFIG.angleDown);
-  const radUp   = toRad(CONFIG.angleUp);
-
-  let lumBot = 0, countBot = 0; // secteur DESCEND
-  let lumTop = 0, countTop = 0; // secteur REMONTE
-
-  for (let y = 0; y < H; y += 2) {
-    const dy = y - cyI;
-    for (let x = 0; x < W; x += 2) {
-      const dx = x - cxI;
-      const r = Math.sqrt(dx*dx + dy*dy);
-
-      // Filtre 1 : uniquement dans la couronne de bord
-      if (r < innerR || r > outerR) continue;
-
-      const pixAngle = Math.atan2(dy, dx);
-      const i = (y * W + x) * 4;
-      const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-
-      // Filtre 2 : secteur angulaire étroit autour du point DOWN
-      let dD = Math.abs(pixAngle - radDown);
-      if (dD > Math.PI) dD = 2*Math.PI - dD;
-      if (dD < SECTOR) { lumBot += lum; countBot++; }
-
-      // Filtre 2 : secteur angulaire étroit autour du point UP
-      let dU = Math.abs(pixAngle - radUp);
-      if (dU > Math.PI) dU = 2*Math.PI - dU;
-      if (dU < SECTOR) { lumTop += lum; countTop++; }
-    }
-  }
-
-  // ── LUMINOSITÉ BRUTE — pas de lissage, lecture directe ──
-  const lumD = lumBot / Math.max(countBot, 1);
-  const lumU = lumTop / Math.max(countTop, 1);
-
-  // ── DEBUG ──
-  const debugPanel = document.getElementById('debug-panel');
-  const debugBands = document.getElementById('debug-bands');
-  const debugInfo  = document.getElementById('debug-info');
-  if (debugPanel && debugPanel.style.display !== 'none') {
-    if (debugBands) debugBands.innerHTML =
-      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+(lumD/255)*46)}px;"></div>`.repeat(6) +
-      `<div style="flex:1;background:#333;border-radius:2px;height:6px;"></div>` +
-      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(lumU/255)*46)}px;"></div>`.repeat(6);
-    if (debugInfo) debugInfo.innerHTML =
-      `↓ Descend: <b style="color:#00f5c4">${Math.round(lumD)}</b> | ↑ Remonte: <b style="color:#7b61ff">${Math.round(lumU)}</b><br>` +
-      `Seuil: ${Math.round(seuil)} | Vitesse: ${getScrollPx()}px<br>` +
-      `${lumD > lumU + seuil ? '⬇ DESCEND' : lumU > lumD + seuil ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
-  }
-
-  // ── DÉCISION — ultra simple ──
-  // Lumière détectée d'un côté → défile IMMÉDIATEMENT à vitesse fixe
-  // Noir total des deux côtés  → arrêt
-  // Pas de lissage, pas d'inertie, pas de réflexion
-
-  const scrollPx  = getScrollPx();
-  const NOIR_SEUIL = 12; // en dessous = noir total = arrêt
-
-  if (lumD < NOIR_SEUIL && lumU < NOIR_SEUIL) {
-    // Noir total → arrêt immédiat
-    setDetecting(false);
-  } else if (lumD >= lumU) {
-    // Secteur DESCEND plus lumineux → descend
-    scrollArea.scrollBy({ top: scrollPx, behavior: 'auto' });
-    updateScrollBar();
-    setDetecting(true);
-    updateDirectionArrows(1);
-  } else {
-    // Secteur REMONTE plus lumineux → remonte
-    scrollArea.scrollBy({ top: -scrollPx, behavior: 'auto' });
-    updateScrollBar();
-    setDetecting(true);
-    updateDirectionArrows(-1);
-  }
-}
-
-/* ── UI : indication visuelle ── */
-let detectingTimeout = null;
-function setDetecting(active) {
-  if (active) {
     camPanel.classList.add('detecting');
-    clearTimeout(detectingTimeout);
-    detectingTimeout = setTimeout(() => {
-      camPanel.classList.remove('detecting');
-      isDetecting = false;
-    }, 400);
-    isDetecting = true;
+    arrowDown.classList.add('active');
+    setTimeout(() => arrowDown.classList.remove('active'), 200);
+  } else if (lumU > lumD + getSeuil()) {
+    // Lumière côté REMONTE → remonte à vitesse fixe
+    scrollArea.scrollBy({ top: -px, behavior: 'auto' });
+    updateScrollBar();
+    camPanel.classList.add('detecting');
+    arrowUp.classList.add('active');
+    setTimeout(() => arrowUp.classList.remove('active'), 200);
+  } else {
+    // Équilibré = arrêt
+    camPanel.classList.remove('detecting');
   }
 }
 
-function updateDirectionArrows(deltaY) {
-  arrowUp.classList.toggle('active', deltaY < -1);
-  arrowDown.classList.toggle('active', deltaY > 1);
-  setTimeout(() => {
-    arrowUp.classList.remove('active');
-    arrowDown.classList.remove('active');
-  }, 300);
-}
-
-function startDetection() {
-  prevCentroid = null;
-  prevData = null;
-  animFrame = requestAnimationFrame(detectFrame);
-}
-
-/* ── VISIBILITÉ : arrêt automatique en arrière-plan ── */
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && stream) {
-    stopCamera();
-    showToast('Caméra suspendue (arrière-plan)', '', 2000);
-  }
+  if (document.hidden && stream) { stopCamera(); showToast('Caméra suspendue', '', 2000); }
 });
 
-/* ── BOUTON CAMÉRA ── */
 btnCamera.addEventListener('click', () => {
   if (stream) stopCamera();
   else if (CONFIG.camEnabled) startCamera();
   else showToast('Activez la caméra dans les paramètres', 'warn');
 });
+camPanel.addEventListener('click', () => { if (!stream && CONFIG.camEnabled) startCamera(); });
 
-/* ── CAM PANEL CLICK (raccourci) ── */
-camPanel.addEventListener('click', () => {
-  if (!stream && CONFIG.camEnabled) startCamera();
-});
+// Debug : appui long 2s sur le bouton caméra
+let holdTimer = null;
+btnCamera.addEventListener('touchstart', () => { holdTimer = setTimeout(() => { document.getElementById('debug-panel').style.display='block'; showToast('Debug activé','ok'); }, 2000); });
+btnCamera.addEventListener('touchend', () => clearTimeout(holdTimer));
+btnCamera.addEventListener('mousedown', () => { holdTimer = setTimeout(() => { document.getElementById('debug-panel').style.display='block'; showToast('Debug activé','ok'); }, 2000); });
+btnCamera.addEventListener('mouseup', () => clearTimeout(holdTimer));
+document.getElementById('debug-close').addEventListener('click', () => { document.getElementById('debug-panel').style.display='none'; });
 
 /* ── SETTINGS ── */
 const settingsDrawer = document.getElementById('settings-drawer');
-document.getElementById('btn-settings').addEventListener('click', () => {
-  settingsDrawer.classList.add('open');
-});
-document.getElementById('drawer-backdrop').addEventListener('click', () => {
-  settingsDrawer.classList.remove('open');
-});
-// Bouton fermer explicite en haut du drawer
-const drawerHandle = document.querySelector('.drawer-handle');
-if (drawerHandle) {
-  drawerHandle.style.cursor = 'pointer';
-  drawerHandle.addEventListener('click', () => {
-    settingsDrawer.classList.remove('open');
-  });
-}
+document.getElementById('btn-settings').addEventListener('click', () => settingsDrawer.classList.add('open'));
+document.getElementById('drawer-backdrop').addEventListener('click', () => settingsDrawer.classList.remove('open'));
+document.getElementById('drawer-handle').addEventListener('click', () => settingsDrawer.classList.remove('open'));
 
-// Toggles
-document.querySelectorAll('.toggle').forEach(toggle => {
-  const key = toggle.dataset.target;
-  if (CONFIG[key]) toggle.classList.add('on');
-
-  toggle.addEventListener('click', () => {
+document.querySelectorAll('.toggle').forEach(t => {
+  const key = t.dataset.target;
+  if (CONFIG[key]) t.classList.add('on');
+  t.addEventListener('click', () => {
     CONFIG[key] = !CONFIG[key];
-    toggle.classList.toggle('on', CONFIG[key]);
-
+    t.classList.toggle('on', CONFIG[key]);
     if (key === 'camEnabled' && !CONFIG[key] && stream) stopCamera();
     if (key === 'useFront' && stream) { stopCamera(); setTimeout(startCamera, 300); }
     if (key === 'ecoMode' && stream)  { stopCamera(); setTimeout(startCamera, 300); }
@@ -2390,243 +469,112 @@ document.querySelectorAll('.toggle').forEach(toggle => {
   });
 });
 
-// Sliders
-const sliderSens = document.getElementById('slider-sensitivity');
+// Slider VITESSE — indépendant
 const sliderSpeed = document.getElementById('slider-speed');
-const sensVal = document.getElementById('sensitivity-val');
-const speedVal = document.getElementById('speed-val');
-
-sliderSens.addEventListener('input', () => {
-  CONFIG.sensitivity = parseInt(sliderSens.value);
-  sensVal.textContent = sliderSens.value;
-  inertia = 0;
-  smoothX = 0.5;
-});
-
+const speedVal    = document.getElementById('speed-val');
 sliderSpeed.addEventListener('input', () => {
   CONFIG.speed = parseInt(sliderSpeed.value);
-  speedVal.textContent = sliderSpeed.value;
-  inertia = 0; // reset pour éviter les à-coups
-  smoothX = 0.5;
+  speedVal.textContent = `${sliderSpeed.value} — ${getScrollPx()}px`;
 });
 
-const sliderRingInner = document.getElementById('slider-ring-inner');
-const sliderRingOuter = document.getElementById('slider-ring-outer');
-const ringInnerVal    = document.getElementById('ring-inner-val');
-const ringOuterVal    = document.getElementById('ring-outer-val');
-
-sliderRingInner.addEventListener('input', () => {
-  CONFIG.ringInner = parseInt(sliderRingInner.value);
-  ringInnerVal.textContent = sliderRingInner.value + '%';
-  // Empêcher inner > outer
-  if (CONFIG.ringInner >= CONFIG.ringOuter - 10) {
-    CONFIG.ringOuter = CONFIG.ringInner + 10;
-    sliderRingOuter.value = CONFIG.ringOuter;
-    ringOuterVal.textContent = CONFIG.ringOuter + '%';
-  }
+// Slider SENSIBILITÉ — indépendant
+const sliderSens = document.getElementById('slider-sensitivity');
+const sensVal    = document.getElementById('sensitivity-val');
+sliderSens.addEventListener('input', () => {
+  CONFIG.sensitivity = parseInt(sliderSens.value);
+  sensVal.textContent = `${sliderSens.value} — ${getSeuil()}lux`;
 });
 
-sliderRingOuter.addEventListener('input', () => {
-  CONFIG.ringOuter = parseInt(sliderRingOuter.value);
-  ringOuterVal.textContent = sliderRingOuter.value + '%';
-  if (CONFIG.ringOuter <= CONFIG.ringInner + 10) {
-    CONFIG.ringInner = CONFIG.ringOuter - 10;
-    sliderRingInner.value = CONFIG.ringInner;
-    ringInnerVal.textContent = CONFIG.ringInner + '%';
-  }
-});
-
-/* ── KNOB DEUX POINTS INDÉPENDANTS ── */
+/* ── KNOB — deux points indépendants ── */
 (function() {
   const canvas = document.getElementById('knob-canvas');
   if (!canvas) return;
   const kctx = canvas.getContext('2d');
-  const SIZE = 120;
-  const cx = SIZE/2, cy = SIZE/2;
-  const RING_R = 46;  // rayon de la piste
-  const DOT_R  = 9;   // rayon des points draggables
+  const S = 120, cx = 60, cy = 60, R = 46, DR = 9;
 
-  // Angles en radians (0 = droite, -PI/2 = haut)
-  // Par défaut : vert en haut (12h = -PI/2), violet en bas (6h = PI/2)
-  let angleDown = -Math.PI / 2; // point vert ↓ descendre — 12h
-  let angleUp   =  Math.PI / 2; // point violet ↑ remonter — 6h
+  let aD = -Math.PI/2; // vert ↓ (12h)
+  let aU =  Math.PI/2; // violet ↑ (6h)
 
-  function angleToPos(a) {
-    return { x: cx + Math.cos(a) * RING_R, y: cy + Math.sin(a) * RING_R };
-  }
-
-  function toClockLabel(a) {
-    // Convertir angle radian en heure d'horloge
-    // 12h = -PI/2, 3h = 0, 6h = PI/2, 9h = PI
-    const normalized = ((a + Math.PI/2) / (2*Math.PI) + 1) % 1;
-    const totalMin = Math.round(normalized * 720) % 720; // 720 min = 12h
-    const h = Math.floor(totalMin / 60) || 12;
-    const m = totalMin % 60;
+  function clockLabel(a) {
+    const n = ((a + Math.PI/2) / (2*Math.PI) + 1) % 1;
+    const t = Math.round(n * 720) % 720;
+    const h = Math.floor(t/60) || 12;
+    const m = t % 60;
     return m ? `${h}h${m.toString().padStart(2,'0')}` : `${h}h00`;
   }
 
+  function pos(a) { return { x: cx + Math.cos(a)*R, y: cy + Math.sin(a)*R }; }
+
   function draw() {
-    kctx.clearRect(0, 0, SIZE, SIZE);
-
-    // Fond cercle
-    kctx.beginPath();
-    kctx.arc(cx, cy, RING_R + 8, 0, Math.PI*2);
-    kctx.fillStyle = '#1a1a2e';
-    kctx.fill();
-    kctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    kctx.lineWidth = 1;
-    kctx.stroke();
-
-    // Piste circulaire
-    kctx.beginPath();
-    kctx.arc(cx, cy, RING_R, 0, Math.PI*2);
-    kctx.strokeStyle = 'rgba(255,255,255,0.10)';
-    kctx.lineWidth = 3;
-    kctx.stroke();
-
-    // Marqueurs d'horloge 12h/3h/6h/9h
-    [0, Math.PI/2, Math.PI, -Math.PI/2].forEach((a, i) => {
-      const lx = cx + Math.cos(a) * (RING_R + 14);
-      const ly = cy + Math.sin(a) * (RING_R + 14);
-      kctx.fillStyle = 'rgba(255,255,255,0.15)';
-      kctx.font = '8px sans-serif';
-      kctx.textAlign = 'center';
-      kctx.textBaseline = 'middle';
-      kctx.fillText(['3','6','9','12'][i], lx, ly);
+    kctx.clearRect(0,0,S,S);
+    // Fond
+    kctx.beginPath(); kctx.arc(cx,cy,R+8,0,Math.PI*2);
+    kctx.fillStyle='#1a1a2e'; kctx.fill();
+    kctx.strokeStyle='rgba(255,255,255,0.06)'; kctx.lineWidth=1; kctx.stroke();
+    // Piste
+    kctx.beginPath(); kctx.arc(cx,cy,R,0,Math.PI*2);
+    kctx.strokeStyle='rgba(255,255,255,0.12)'; kctx.lineWidth=3; kctx.stroke();
+    // Repères horloge
+    [[-Math.PI/2,'12'],[0,'3'],[Math.PI/2,'6'],[Math.PI,'9']].forEach(([a,l]) => {
+      const lx=cx+Math.cos(a)*(R+14), ly=cy+Math.sin(a)*(R+14);
+      kctx.fillStyle='rgba(255,255,255,0.2)'; kctx.font='8px sans-serif';
+      kctx.textAlign='center'; kctx.textBaseline='middle'; kctx.fillText(l,lx,ly);
     });
-
     // Ligne entre les deux points
-    const pd = angleToPos(angleDown);
-    const pu = angleToPos(angleUp);
-    kctx.beginPath();
-    kctx.moveTo(pd.x, pd.y);
-    kctx.lineTo(pu.x, pu.y);
-    kctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    kctx.lineWidth = 1;
-    kctx.setLineDash([3,3]);
-    kctx.stroke();
-    kctx.setLineDash([]);
-
+    const pd=pos(aD), pu=pos(aU);
+    kctx.beginPath(); kctx.moveTo(pd.x,pd.y); kctx.lineTo(pu.x,pu.y);
+    kctx.strokeStyle='rgba(255,255,255,0.06)'; kctx.lineWidth=1;
+    kctx.setLineDash([3,3]); kctx.stroke(); kctx.setLineDash([]);
     // Centre
-    kctx.beginPath();
-    kctx.arc(cx, cy, 3, 0, Math.PI*2);
-    kctx.fillStyle = 'rgba(255,255,255,0.15)';
-    kctx.fill();
-
-    // Point VERT ↓ (descendre)
-    kctx.beginPath();
-    kctx.arc(pd.x, pd.y, DOT_R, 0, Math.PI*2);
-    kctx.fillStyle = '#00f5c4';
-    kctx.fill();
-    kctx.fillStyle = '#0a0a12';
-    kctx.font = 'bold 9px sans-serif';
-    kctx.textAlign = 'center';
-    kctx.textBaseline = 'middle';
-    kctx.fillText('↓', pd.x, pd.y);
-
-    // Point VIOLET ↑ (remonter)
-    kctx.beginPath();
-    kctx.arc(pu.x, pu.y, DOT_R, 0, Math.PI*2);
-    kctx.fillStyle = '#7b61ff';
-    kctx.fill();
-    kctx.fillStyle = '#fff';
-    kctx.fillText('↑', pu.x, pu.y);
-
-    // Labels horloge
-    document.getElementById('pos-down').textContent = toClockLabel(angleDown);
-    document.getElementById('pos-up').textContent   = toClockLabel(angleUp);
-
-    // Mettre à jour CONFIG avec les angles convertis en degrés depuis le vertical
-    // angleDown en radians → degrés depuis le haut (12h = 0°)
-    CONFIG.angleDown = Math.round(((angleDown + Math.PI/2) * 180 / Math.PI + 360) % 360);
-    CONFIG.angleUp   = Math.round(((angleUp   + Math.PI/2) * 180 / Math.PI + 360) % 360);
+    kctx.beginPath(); kctx.arc(cx,cy,3,0,Math.PI*2);
+    kctx.fillStyle='rgba(255,255,255,0.15)'; kctx.fill();
+    // Point vert ↓
+    kctx.beginPath(); kctx.arc(pd.x,pd.y,DR,0,Math.PI*2);
+    kctx.fillStyle='#00f5c4'; kctx.fill();
+    kctx.fillStyle='#0a0a12'; kctx.font='bold 9px sans-serif';
+    kctx.textAlign='center'; kctx.textBaseline='middle'; kctx.fillText('↓',pd.x,pd.y);
+    // Point violet ↑
+    kctx.beginPath(); kctx.arc(pu.x,pu.y,DR,0,Math.PI*2);
+    kctx.fillStyle='#7b61ff'; kctx.fill();
+    kctx.fillStyle='#fff'; kctx.fillText('↑',pu.x,pu.y);
+    // Mettre à jour labels et CONFIG
+    document.getElementById('pos-down').textContent = clockLabel(aD);
+    document.getElementById('pos-up').textContent   = clockLabel(aU);
+    CONFIG.angleDown = Math.round(((aD+Math.PI/2)*180/Math.PI+360)%360);
+    CONFIG.angleUp   = Math.round(((aU+Math.PI/2)*180/Math.PI+360)%360);
   }
 
-  // Déterminer quel point est le plus proche du touch/click
-  let dragging = null; // 'down' | 'up' | null
-
-  function getAngleFromEvent(e) {
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const mx = (clientX - rect.left) * (SIZE / rect.width)  - cx;
-    const my = (clientY - rect.top)  * (SIZE / rect.height) - cy;
-    return Math.atan2(my, mx);
+  function getA(e) {
+    const r = canvas.getBoundingClientRect();
+    const x = (e.touches?e.touches[0].clientX:e.clientX) - r.left;
+    const y = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
+    return Math.atan2((y/r.height*S)-cy, (x/r.width*S)-cx);
   }
 
-  function nearestDot(e) {
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const mx = (clientX - rect.left) * (SIZE / rect.width);
-    const my = (clientY - rect.top)  * (SIZE / rect.height);
-    const pd = angleToPos(angleDown);
-    const pu = angleToPos(angleUp);
-    const distD = Math.hypot(mx - pd.x, my - pd.y);
-    const distU = Math.hypot(mx - pu.x, my - pu.y);
-    if (distD < DOT_R + 10 && distD <= distU) return 'down';
-    if (distU < DOT_R + 10) return 'up';
+  function nearest(e) {
+    const r = canvas.getBoundingClientRect();
+    const mx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    const my=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    const px=mx/r.width*S, py=my/r.height*S;
+    const pd=pos(aD), pu=pos(aU);
+    const dD=Math.hypot(px-pd.x,py-pd.y), dU=Math.hypot(px-pu.x,py-pu.y);
+    if (dD < DR+12 && dD<=dU) return 'D';
+    if (dU < DR+12) return 'U';
     return null;
   }
 
-  canvas.addEventListener('mousedown', e => {
-    dragging = nearestDot(e);
-  });
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const a = getAngleFromEvent(e);
-    if (dragging === 'down') angleDown = a;
-    else angleUp = a;
-    draw();
-  });
-  document.addEventListener('mouseup', () => { dragging = null; });
-
-  canvas.addEventListener('touchstart', e => {
-    dragging = nearestDot(e);
-    e.preventDefault();
-  }, { passive: false });
-  canvas.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const a = getAngleFromEvent(e);
-    if (dragging === 'down') angleDown = a;
-    else angleUp = a;
-    draw();
-    e.preventDefault();
-  }, { passive: false });
-  canvas.addEventListener('touchend', () => { dragging = null; });
-
+  let drag = null;
+  canvas.addEventListener('mousedown', e => { drag=nearest(e); });
+  document.addEventListener('mousemove', e => { if(!drag)return; if(drag==='D')aD=getA(e); else aU=getA(e); draw(); });
+  document.addEventListener('mouseup', () => drag=null);
+  canvas.addEventListener('touchstart', e => { drag=nearest(e); e.preventDefault(); },{passive:false});
+  canvas.addEventListener('touchmove', e => { if(!drag)return; if(drag==='D')aD=getA(e); else aU=getA(e); draw(); e.preventDefault(); },{passive:false});
+  canvas.addEventListener('touchend', () => drag=null);
   draw();
 })();
 
-/* ── INIT ── */
 updateScrollBar();
-showUI(false);
-
-// Message d'accueil
-setTimeout(() => {
-  showToast('👆 Appuyez sur 📷 pour démarrer', '', 4000);
-}, 500);
-
-// Debug panel
-document.getElementById('debug-close').addEventListener('click', () => {
-  document.getElementById('debug-panel').style.display = 'none';
-});
-// Appui long sur le bouton caméra (2s) pour ouvrir le debug
-let camHoldTimer = null;
-btnCamera.addEventListener('touchstart', () => {
-  camHoldTimer = setTimeout(() => {
-    document.getElementById('debug-panel').style.display = 'block';
-    showToast('Mode debug activé', 'ok');
-  }, 2000);
-});
-btnCamera.addEventListener('touchend', () => clearTimeout(camHoldTimer));
-btnCamera.addEventListener('mousedown', () => {
-  camHoldTimer = setTimeout(() => {
-    document.getElementById('debug-panel').style.display = 'block';
-    showToast('Mode debug activé', 'ok');
-  }, 2000);
-});
-btnCamera.addEventListener('mouseup', () => clearTimeout(camHoldTimer));
+setTimeout(() => showToast('👆 Appuyez sur 📷 pour démarrer', '', 4000), 500);
 </script>
 </body>
 </html>
