@@ -809,21 +809,25 @@
 
       <div class="setting-row" style="flex-direction:column; align-items:stretch; gap:12px;">
         <div class="setting-info">
-          <h4>Angle du doigt</h4>
-          <p id="angle-desc">Position 12h / 6h — 0°</p>
+          <h4>Position du doigt</h4>
+          <p>Glissez chaque point librement sur le cercle</p>
         </div>
         <div style="display:flex; align-items:center; justify-content:center; gap:16px;">
-          <!-- Bouton rotatif -->
-          <div style="position:relative; width:100px; height:100px; flex-shrink:0;">
-            <canvas id="knob-canvas" width="100" height="100"
-              style="cursor:grab; touch-action:none; border-radius:50%;">
-            </canvas>
-          </div>
-          <div style="text-align:left;">
-            <div id="angle-val" style="font-size:22px; font-weight:800; font-family:'Fira Code',monospace; color:var(--accent);">0°</div>
-            <div id="angle-clock" style="font-size:12px; color:var(--muted); margin-top:2px;">⬇ 12h &nbsp; ⬆ 6h</div>
-            <div style="font-size:11px; color:var(--muted); margin-top:8px; line-height:1.6;">
-              Tournez le bouton<br>pour ajuster l'axe
+          <canvas id="knob-canvas" width="120" height="120"
+            style="touch-action:none; flex-shrink:0;"></canvas>
+          <div style="text-align:left; font-family:'Fira Code',monospace; font-size:12px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#00f5c4;display:inline-block;"></span>
+              <span style="color:var(--muted);">⬇ Descend</span>
+              <span id="pos-down" style="color:#00f5c4; margin-left:4px;">12h00</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#7b61ff;display:inline-block;"></span>
+              <span style="color:var(--muted);">⬆ Remonte</span>
+              <span id="pos-up" style="color:#7b61ff; margin-left:4px;">6h00</span>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">
+              Glissez les points<br>où la lumière passe
             </div>
           </div>
         </div>
@@ -869,9 +873,11 @@ const CONFIG = {
   ecoMode: false,
   sensitivity: 5,     // 1-10 : seuil de détection
   speed: 5,           // 1-10 : multiplicateur de défilement
-  angle: 0,           // -45 à +45 degrés : inclinaison de l'axe
-  ringInner: 55,      // bord intérieur de la couronne (% du rayon, 30-80)
-  ringOuter: 96,      // bord extérieur de la couronne (% du rayon, 70-99)
+  angle: 0,           // legacy
+  angleDown: 270,     // position point vert ↓ en degrés 0-360 (270=12h)
+  angleUp: 90,        // position point violet ↑ en degrés 0-360 (90=6h)
+  ringInner: 55,
+  ringOuter: 96,
 };
 
 // Seuils internes calculés depuis CONFIG
@@ -1065,19 +1071,38 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // ── Luminosité quart HAUT vs quart BAS ──
-  const bandH = Math.floor(H / 4);
-  let lumTop = 0, lumBot = 0, countTop = 0, countBot = 0;
+  // ── Luminosité dans deux secteurs angulaires indépendants ──
+  // Chaque secteur est centré sur son angle (angleDown / angleUp)
+  // et couvre un arc de ±45° autour de cet angle
+  const cxI = W/2, cyI = H/2;
+  const SECTOR = Math.PI / 4; // ±45° de chaque côté
 
-  for (let y = 0; y < H; y++) {
-    const inTop = y < bandH;
-    const inBot = y >= H - bandH;
-    if (!inTop && !inBot) continue;
+  // Convertir degrés 0-360 (0=haut, sens horaire) → radians canvas
+  // 0° = 12h = angle canvas -PI/2
+  const toRad = deg => (deg - 90) * Math.PI / 180;
+  const radDown = toRad(CONFIG.angleDown);
+  const radUp   = toRad(CONFIG.angleUp);
+
+  let lumBot = 0, countBot = 0; // secteur DESCEND
+  let lumTop = 0, countTop = 0; // secteur REMONTE
+
+  for (let y = 0; y < H; y += 2) {
+    const dy = y - cyI;
     for (let x = 0; x < W; x += 2) {
+      const dx = x - cxI;
+      const pixAngle = Math.atan2(dy, dx);
       const i = (y * W + x) * 4;
       const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-      if (inTop) { lumTop += lum; countTop++; }
-      else       { lumBot += lum; countBot++; }
+
+      // Distance angulaire au secteur DOWN
+      let dD = Math.abs(pixAngle - radDown);
+      if (dD > Math.PI) dD = 2*Math.PI - dD;
+      if (dD < SECTOR) { lumBot += lum; countBot++; }
+
+      // Distance angulaire au secteur UP
+      let dU = Math.abs(pixAngle - radUp);
+      if (dU > Math.PI) dU = 2*Math.PI - dU;
+      if (dU < SECTOR) { lumTop += lum; countTop++; }
     }
   }
 
@@ -1283,142 +1308,166 @@ sliderRingOuter.addEventListener('input', () => {
   }
 });
 
-/* ── KNOB ROTATIF ── */
+/* ── KNOB DEUX POINTS INDÉPENDANTS ── */
 (function() {
   const canvas = document.getElementById('knob-canvas');
   if (!canvas) return;
   const kctx = canvas.getContext('2d');
-  const SIZE = 100;
-  const cx = SIZE/2, cy = SIZE/2, R = 42;
+  const SIZE = 120;
+  const cx = SIZE/2, cy = SIZE/2;
+  const RING_R = 46;  // rayon de la piste
+  const DOT_R  = 9;   // rayon des points draggables
 
-  // Angle en degrés : -45 à +45, 0 = vertical haut/bas
-  let knobAngle = 0; // degrés
+  // Angles en radians (0 = droite, -PI/2 = haut)
+  // Par défaut : vert en haut (12h = -PI/2), violet en bas (6h = PI/2)
+  let angleDown = -Math.PI / 2; // point vert ↓ descendre — 12h
+  let angleUp   =  Math.PI / 2; // point violet ↑ remonter — 6h
 
-  function clockLabel(a) {
-    // a = -45..+45 degrés d'inclinaison de l'axe
-    const topH = 12 + a/30; // heure du point haut
-    const botH = 6  + a/30; // heure du point bas
-    const fmt = h => {
-      const hh = ((Math.floor(h) % 12) + 12) % 12 || 12;
-      const mm = Math.round((h % 1) * 60);
-      return mm ? `${hh}h${mm.toString().padStart(2,'0')}` : `${hh}h`;
-    };
-    return `⬇ ${fmt(topH)} &nbsp; ⬆ ${fmt(botH)}`;
+  function angleToPos(a) {
+    return { x: cx + Math.cos(a) * RING_R, y: cy + Math.sin(a) * RING_R };
   }
 
-  function drawKnob(a) {
+  function toClockLabel(a) {
+    // Convertir angle radian en heure d'horloge
+    // 12h = -PI/2, 3h = 0, 6h = PI/2, 9h = PI
+    const normalized = ((a + Math.PI/2) / (2*Math.PI) + 1) % 1;
+    const totalMin = Math.round(normalized * 720) % 720; // 720 min = 12h
+    const h = Math.floor(totalMin / 60) || 12;
+    const m = totalMin % 60;
+    return m ? `${h}h${m.toString().padStart(2,'0')}` : `${h}h00`;
+  }
+
+  function draw() {
     kctx.clearRect(0, 0, SIZE, SIZE);
 
-    // Fond
+    // Fond cercle
     kctx.beginPath();
-    kctx.arc(cx, cy, R+4, 0, Math.PI*2);
+    kctx.arc(cx, cy, RING_R + 8, 0, Math.PI*2);
     kctx.fillStyle = '#1a1a2e';
     kctx.fill();
-
-    // Cercle extérieur
-    kctx.beginPath();
-    kctx.arc(cx, cy, R+4, 0, Math.PI*2);
-    kctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    kctx.strokeStyle = 'rgba(255,255,255,0.06)';
     kctx.lineWidth = 1;
     kctx.stroke();
 
-    // Corps du bouton
-    const grad = kctx.createRadialGradient(cx-8, cy-8, 2, cx, cy, R);
-    grad.addColorStop(0, '#2a2a3e');
-    grad.addColorStop(1, '#12121e');
+    // Piste circulaire
     kctx.beginPath();
-    kctx.arc(cx, cy, R, 0, Math.PI*2);
-    kctx.fillStyle = grad;
-    kctx.fill();
-    kctx.strokeStyle = 'rgba(0,245,196,0.25)';
-    kctx.lineWidth = 1.5;
+    kctx.arc(cx, cy, RING_R, 0, Math.PI*2);
+    kctx.strokeStyle = 'rgba(255,255,255,0.10)';
+    kctx.lineWidth = 3;
     kctx.stroke();
 
-    // Axe incliné (ligne de l'angle)
-    const rad = (a - 90) * Math.PI / 180;
-    const rad2 = (a + 90) * Math.PI / 180;
-    const lineR = R - 8;
-    const x1 = cx + Math.cos(rad)  * lineR;
-    const y1 = cy + Math.sin(rad)  * lineR;
-    const x2 = cx + Math.cos(rad2) * lineR;
-    const y2 = cy + Math.sin(rad2) * lineR;
+    // Marqueurs d'horloge 12h/3h/6h/9h
+    [0, Math.PI/2, Math.PI, -Math.PI/2].forEach((a, i) => {
+      const lx = cx + Math.cos(a) * (RING_R + 14);
+      const ly = cy + Math.sin(a) * (RING_R + 14);
+      kctx.fillStyle = 'rgba(255,255,255,0.15)';
+      kctx.font = '8px sans-serif';
+      kctx.textAlign = 'center';
+      kctx.textBaseline = 'middle';
+      kctx.fillText(['3','6','9','12'][i], lx, ly);
+    });
 
+    // Ligne entre les deux points
+    const pd = angleToPos(angleDown);
+    const pu = angleToPos(angleUp);
     kctx.beginPath();
-    kctx.moveTo(x1, y1);
-    kctx.lineTo(x2, y2);
-    kctx.strokeStyle = 'rgba(0,245,196,0.3)';
+    kctx.moveTo(pd.x, pd.y);
+    kctx.lineTo(pu.x, pu.y);
+    kctx.strokeStyle = 'rgba(255,255,255,0.08)';
     kctx.lineWidth = 1;
     kctx.setLineDash([3,3]);
     kctx.stroke();
     kctx.setLineDash([]);
 
-    // Point HAUT (descendre) — vert
+    // Centre
     kctx.beginPath();
-    kctx.arc(x1, y1, 6, 0, Math.PI*2);
+    kctx.arc(cx, cy, 3, 0, Math.PI*2);
+    kctx.fillStyle = 'rgba(255,255,255,0.15)';
+    kctx.fill();
+
+    // Point VERT ↓ (descendre)
+    kctx.beginPath();
+    kctx.arc(pd.x, pd.y, DOT_R, 0, Math.PI*2);
     kctx.fillStyle = '#00f5c4';
     kctx.fill();
-    // Flèche ⬇
     kctx.fillStyle = '#0a0a12';
-    kctx.font = 'bold 7px sans-serif';
+    kctx.font = 'bold 9px sans-serif';
     kctx.textAlign = 'center';
     kctx.textBaseline = 'middle';
-    kctx.fillText('↓', x1, y1);
+    kctx.fillText('↓', pd.x, pd.y);
 
-    // Point BAS (remonter) — violet
+    // Point VIOLET ↑ (remonter)
     kctx.beginPath();
-    kctx.arc(x2, y2, 6, 0, Math.PI*2);
+    kctx.arc(pu.x, pu.y, DOT_R, 0, Math.PI*2);
     kctx.fillStyle = '#7b61ff';
     kctx.fill();
     kctx.fillStyle = '#fff';
-    kctx.fillText('↑', x2, y2);
+    kctx.fillText('↑', pu.x, pu.y);
 
-    // Marqueur central
-    kctx.beginPath();
-    kctx.arc(cx, cy, 3, 0, Math.PI*2);
-    kctx.fillStyle = 'rgba(0,245,196,0.4)';
-    kctx.fill();
+    // Labels horloge
+    document.getElementById('pos-down').textContent = toClockLabel(angleDown);
+    document.getElementById('pos-up').textContent   = toClockLabel(angleUp);
+
+    // Mettre à jour CONFIG avec les angles convertis en degrés depuis le vertical
+    // angleDown en radians → degrés depuis le haut (12h = 0°)
+    CONFIG.angleDown = Math.round(((angleDown + Math.PI/2) * 180 / Math.PI + 360) % 360);
+    CONFIG.angleUp   = Math.round(((angleUp   + Math.PI/2) * 180 / Math.PI + 360) % 360);
   }
 
-  function updateAngle(a) {
-    knobAngle = Math.max(-45, Math.min(45, Math.round(a/5)*5));
-    CONFIG.angle = knobAngle;
-    drawKnob(knobAngle);
-    document.getElementById('angle-val').textContent = knobAngle + '°';
-    document.getElementById('angle-clock').innerHTML = clockLabel(knobAngle);
+  // Déterminer quel point est le plus proche du touch/click
+  let dragging = null; // 'down' | 'up' | null
+
+  function getAngleFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const mx = (clientX - rect.left) * (SIZE / rect.width)  - cx;
+    const my = (clientY - rect.top)  * (SIZE / rect.height) - cy;
+    return Math.atan2(my, mx);
   }
 
-  // Interaction : drag pour tourner
-  let dragging = false, startY = 0, startAngle = 0;
+  function nearestDot(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const mx = (clientX - rect.left) * (SIZE / rect.width);
+    const my = (clientY - rect.top)  * (SIZE / rect.height);
+    const pd = angleToPos(angleDown);
+    const pu = angleToPos(angleUp);
+    const distD = Math.hypot(mx - pd.x, my - pd.y);
+    const distU = Math.hypot(mx - pu.x, my - pu.y);
+    if (distD < DOT_R + 10 && distD <= distU) return 'down';
+    if (distU < DOT_R + 10) return 'up';
+    return null;
+  }
 
   canvas.addEventListener('mousedown', e => {
-    dragging = true; startY = e.clientY; startAngle = knobAngle;
-    canvas.style.cursor = 'grabbing';
+    dragging = nearestDot(e);
   });
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
-    const dy = startY - e.clientY; // vers le haut = angle positif
-    updateAngle(startAngle + dy * 0.8);
+    const a = getAngleFromEvent(e);
+    if (dragging === 'down') angleDown = a;
+    else angleUp = a;
+    draw();
   });
-  document.addEventListener('mouseup', () => {
-    dragging = false; canvas.style.cursor = 'grab';
-  });
+  document.addEventListener('mouseup', () => { dragging = null; });
 
   canvas.addEventListener('touchstart', e => {
-    dragging = true;
-    startY = e.touches[0].clientY;
-    startAngle = knobAngle;
+    dragging = nearestDot(e);
     e.preventDefault();
   }, { passive: false });
   canvas.addEventListener('touchmove', e => {
     if (!dragging) return;
-    const dy = startY - e.touches[0].clientY;
-    updateAngle(startAngle + dy * 0.8);
+    const a = getAngleFromEvent(e);
+    if (dragging === 'down') angleDown = a;
+    else angleUp = a;
+    draw();
     e.preventDefault();
   }, { passive: false });
-  canvas.addEventListener('touchend', () => { dragging = false; });
+  canvas.addEventListener('touchend', () => { dragging = null; });
 
-  // Init
-  updateAngle(0);
+  draw();
 })();
 
 /* ── INIT ── */
