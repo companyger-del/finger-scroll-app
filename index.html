@@ -301,36 +301,63 @@ function updateScrollBar() {
 }
 scrollArea.addEventListener('scroll', updateScrollBar);
 
-// Doigt sur l'écran = pause défilement
-// Sélection bloquée SAUF si objectif était noir (selectionAllowed)
+// ── CONTRÔLE TACTILE PRIORITAIRE ──
+// Le doigt sur l'écran prend le contrôle sur la caméra
+// - Balayage : scroll normal du doigt, sans copier
+// - Posé immobile : arrêt du défilement caméra
+// - Dans les deux cas : pas de sélection/copie sauf si objectif noir
+// Dès que le doigt lâche : la caméra reprend là où elle en était
+
+let touchStartY = 0;
+let isSwiping = false;
+
 scrollArea.addEventListener('touchstart', (e) => {
   touchActive = true;
   scrollStartTime = 0;
   currentPx = 0;
+  touchStartY = e.touches[0].clientY;
+  isSwiping = false;
+
   if (!selectionAllowed) {
-    // Objectif pas noir = on bloque sélection et copie
     scrollArea.classList.add('no-select');
-    e.preventDefault(); // bloque le long-press copier/coller
+    // Ne pas preventDefault ici pour permettre le scroll natif du doigt
   }
-}, { passive: false });
+}, { passive: true });
+
+scrollArea.addEventListener('touchmove', (e) => {
+  const dy = Math.abs(e.touches[0].clientY - touchStartY);
+  if (dy > 5) isSwiping = true; // c'est un balayage
+
+  if (!selectionAllowed && isSwiping) {
+    // Balayage sans sélection : laisser le scroll natif fonctionner
+    // mais bloquer long-press et sélection de texte
+    scrollArea.classList.add('no-select');
+  }
+}, { passive: true });
 
 scrollArea.addEventListener('touchend', () => {
   touchActive = false;
-  scrollStartTime = 0;
+  isSwiping = false;
+  scrollStartTime = 0; // repart depuis le début de l'accélération
   currentPx = 0;
-  // Remettre sélection possible après relâche
-  setTimeout(() => scrollArea.classList.remove('no-select'), 100);
+  setTimeout(() => scrollArea.classList.remove('no-select'), 150);
 }, { passive: true });
 
 scrollArea.addEventListener('touchcancel', () => {
   touchActive = false;
+  isSwiping = false;
   scrollStartTime = 0;
   currentPx = 0;
   scrollArea.classList.remove('no-select');
 }, { passive: true });
 
-// Bloquer le menu contextuel si défilement actif
+// Bloquer menu contextuel si objectif lumineux
 scrollArea.addEventListener('contextmenu', (e) => {
+  if (!selectionAllowed) e.preventDefault();
+});
+
+// Bloquer sélection de texte par double-tap si objectif lumineux
+scrollArea.addEventListener('selectstart', (e) => {
   if (!selectionAllowed) e.preventDefault();
 });
 
