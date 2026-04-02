@@ -881,24 +881,19 @@ const CONFIG = {
 };
 
 // Seuils internes calculés depuis CONFIG
-// ── VITESSE : progression géométrique exacte ──
-// Cran 5 = référence ×1.0
-// Chaque cran supplémentaire = ×1.414 (racine de 2)
-// Donc cran 7 = cran 5 × 1.414 × 1.414 = ×2.0 EXACTEMENT
-// Cran 10 = ×8.0, Cran 1 = ×0.125
-// Formule : 1.414^(cran - 5)
-const getSpeedMult = () => {
-  const base = Math.pow(1.4142, CONFIG.speed - 5); // ×2 tous les 2 crans
-  return 5.0 * base; // 5.0 = vitesse de référence au cran 5
-};
+// ── VITESSE : pixels scrollés par frame, direct et linéaire ──
+// Cran 1=2px, 2=4px, 3=6px, 4=8px, 5=10px, 6=14px, 7=20px, 8=28px, 9=40px, 10=56px
+// De 5→7 : ×2 exact. De 5→9 : ×4 exact.
+const SPEED_PX = [2, 4, 6, 8, 10, 14, 20, 28, 40, 56];
+const getScrollPx = () => SPEED_PX[Math.min(CONFIG.speed - 1, 9)];
 
-// ── SENSIBILITÉ : progression géométrique exacte ──
-// Cran 5 = référence
-// Cran 7 = 2× plus sensible (zone morte 2× plus petite)
-// Cran 3 = 2× moins sensible
-const getSensMult = () => {
-  return Math.pow(1.4142, CONFIG.sensitivity - 5); // ×2 tous les 2 crans
-};
+// ── SENSIBILITÉ : seuil de déclenchement uniquement ──
+// Cran 1 = très difficile à déclencher (seuil 0.20)
+// Cran 5 = normal (seuil 0.06)
+// Cran 10 = très facile (seuil 0.01)
+// Formule linéaire simple, aucun lien avec la vitesse
+const SENS_THRESHOLD = [0.20, 0.16, 0.12, 0.09, 0.06, 0.045, 0.032, 0.022, 0.014, 0.008];
+const getDeadBand = () => SENS_THRESHOLD[Math.min(CONFIG.sensitivity - 1, 9)];
 
 /* ── STATE ── */
 let stream = null;
@@ -1156,64 +1151,44 @@ function detectFrame() {
       `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(lumU/255)*46)}px;" title="Remonte"></div>`.repeat(6);
   }
 
-  // ── DÉCISION — réglages totalement isolés ──
+  // ── DÉCISION — 3 réglages totalement indépendants ──
   //
-  // SENSIBILITÉ : contrôle uniquement le seuil de déclenchement
-  //   deadBand fixe (0.04) divisé par getSensMult()
-  //   cran 1 = zone morte large (difficile à déclencher)
-  //   cran 10 = zone morte très petite (très réactif)
-  //   N'influence PAS la vitesse
+  // POSITION  → définit où on regarde (angleDown / angleUp) — déjà appliqué
+  // SENSIBILITÉ → getDeadBand() → seuil de déclenchement UNIQUEMENT
+  // VITESSE   → getScrollPx()  → pixels scrollés par frame UNIQUEMENT
   //
-  // VITESSE : contrôle uniquement la quantité de pixels scrollés
-  //   getSpeedMult() appliqué APRÈS la décision de direction
-  //   N'influence PAS le seuil de déclenchement
+  // Aucune interaction entre eux.
 
-  const DEAD_BASE = 0.06; // zone morte de base (indépendante de la vitesse)
-  const deadBand  = Math.max(0.008, DEAD_BASE / getSensMult());
+  const deadBand  = getDeadBand();  // seuil pur, indépendant de tout
+  const scrollPx  = getScrollPx();  // vitesse pure, indépendante de tout
 
-  // Direction : basée uniquement sur smoothX vs deadBand
-  const imbalance = smoothX - 0.5; // positif = bas dominant, négatif = haut dominant
-  const direction = imbalance >  deadBand ?  1   // bas lumineux → descend
-                  : imbalance < -deadBand ? -1   // haut lumineux → remonte
+  const imbalance = smoothX - 0.5;
+  const direction = imbalance >  deadBand ?  1
+                  : imbalance < -deadBand ? -1
                   : 0;
-
-  // Luminosité minimale — doigt doit être présent
-  const minLum = 6;
 
   if (debugInfo) {
     const lumD2 = lumBot / Math.max(countBot, 1);
     const lumU2 = lumTop / Math.max(countTop, 1);
     debugInfo.innerHTML =
-      `↓: <b style="color:#00f5c4">${Math.round(lumD2)}</b> | ↑: <b style="color:#7b61ff">${Math.round(lumU2)}</b> | Lum: ${Math.round(smoothLum)}<br>` +
+      `↓: <b style="color:#00f5c4">${Math.round(lumD2)}</b> | ↑: <b style="color:#7b61ff">${Math.round(lumU2)}</b><br>` +
       `Déséquilibre: <b>${imbalance.toFixed(3)}</b> | Seuil: ±${deadBand.toFixed(3)}<br>` +
-      `Vitesse ×${getSpeedMult().toFixed(1)} | Inertie: ${inertia.toFixed(1)}<br>` +
+      `Vitesse: ${scrollPx}px/frame | Inertie: ${inertia.toFixed(1)}<br>` +
       `${direction===1 ? '⬇ DESCEND' : direction===-1 ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
   }
 
-  if (smoothLum < minLum) {
-    // Trop sombre → arrêt progressif
-    inertia *= 0.75;
-    if (Math.abs(inertia) < 0.3) { inertia = 0; setDetecting(false); }
-
-  } else if (direction !== 0) {
-    // Vitesse = luminosité × getSpeedMult() UNIQUEMENT
-    // lumFactor : luminosité normalisée 0→1 (plus c'est lumineux = plus vite)
-    // Complètement indépendant de getSensMult()
-    const lumFactor = Math.min(smoothLum / 120, 1.0); // normalisé 0-1
-    const accel = 1.0 + Math.min(lumSpeed / 20, 1.5); // bonus si changement rapide
-    const targetSpeed = lumFactor * getSpeedMult() * accel;
-    const targetInertia = direction * Math.max(targetSpeed, 1.0); // minimum 1px
-
-    // Convergence douce vers la cible
-    inertia = inertia * 0.70 + targetInertia * 0.30;
+  if (direction !== 0) {
+    // Vitesse FIXE = scrollPx, pas influencée par luminosité ni sensibilité
+    // Convergence douce pour éviter les à-coups
+    const target = direction * scrollPx;
+    inertia = inertia * 0.65 + target * 0.35;
     lastScrollDir = direction;
     setDetecting(true);
     updateDirectionArrows(direction);
-
   } else {
-    // Zone morte → décélération douce
-    inertia *= 0.72;
-    if (Math.abs(inertia) < 0.3) {
+    // Arrêt progressif
+    inertia *= 0.68;
+    if (Math.abs(inertia) < 0.4) {
       inertia = 0;
       lastScrollDir = 0;
       setDetecting(false);
