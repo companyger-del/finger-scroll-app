@@ -1072,13 +1072,19 @@ function detectFrame() {
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
   // ── Luminosité dans deux secteurs angulaires indépendants ──
-  // Chaque secteur est centré sur son angle (angleDown / angleUp)
-  // et couvre un arc de ±45° autour de cet angle
-  const cxI = W/2, cyI = H/2;
-  const SECTOR = Math.PI / 4; // ±45° de chaque côté
+  // ── ANALYSE AU BORD DE L'OBJECTIF uniquement ──
+  // On combine deux filtres :
+  //   1. Filtre radial : garder uniquement les pixels dans la couronne
+  //      entre 70% et 98% du rayon → juste le bord de l'objectif
+  //   2. Filtre angulaire : secteur étroit de ±25° autour de chaque point
+  // Résultat : un petit arc au bord extrême — là où le contraste est maximal
 
-  // Convertir degrés 0-360 (0=haut, sens horaire) → radians canvas
-  // 0° = 12h = angle canvas -PI/2
+  const cxI = W/2, cyI = H/2;
+  const maxR   = Math.min(W, H) / 2;
+  const innerR = maxR * 0.70; // bord intérieur de la couronne (70%)
+  const outerR = maxR * 0.98; // bord extérieur (quasi le bord de l'image)
+  const SECTOR = Math.PI / 7; // ±25° — secteur étroit et précis
+
   const toRad = deg => (deg - 90) * Math.PI / 180;
   const radDown = toRad(CONFIG.angleDown);
   const radUp   = toRad(CONFIG.angleUp);
@@ -1090,16 +1096,21 @@ function detectFrame() {
     const dy = y - cyI;
     for (let x = 0; x < W; x += 2) {
       const dx = x - cxI;
+      const r = Math.sqrt(dx*dx + dy*dy);
+
+      // Filtre 1 : uniquement dans la couronne de bord
+      if (r < innerR || r > outerR) continue;
+
       const pixAngle = Math.atan2(dy, dx);
       const i = (y * W + x) * 4;
       const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
 
-      // Distance angulaire au secteur DOWN
+      // Filtre 2 : secteur angulaire étroit autour du point DOWN
       let dD = Math.abs(pixAngle - radDown);
       if (dD > Math.PI) dD = 2*Math.PI - dD;
       if (dD < SECTOR) { lumBot += lum; countBot++; }
 
-      // Distance angulaire au secteur UP
+      // Filtre 2 : secteur angulaire étroit autour du point UP
       let dU = Math.abs(pixAngle - radUp);
       if (dU > Math.PI) dU = 2*Math.PI - dU;
       if (dU < SECTOR) { lumTop += lum; countTop++; }
