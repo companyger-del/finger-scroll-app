@@ -1141,29 +1141,29 @@ function detectFrame() {
       `${lumD > lumU + seuil ? '⬇ DESCEND' : lumU > lumD + seuil ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
   }
 
-  // ── DÉCISION ──
-  // Lumière en haut (lumD fort) → descend
-  // Lumière en bas  (lumU fort) → remonte
-  // Équilibré ou sombre         → arrêt
-  // Vitesse = réglage uniquement, pas la luminosité
+  // ── DÉCISION — ultra simple ──
+  // Lumière détectée d'un côté → défile IMMÉDIATEMENT à vitesse fixe
+  // Noir total des deux côtés  → arrêt
+  // Pas de lissage, pas d'inertie, pas de réflexion
 
-  const scrollPx = getScrollPx();
+  const scrollPx  = getScrollPx();
+  const NOIR_SEUIL = 12; // en dessous = noir total = arrêt
 
-  if (lumD > lumU + seuil) {
-    // Lumière dans secteur DESCEND → on descend
+  if (lumD < NOIR_SEUIL && lumU < NOIR_SEUIL) {
+    // Noir total → arrêt immédiat
+    setDetecting(false);
+  } else if (lumD >= lumU) {
+    // Secteur DESCEND plus lumineux → descend
     scrollArea.scrollBy({ top: scrollPx, behavior: 'auto' });
     updateScrollBar();
     setDetecting(true);
     updateDirectionArrows(1);
-  } else if (lumU > lumD + seuil) {
-    // Lumière dans secteur REMONTE → on remonte
+  } else {
+    // Secteur REMONTE plus lumineux → remonte
     scrollArea.scrollBy({ top: -scrollPx, behavior: 'auto' });
     updateScrollBar();
     setDetecting(true);
     updateDirectionArrows(-1);
-  } else {
-    // Équilibré → arrêt
-    setDetecting(false);
   }
 }
 
