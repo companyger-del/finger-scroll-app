@@ -839,7 +839,7 @@
 
 <script>
 (() => {
-  const STORAGE_KEY = 'fingerscroll_settings_v2';
+  const STORAGE_KEY = 'fingerscroll_settings_v3';
 
   const DEFAULT_CONFIG = {
     camEnabled: true,
@@ -857,19 +857,24 @@
   const SPEED_PX = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
   const SENS_LUX = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
 
-  const ACCEL_DURATION = 2000;
-  const CAMERA_SIZE = { w: 320, h: 240 };
+  const CAMERA_W = 320;
+  const CAMERA_H = 240;
   const BASE_NOIR = 8;
 
+  // Détection caméra
+  const DETECT_FPS_NORMAL = 22;
+  const DETECT_FPS_ECO = 12;
+
+  // Animation scroll
+  const ACCEL_TIME = 2000; // 2 secondes pour atteindre la vitesse max
+  const DECEL_TIME = 220;  // arrêt propre sans cassure brutale
+
   let stream = null;
-  let animFrame = null;
+  let detectRAF = null;
+  let motionRAF = null;
+
   let touchActive = false;
   let selectionAllowed = false;
-  let scrollStartTime = 0;
-  let currentPx = 0;
-  let lastProcessedAt = 0;
-  let lastArrowUpAt = 0;
-  let lastArrowDownAt = 0;
   let localNoirThreshold = BASE_NOIR;
   let calibrating = false;
 
@@ -887,6 +892,17 @@
   let panelDragStartY = 0;
   let panelDragging = false;
 
+  // État mouvement continu
+  let commandedDirection = 0; // -1 = up, +1 = down, 0 = stop
+  let actualVelocity = 0;     // px/sec signé
+  let lastMotionTime = 0;
+  let lastDetectTime = 0;
+
+  // Flèches
+  let lastArrowUpAt = 0;
+  let lastArrowDownAt = 0;
+
+  // DOM
   const scrollArea = document.getElementById('scroll-area');
   const camPanel = document.getElementById('cam-panel');
   const camVideo = document.getElementById('cam-video');
@@ -914,8 +930,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return { ...DEFAULT_CONFIG };
-      const parsed = JSON.parse(raw);
-      return { ...DEFAULT_CONFIG, ...parsed };
+      return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
     } catch {
       return { ...DEFAULT_CONFIG };
     }
@@ -927,16 +942,22 @@
     } catch {}
   }
 
-  function getScrollPx() {
+  function getScrollPxPerFrame() {
     return SPEED_PX[Math.min(Math.max(CONFIG.speed, 1) - 1, 9)];
+  }
+
+  // Conversion en px/sec pour animation fluide indépendante du FPS
+  function getTargetVelocity() {
+    return getScrollPxPerFrame() * 60;
   }
 
   function getSeuil() {
     return SENS_LUX[Math.min(Math.max(CONFIG.sensitivity, 1) - 1, 9)];
   }
 
-  function getTargetFPS() {
-    return CONFIG.ecoMode ? 15 : 30;
+  function getDetectInterval() {
+    const fps = CONFIG.ecoMode ? DETECT_FPS_ECO : DETECT_FPS_NORMAL;
+    return 1000 / fps;
   }
 
   function showToast(msg, type = '', dur = 2500) {
@@ -949,9 +970,7 @@
   }
 
   function vibrate(pattern) {
-    if (CONFIG.haptic && 'vibrate' in navigator) {
-      navigator.vibrate(pattern);
-    }
+    if (CONFIG.haptic && 'vibrate' in navigator) navigator.vibrate(pattern);
   }
 
   function updateScrollBar() {
@@ -980,8 +999,8 @@
 
   function refreshArrows() {
     const now = performance.now();
-    if (now - lastArrowUpAt > 170) arrowUp.classList.remove('active');
-    if (now - lastArrowDownAt > 170) arrowDown.classList.remove('active');
+    if (now - lastArrowUpAt > 140) arrowUp.classList.remove('active');
+    if (now - lastArrowDownAt > 140) arrowDown.classList.remove('active');
   }
 
   function setSelectionAllowed(value) {
@@ -993,9 +1012,10 @@
     }
   }
 
-  function resetScrollMotion() {
-    currentPx = 0;
-    scrollStartTime = 0;
+  function resetMotionHard() {
+    commandedDirection = 0;
+    actualVelocity = 0;
+    lastMotionTime = 0;
   }
 
   function resetCameraUI() {
@@ -1005,7 +1025,8 @@
     btnCamera.classList.remove('active');
     scrollBar.style.opacity = '0';
     document.getElementById('direction-hint').style.opacity = '0';
-    refreshArrows();
+    arrowUp.classList.remove('active');
+    arrowDown.classList.remove('active');
   }
 
   function activateCameraUI() {
@@ -1047,7 +1068,7 @@
         count++;
       }
 
-      await new Promise(r => setTimeout(r, 40));
+      await new Promise(r => setTimeout(r, 35));
     }
 
     if (count > 0) {
@@ -1063,15 +1084,13 @@
   async function startCamera() {
     if (stream || !CONFIG.camEnabled) return;
 
-    const fps = getTargetFPS();
-
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
-          width: { ideal: CAMERA_SIZE.w },
-          height: { ideal: CAMERA_SIZE.h },
-          frameRate: { ideal: fps, max: fps }
+          width: { ideal: CAMERA_W },
+          height: { ideal: CAMERA_H },
+          frameRate: { ideal: 30, max: 30 }
         },
         audio: false
       });
@@ -1079,20 +1098,24 @@
       camVideo.srcObject = stream;
       await camVideo.play();
 
-      camCanvas.width = CAMERA_SIZE.w;
-      camCanvas.height = CAMERA_SIZE.h;
+      camCanvas.width = CAMERA_W;
+      camCanvas.height = CAMERA_H;
 
       activateCameraUI();
-      resetScrollMotion();
       setSelectionAllowed(false);
+      resetMotionHard();
+
       showToast('📷 Caméra active', 'ok', 1800);
       vibrate(30);
 
       await calibrateNoir(12);
 
-      lastProcessedAt = 0;
-      cancelAnimationFrame(animFrame);
-      animFrame = requestAnimationFrame(detectFrame);
+      lastDetectTime = 0;
+      cancelAnimationFrame(detectRAF);
+      detectRAF = requestAnimationFrame(detectLoop);
+
+      cancelAnimationFrame(motionRAF);
+      motionRAF = requestAnimationFrame(motionLoop);
     } catch (e) {
       console.error(e);
       stream = null;
@@ -1108,9 +1131,14 @@
   }
 
   function stopCamera(silent = false) {
-    if (animFrame) {
-      cancelAnimationFrame(animFrame);
-      animFrame = null;
+    if (detectRAF) {
+      cancelAnimationFrame(detectRAF);
+      detectRAF = null;
+    }
+
+    if (motionRAF) {
+      cancelAnimationFrame(motionRAF);
+      motionRAF = null;
     }
 
     if (stream) {
@@ -1121,11 +1149,9 @@
     camVideo.srcObject = null;
     resetCameraUI();
     setSelectionAllowed(true);
-    resetScrollMotion();
+    resetMotionHard();
 
-    if (!silent) {
-      showToast('Caméra désactivée', '', 1500);
-    }
+    if (!silent) showToast('Caméra désactivée', '', 1500);
   }
 
   function toRad(deg) {
@@ -1138,17 +1164,14 @@
     return d;
   }
 
-  function detectFrame(now) {
+  function detectLoop(now) {
     if (!stream) return;
-
-    animFrame = requestAnimationFrame(detectFrame);
+    detectRAF = requestAnimationFrame(detectLoop);
     refreshArrows();
 
     if (camVideo.readyState < 2) return;
-
-    const minInterval = 1000 / getTargetFPS();
-    if (now - lastProcessedAt < minInterval) return;
-    lastProcessedAt = now;
+    if (now - lastDetectTime < getDetectInterval()) return;
+    lastDetectTime = now;
 
     const W = camCanvas.width;
     const H = camCanvas.height;
@@ -1184,7 +1207,6 @@
           lumD += lum;
           nD++;
         }
-
         if (deltaAngle(a, radU) < SECTOR) {
           lumU += lum;
           nU++;
@@ -1212,66 +1234,102 @@
 
       debugInfo.innerHTML =
         `⬇ ${Math.round(lumD)} | ⬆ ${Math.round(lumU)} | Seuil: ${getSeuil()}<br>` +
-        `Noir local: ${Math.round(localNoirThreshold)} | Vitesse: ${getScrollPx()}px<br>` +
+        `Noir local: ${Math.round(localNoirThreshold)} | Vitesse cible: ${Math.round(getTargetVelocity())} px/s<br>` +
         `${status}`;
     }
 
+    // Priorité absolue au doigt sur l'écran
     if (touchActive) {
-      resetScrollMotion();
+      commandedDirection = 0;
       camPanel.classList.remove('detecting');
       return;
     }
 
-    const targetPx = getScrollPx();
-
     if (lumD < localNoirThreshold && lumU < localNoirThreshold) {
-      resetScrollMotion();
+      commandedDirection = 0;
       setSelectionAllowed(true);
       camPanel.classList.remove('detecting');
       return;
     }
 
     if (lumD > lumU + getSeuil()) {
+      commandedDirection = 1;
       setSelectionAllowed(false);
-
-      if (scrollStartTime === 0) scrollStartTime = Date.now();
-
-      const elapsed = Date.now() - scrollStartTime;
-      const ratio = Math.min(elapsed / ACCEL_DURATION, 1);
-      const eased = ratio < 0.5 ? 2 * ratio * ratio : -1 + (4 - 2 * ratio) * ratio;
-      const wantedPx = Math.max(1, targetPx * eased);
-
-      currentPx = currentPx * 0.75 + wantedPx * 0.25;
-      scrollArea.scrollBy({ top: Math.round(currentPx), behavior: 'auto' });
-      updateScrollBar();
-
       camPanel.classList.add('detecting');
       setArrow('down');
       return;
     }
 
     if (lumU > lumD + getSeuil()) {
+      commandedDirection = -1;
       setSelectionAllowed(false);
-
-      if (scrollStartTime === 0) scrollStartTime = Date.now();
-
-      const elapsed = Date.now() - scrollStartTime;
-      const ratio = Math.min(elapsed / ACCEL_DURATION, 1);
-      const eased = ratio < 0.5 ? 2 * ratio * ratio : -1 + (4 - 2 * ratio) * ratio;
-      const wantedPx = Math.max(1, targetPx * eased);
-
-      currentPx = currentPx * 0.75 + wantedPx * 0.25;
-      scrollArea.scrollBy({ top: -Math.round(currentPx), behavior: 'auto' });
-      updateScrollBar();
-
       camPanel.classList.add('detecting');
       setArrow('up');
       return;
     }
 
-    resetScrollMotion();
+    commandedDirection = 0;
     setSelectionAllowed(false);
     camPanel.classList.remove('detecting');
+  }
+
+  function motionLoop(now) {
+    motionRAF = requestAnimationFrame(motionLoop);
+    refreshArrows();
+
+    if (!stream) return;
+
+    if (!lastMotionTime) {
+      lastMotionTime = now;
+      return;
+    }
+
+    let dt = (now - lastMotionTime) / 1000;
+    lastMotionTime = now;
+
+    if (dt > 0.05) dt = 0.05;
+
+    const targetVelocity = commandedDirection * getTargetVelocity();
+
+    if (touchActive) {
+      actualVelocity = 0;
+      return;
+    }
+
+    if (targetVelocity !== 0) {
+      const accel = getTargetVelocity() / ACCEL_TIME;
+      if (actualVelocity < targetVelocity) {
+        actualVelocity = Math.min(actualVelocity + accel * dt * ACCEL_TIME, targetVelocity);
+      } else if (actualVelocity > targetVelocity) {
+        actualVelocity = Math.max(actualVelocity - accel * dt * ACCEL_TIME, targetVelocity);
+      }
+
+      // rampe progressive exacte sur 2 secondes environ
+      const step = getTargetVelocity() / ACCEL_TIME;
+      if (actualVelocity < targetVelocity) {
+        actualVelocity = Math.min(actualVelocity + step * dt * ACCEL_TIME, targetVelocity);
+      } else if (actualVelocity > targetVelocity) {
+        actualVelocity = Math.max(actualVelocity - step * dt * ACCEL_TIME, targetVelocity);
+      }
+    } else {
+      const decel = getTargetVelocity() / DECEL_TIME;
+      if (actualVelocity > 0) {
+        actualVelocity = Math.max(0, actualVelocity - decel * dt * DECEL_TIME);
+      } else if (actualVelocity < 0) {
+        actualVelocity = Math.min(0, actualVelocity + decel * dt * DECEL_TIME);
+      }
+    }
+
+    if (Math.abs(actualVelocity) < 0.5) {
+      actualVelocity = 0;
+      return;
+    }
+
+    const delta = actualVelocity * dt;
+    if (delta !== 0) {
+      scrollArea.scrollTop += delta;
+      updateScrollBar();
+    }
   }
 
   function bindScrollPriority() {
@@ -1279,7 +1337,7 @@
 
     scrollArea.addEventListener('touchstart', (e) => {
       touchActive = true;
-      resetScrollMotion();
+      actualVelocity = 0;
       touchStartY = e.touches[0].clientY;
       isSwiping = false;
 
@@ -1320,7 +1378,7 @@
     scrollArea.addEventListener('touchend', () => {
       touchActive = false;
       isSwiping = false;
-      resetScrollMotion();
+      actualVelocity = 0;
 
       if (selectionAllowed) {
         scrollArea.classList.remove('no-select');
@@ -1335,7 +1393,7 @@
     scrollArea.addEventListener('touchcancel', () => {
       touchActive = false;
       isSwiping = false;
-      resetScrollMotion();
+      actualVelocity = 0;
       if (selectionAllowed) scrollArea.classList.remove('no-select');
     }, { passive: true });
 
@@ -1388,7 +1446,7 @@
       e.stopPropagation();
     }, { passive: true });
 
-    camPanel.addEventListener('touchend', async (e) => {
+    camPanel.addEventListener('touchend', (e) => {
       const dx = e.changedTouches[0].clientX - panelDragStartX;
       const dy = e.changedTouches[0].clientY - panelDragStartY;
 
@@ -1474,7 +1532,7 @@
     sliderSens.value = CONFIG.sensitivity;
 
     function refreshSliderLabels() {
-      speedVal.textContent = `${CONFIG.speed} — ${getScrollPx()}px`;
+      speedVal.textContent = `${CONFIG.speed} — ${getScrollPxPerFrame()}px`;
       sensVal.textContent = `${CONFIG.sensitivity} — ${getSeuil()}lux`;
     }
 
