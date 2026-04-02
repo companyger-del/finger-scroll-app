@@ -257,6 +257,10 @@ const NOIR = 8; // luminosité absolue en dessous de laquelle on stoppe
 
 /* ── STATE ── */
 let stream = null, animFrame = null;
+let touchActive = false;    // doigt sur l'écran = pause
+let scrollStartTime = 0;    // timestamp début du défilement pour accélération
+let currentPx = 0;          // vitesse courante lissée (anti-sautillement)
+const ACCEL_DURATION = 2000; // ms pour atteindre la vitesse max
 
 /* ── DOM ── */
 const scrollArea    = document.getElementById('scroll-area');
@@ -290,6 +294,11 @@ function updateScrollBar() {
   scrollThumb.style.top = p * (bh - th) + 'px';
 }
 scrollArea.addEventListener('scroll', updateScrollBar);
+
+// Doigt sur l'écran = pause du défilement caméra
+scrollArea.addEventListener('touchstart', () => { touchActive = true;  scrollStartTime = 0; currentPx = 0; }, { passive: true });
+scrollArea.addEventListener('touchend',   () => { touchActive = false; scrollStartTime = 0; currentPx = 0; }, { passive: true });
+scrollArea.addEventListener('touchcancel',() => { touchActive = false; scrollStartTime = 0; currentPx = 0; }, { passive: true });
 
 function vibrate(p) { if (CONFIG.haptic && 'vibrate' in navigator) navigator.vibrate(p); }
 
@@ -406,27 +415,57 @@ function detectFrame() {
   }
 
   // ── DÉCISION — 3 paramètres 100% indépendants ──
-  const px = getScrollPx(); // vitesse fixe, jamais influencée par lumD/lumU
+
+  // Doigt sur l'écran = pause immédiate
+  if (touchActive) {
+    currentPx = 0;
+    scrollStartTime = 0;
+    camPanel.classList.remove('detecting');
+    return;
+  }
+
+  const targetPx = getScrollPx(); // vitesse cible définie par le réglage uniquement
 
   if (lumD < NOIR && lumU < NOIR) {
-    // Noir total = pas de doigt = arrêt
+    // Noir total = arrêt BRUTAL immédiat
+    currentPx = 0;
+    scrollStartTime = 0;
     camPanel.classList.remove('detecting');
+
   } else if (lumD > lumU + getSeuil()) {
-    // Lumière côté DESCEND → descend à vitesse fixe
-    scrollArea.scrollBy({ top: px, behavior: 'auto' });
+    // Lumière côté DESCEND → descend
+    if (scrollStartTime === 0) scrollStartTime = Date.now();
+    // Accélération progressive sur 2 secondes
+    const elapsed = Date.now() - scrollStartTime;
+    const ratio = Math.min(elapsed / ACCEL_DURATION, 1.0);
+    const easedRatio = ratio < 0.5 ? 2*ratio*ratio : -1+(4-2*ratio)*ratio; // easeInOut
+    const wantedPx = Math.max(1, targetPx * easedRatio);
+    // Lissage anti-sautillement : currentPx converge doucement vers wantedPx
+    currentPx = currentPx * 0.75 + wantedPx * 0.25;
+    scrollArea.scrollBy({ top: Math.round(currentPx), behavior: 'auto' });
     updateScrollBar();
     camPanel.classList.add('detecting');
     arrowDown.classList.add('active');
     setTimeout(() => arrowDown.classList.remove('active'), 200);
+
   } else if (lumU > lumD + getSeuil()) {
-    // Lumière côté REMONTE → remonte à vitesse fixe
-    scrollArea.scrollBy({ top: -px, behavior: 'auto' });
+    // Lumière côté REMONTE → remonte
+    if (scrollStartTime === 0) scrollStartTime = Date.now();
+    const elapsed = Date.now() - scrollStartTime;
+    const ratio = Math.min(elapsed / ACCEL_DURATION, 1.0);
+    const easedRatio = ratio < 0.5 ? 2*ratio*ratio : -1+(4-2*ratio)*ratio;
+    const wantedPx = Math.max(1, targetPx * easedRatio);
+    currentPx = currentPx * 0.75 + wantedPx * 0.25;
+    scrollArea.scrollBy({ top: -Math.round(currentPx), behavior: 'auto' });
     updateScrollBar();
     camPanel.classList.add('detecting');
     arrowUp.classList.add('active');
     setTimeout(() => arrowUp.classList.remove('active'), 200);
+
   } else {
-    // Équilibré = arrêt
+    // Équilibré = arrêt progressif (reset accélération pour prochain départ)
+    currentPx = 0;
+    scrollStartTime = 0;
     camPanel.classList.remove('detecting');
   }
 }
