@@ -813,6 +813,28 @@
           <div class="slider-val" id="angle-val">0°</div>
         </div>
       </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Zone intérieure ◯</h4>
+          <p>Bord interne de la couronne</p>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-ring-inner" min="20" max="80" value="55" step="5" />
+          <div class="slider-val" id="ring-inner-val">55%</div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Zone extérieure ◉</h4>
+          <p>Bord externe de la couronne</p>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-ring-outer" min="70" max="99" value="96" step="3" />
+          <div class="slider-val" id="ring-outer-val">96%</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -833,6 +855,8 @@ const CONFIG = {
   sensitivity: 5,     // 1-10 : seuil de détection
   speed: 5,           // 1-10 : multiplicateur de défilement
   angle: 0,           // -45 à +45 degrés : inclinaison de l'axe
+  ringInner: 55,      // bord intérieur de la couronne (% du rayon, 30-80)
+  ringOuter: 96,      // bord extérieur de la couronne (% du rayon, 70-99)
 };
 
 // Seuils internes calculés depuis CONFIG
@@ -927,6 +951,8 @@ async function startCamera() {
     lastScrollDir = 0;
     prevTotalLum = -1;
     lumSpeed = 0;
+    // Réinitialiser l'historique de lissage
+    smoothX = 0.5;
 
     showToast('📷 Caméra active — bougez votre doigt', 'ok', 3000);
     vibrate(30);
@@ -1017,19 +1043,34 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // ── Luminosité quart HAUT vs quart BAS ──
-  const bandH = Math.floor(H / 4);
+  // ── COURONNE CIRCULAIRE : anneau entre 60% et 95% du rayon ──
+  // On analyse uniquement les pixels dans cet anneau.
+  // Dans cet anneau, on compare le secteur HAUT vs secteur BAS.
+  // Le croissant lumineux créé par le doigt est détecté précisément.
+  const cx = W / 2, cy = H / 2;
+  const maxR = Math.min(W, H) / 2;
+  const innerR = maxR * (CONFIG.ringInner / 100); // bord intérieur configurable
+  const outerR = maxR * (CONFIG.ringOuter / 100); // bord extérieur configurable
+  // L'angle CONFIG permet d'incliner l'axe haut/bas
+  const angleRad = (CONFIG.angle * Math.PI) / 180;
+  const axX = Math.sin(angleRad);   // composante X de l'axe "haut"
+  const axY = -Math.cos(angleRad);  // composante Y de l'axe "haut"
+
   let lumTop = 0, lumBot = 0, countTop = 0, countBot = 0;
 
-  for (let y = 0; y < H; y++) {
-    const inTop = y < bandH;
-    const inBot = y >= H - bandH;
-    if (!inTop && !inBot) continue;
+  for (let y = 0; y < H; y += 2) {
+    const dy = y - cy;
     for (let x = 0; x < W; x += 2) {
+      const dx = x - cx;
+      const r = Math.sqrt(dx * dx + dy * dy);
+      // Garder uniquement les pixels dans la couronne
+      if (r < innerR || r > outerR) continue;
+      // Projection sur l'axe orienté → détermine haut ou bas
+      const proj = dx * axX + dy * axY;
       const i = (y * W + x) * 4;
       const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-      if (inTop) { lumTop += lum; countTop++; }
-      else       { lumBot += lum; countBot++; }
+      if (proj < 0) { lumTop += lum; countTop++; } // secteur "haut" → remonter
+      else          { lumBot += lum; countBot++; } // secteur "bas"  → descendre
     }
   }
 
@@ -1056,9 +1097,9 @@ function detectFrame() {
   const debugInfo  = document.getElementById('debug-info');
   if (debugPanel && debugPanel.style.display !== 'none') {
     if (debugBands) debugBands.innerHTML =
-      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+(avgTop/255)*46)}px;"></div>`.repeat(6) +
-      `<div style="flex:1;background:#333;border-radius:2px;height:4px;"></div>` +
-      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(avgBot/255)*46)}px;"></div>`.repeat(6);
+      `<div style="flex:1;background:#00f5c4;border-radius:2px 2px 0 0;height:${Math.round(4+(avgTop/255)*46)}px;" title="Haut"></div>`.repeat(6) +
+      `<div style="flex:1;background:#333;border-radius:2px;height:6px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#666">◯</div>` +
+      `<div style="flex:1;background:#7b61ff;border-radius:0 0 2px 2px;height:${Math.round(4+(avgBot/255)*46)}px;" title="Bas"></div>`.repeat(6);
   }
 
   // ── DÉCISION ──
@@ -1199,6 +1240,32 @@ sliderSens.addEventListener('input', () => {
 sliderSpeed.addEventListener('input', () => {
   CONFIG.speed = parseInt(sliderSpeed.value);
   speedVal.textContent = sliderSpeed.value;
+});
+
+const sliderRingInner = document.getElementById('slider-ring-inner');
+const sliderRingOuter = document.getElementById('slider-ring-outer');
+const ringInnerVal    = document.getElementById('ring-inner-val');
+const ringOuterVal    = document.getElementById('ring-outer-val');
+
+sliderRingInner.addEventListener('input', () => {
+  CONFIG.ringInner = parseInt(sliderRingInner.value);
+  ringInnerVal.textContent = sliderRingInner.value + '%';
+  // Empêcher inner > outer
+  if (CONFIG.ringInner >= CONFIG.ringOuter - 10) {
+    CONFIG.ringOuter = CONFIG.ringInner + 10;
+    sliderRingOuter.value = CONFIG.ringOuter;
+    ringOuterVal.textContent = CONFIG.ringOuter + '%';
+  }
+});
+
+sliderRingOuter.addEventListener('input', () => {
+  CONFIG.ringOuter = parseInt(sliderRingOuter.value);
+  ringOuterVal.textContent = sliderRingOuter.value + '%';
+  if (CONFIG.ringOuter <= CONFIG.ringInner + 10) {
+    CONFIG.ringInner = CONFIG.ringOuter - 10;
+    sliderRingInner.value = CONFIG.ringInner;
+    ringInnerVal.textContent = CONFIG.ringInner + '%';
+  }
 });
 
 const sliderAngle = document.getElementById('slider-angle');
