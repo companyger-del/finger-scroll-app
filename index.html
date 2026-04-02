@@ -1178,27 +1178,18 @@ function detectFrame() {
   }
 
   if (direction !== 0) {
-    // Vitesse FIXE = scrollPx, pas influencée par luminosité ni sensibilité
-    // Convergence douce pour éviter les à-coups
-    const target = direction * scrollPx;
-    inertia = inertia * 0.65 + target * 0.35;
+    // Vitesse DIRECTE = scrollPx exact, aucune influence de la luminosité
+    // Pas d'inertie — la vitesse est immédiate et constante
+    scrollArea.scrollBy({ top: direction * scrollPx, behavior: 'auto' });
+    updateScrollBar();
+    lastScrollTime = Date.now();
     lastScrollDir = direction;
     setDetecting(true);
     updateDirectionArrows(direction);
   } else {
-    // Arrêt progressif
-    inertia *= 0.68;
-    if (Math.abs(inertia) < 0.4) {
-      inertia = 0;
-      lastScrollDir = 0;
-      setDetecting(false);
-    }
-  }
-
-  if (inertia !== 0) {
-    scrollArea.scrollBy({ top: inertia, behavior: 'auto' });
-    updateScrollBar();
-    lastScrollTime = Date.now();
+    // Arrêt immédiat dès que la lumière est centrée ou absente
+    lastScrollDir = 0;
+    setDetecting(false);
   }
 }
 
