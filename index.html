@@ -425,6 +425,11 @@ function stopCamera() {
   btnCamera.classList.remove('active');
   scrollBar.style.opacity = '0';
   document.getElementById('direction-hint').style.opacity = '0';
+  // Libérer complètement la sélection et le copier-coller
+  selectionAllowed = true;
+  scrollArea.classList.remove('no-select');
+  currentPx = 0;
+  scrollStartTime = 0;
   showToast('Caméra désactivée', '', 1500);
 }
 
