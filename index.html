@@ -1121,74 +1121,48 @@ function detectFrame() {
     }
   }
 
-  const avgTop = lumTop / Math.max(countTop, 1);
-  const avgBot = lumBot / Math.max(countBot, 1);
-  const totalLum = (avgTop + avgBot) / 2;
+  // ── LUMINOSITÉ PAR SECTEUR ──
+  const lumD = lumBot / Math.max(countBot, 1); // luminosité secteur DESCEND
+  const lumU = lumTop / Math.max(countTop, 1); // luminosité secteur REMONTE
+  const seuil = getDeadBand() * 255;           // seuil en valeur absolue 0-255
 
-  // Centre de gravité Y : 0 = tout en haut, 1 = tout en bas
-  const rawX = avgTop + avgBot > 0
-    ? avgBot / (avgTop + avgBot)  // dominance du bas = descendre
-    : 0.5;
-
-  // Lissage exponentiel réactif
-  if (smoothLum < 0) { smoothLum = totalLum; prevTotalLum = totalLum; }
-  const rawLumDelta = Math.abs(totalLum - prevTotalLum); // variation brute frame/frame
-  lumSpeed = lumSpeed * 0.92 + rawLumDelta * 0.08;       // très lissée = accélération progressive
-  prevTotalLum = totalLum;
-  smoothLum = smoothLum * 0.60 + totalLum * 0.40;
-  smoothX   = smoothX   * 0.55 + rawX     * 0.45;
-
-  // ── DEBUG VISUEL ──
+  // ── DEBUG ──
   const debugPanel = document.getElementById('debug-panel');
   const debugBands = document.getElementById('debug-bands');
   const debugInfo  = document.getElementById('debug-info');
   if (debugPanel && debugPanel.style.display !== 'none') {
-    const lumD = lumBot / Math.max(countBot, 1);
-    const lumU = lumTop / Math.max(countTop, 1);
     if (debugBands) debugBands.innerHTML =
-      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+(lumD/255)*46)}px;" title="Descend"></div>`.repeat(6) +
+      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+(lumD/255)*46)}px;"></div>`.repeat(6) +
       `<div style="flex:1;background:#333;border-radius:2px;height:6px;"></div>` +
-      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(lumU/255)*46)}px;" title="Remonte"></div>`.repeat(6);
+      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+(lumU/255)*46)}px;"></div>`.repeat(6);
+    if (debugInfo) debugInfo.innerHTML =
+      `↓ Descend: <b style="color:#00f5c4">${Math.round(lumD)}</b> | ↑ Remonte: <b style="color:#7b61ff">${Math.round(lumU)}</b><br>` +
+      `Seuil: ${Math.round(seuil)} | Vitesse: ${getScrollPx()}px<br>` +
+      `${lumD > lumU + seuil ? '⬇ DESCEND' : lumU > lumD + seuil ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
   }
 
-  // ── DÉCISION — 3 réglages totalement indépendants ──
-  //
-  // POSITION  → définit où on regarde (angleDown / angleUp) — déjà appliqué
-  // SENSIBILITÉ → getDeadBand() → seuil de déclenchement UNIQUEMENT
-  // VITESSE   → getScrollPx()  → pixels scrollés par frame UNIQUEMENT
-  //
-  // Aucune interaction entre eux.
+  // ── DÉCISION ──
+  // Lumière en haut (lumD fort) → descend
+  // Lumière en bas  (lumU fort) → remonte
+  // Équilibré ou sombre         → arrêt
+  // Vitesse = réglage uniquement, pas la luminosité
 
-  const deadBand  = getDeadBand();  // seuil pur, indépendant de tout
-  const scrollPx  = getScrollPx();  // vitesse pure, indépendante de tout
+  const scrollPx = getScrollPx();
 
-  const imbalance = smoothX - 0.5;
-  const direction = imbalance >  deadBand ?  1
-                  : imbalance < -deadBand ? -1
-                  : 0;
-
-  if (debugInfo) {
-    const lumD2 = lumBot / Math.max(countBot, 1);
-    const lumU2 = lumTop / Math.max(countTop, 1);
-    debugInfo.innerHTML =
-      `↓: <b style="color:#00f5c4">${Math.round(lumD2)}</b> | ↑: <b style="color:#7b61ff">${Math.round(lumU2)}</b><br>` +
-      `Déséquilibre: <b>${imbalance.toFixed(3)}</b> | Seuil: ±${deadBand.toFixed(3)}<br>` +
-      `Vitesse: ${scrollPx}px/frame | Inertie: ${inertia.toFixed(1)}<br>` +
-      `${direction===1 ? '⬇ DESCEND' : direction===-1 ? '⬆ REMONTE' : '⏸ ARRÊT'}`;
-  }
-
-  if (direction !== 0) {
-    // Vitesse DIRECTE = scrollPx exact, aucune influence de la luminosité
-    // Pas d'inertie — la vitesse est immédiate et constante
-    scrollArea.scrollBy({ top: direction * scrollPx, behavior: 'auto' });
+  if (lumD > lumU + seuil) {
+    // Lumière dans secteur DESCEND → on descend
+    scrollArea.scrollBy({ top: scrollPx, behavior: 'auto' });
     updateScrollBar();
-    lastScrollTime = Date.now();
-    lastScrollDir = direction;
     setDetecting(true);
-    updateDirectionArrows(direction);
+    updateDirectionArrows(1);
+  } else if (lumU > lumD + seuil) {
+    // Lumière dans secteur REMONTE → on remonte
+    scrollArea.scrollBy({ top: -scrollPx, behavior: 'auto' });
+    updateScrollBar();
+    setDetecting(true);
+    updateDirectionArrows(-1);
   } else {
-    // Arrêt immédiat dès que la lumière est centrée ou absente
-    lastScrollDir = 0;
+    // Équilibré → arrêt
     setDetecting(false);
   }
 }
