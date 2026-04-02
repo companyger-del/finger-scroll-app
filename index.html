@@ -452,6 +452,7 @@
     }
 
     #settings-drawer.open .drawer-panel { transform: translateY(0); }
+    #settings-drawer.open { pointer-events: all; }
 
     .drawer-handle {
       width: 36px;
@@ -1043,34 +1044,19 @@ function detectFrame() {
   ctx.drawImage(camVideo, 0, 0, W, H);
   const frameData = ctx.getImageData(0, 0, W, H).data;
 
-  // ── COURONNE CIRCULAIRE : anneau entre 60% et 95% du rayon ──
-  // On analyse uniquement les pixels dans cet anneau.
-  // Dans cet anneau, on compare le secteur HAUT vs secteur BAS.
-  // Le croissant lumineux créé par le doigt est détecté précisément.
-  const cx = W / 2, cy = H / 2;
-  const maxR = Math.min(W, H) / 2;
-  const innerR = maxR * (CONFIG.ringInner / 100); // bord intérieur configurable
-  const outerR = maxR * (CONFIG.ringOuter / 100); // bord extérieur configurable
-  // L'angle CONFIG permet d'incliner l'axe haut/bas
-  const angleRad = (CONFIG.angle * Math.PI) / 180;
-  const axX = Math.sin(angleRad);   // composante X de l'axe "haut"
-  const axY = -Math.cos(angleRad);  // composante Y de l'axe "haut"
-
+  // ── Luminosité quart HAUT vs quart BAS ──
+  const bandH = Math.floor(H / 4);
   let lumTop = 0, lumBot = 0, countTop = 0, countBot = 0;
 
-  for (let y = 0; y < H; y += 2) {
-    const dy = y - cy;
+  for (let y = 0; y < H; y++) {
+    const inTop = y < bandH;
+    const inBot = y >= H - bandH;
+    if (!inTop && !inBot) continue;
     for (let x = 0; x < W; x += 2) {
-      const dx = x - cx;
-      const r = Math.sqrt(dx * dx + dy * dy);
-      // Garder uniquement les pixels dans la couronne
-      if (r < innerR || r > outerR) continue;
-      // Projection sur l'axe orienté → détermine haut ou bas
-      const proj = dx * axX + dy * axY;
       const i = (y * W + x) * 4;
       const lum = frameData[i] * 0.2126 + frameData[i+1] * 0.7152 + frameData[i+2] * 0.0722;
-      if (proj < 0) { lumTop += lum; countTop++; } // secteur "haut" → remonter
-      else          { lumBot += lum; countBot++; } // secteur "bas"  → descendre
+      if (inTop) { lumTop += lum; countTop++; }
+      else       { lumBot += lum; countBot++; }
     }
   }
 
@@ -1209,6 +1195,14 @@ document.getElementById('btn-settings').addEventListener('click', () => {
 document.getElementById('drawer-backdrop').addEventListener('click', () => {
   settingsDrawer.classList.remove('open');
 });
+// Bouton fermer explicite en haut du drawer
+const drawerHandle = document.querySelector('.drawer-handle');
+if (drawerHandle) {
+  drawerHandle.style.cursor = 'pointer';
+  drawerHandle.addEventListener('click', () => {
+    settingsDrawer.classList.remove('open');
+  });
+}
 
 // Toggles
 document.querySelectorAll('.toggle').forEach(toggle => {
