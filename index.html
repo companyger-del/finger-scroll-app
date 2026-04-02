@@ -1121,10 +1121,9 @@ function detectFrame() {
     }
   }
 
-  // ── LUMINOSITÉ PAR SECTEUR ──
-  const lumD = lumBot / Math.max(countBot, 1); // luminosité secteur DESCEND
-  const lumU = lumTop / Math.max(countTop, 1); // luminosité secteur REMONTE
-  const seuil = getDeadBand() * 255;           // seuil en valeur absolue 0-255
+  // ── LUMINOSITÉ BRUTE — pas de lissage, lecture directe ──
+  const lumD = lumBot / Math.max(countBot, 1);
+  const lumU = lumTop / Math.max(countTop, 1);
 
   // ── DEBUG ──
   const debugPanel = document.getElementById('debug-panel');
