@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -11,88 +11,642 @@
   <link rel="manifest" href="manifest.json" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Fira+Code:wght@300;400&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #0a0a12; --surface: #12121e; --surface2: #1a1a2e;
-      --accent: #00f5c4; --accent2: #7b61ff; --warn: #ff6b35;
-      --text: #e8e8f0; --muted: #6b6b8a;
-      --border: rgba(255,255,255,0.07); --radius: 16px;
+      --bg: #0a0a12;
+      --surface: #12121e;
+      --surface2: #1a1a2e;
+      --accent: #00f5c4;
+      --accent2: #7b61ff;
+      --warn: #ff6b35;
+      --text: #e8e8f0;
+      --muted: #6b6b8a;
+      --border: rgba(255,255,255,0.07);
+      --radius: 16px;
     }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; overflow: hidden; -webkit-font-smoothing: antialiased; }
-    #app { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; }
-    #header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent); position: relative; z-index: 10; flex-shrink: 0; }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .header-actions { display: flex; gap: 10px; }
-    .icon-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
-    .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
-    .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
-    #scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 0 20px 120px; }
-    #scroll-area::-webkit-scrollbar { display: none; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      touch-action: manipulation;
+    }
+
+    body {
+      overscroll-behavior: none;
+    }
+
+    #app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent);
+      position: relative;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+      background: var(--surface2);
+    }
+
+    .icon-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(0,245,196,0.2);
+    }
+
+    #scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 20px 120px;
+      overscroll-behavior: contain;
+    }
+
+    #scroll-area::-webkit-scrollbar {
+      display: none;
+    }
+
     #scroll-area.no-select {
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
     }
-    .article-hero { margin: 8px 0 28px; padding: 28px 24px; background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border-radius: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; }
-    .article-hero::before { content: ''; position: absolute; top: -50%; right: -30%; width: 250px; height: 250px; background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%); pointer-events: none; }
-    .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(0,245,196,0.1); color: var(--accent); border: 1px solid rgba(0,245,196,0.2); margin-bottom: 14px; font-family: 'Fira Code', monospace; }
-    .article-hero h1 { font-size: 26px; font-weight: 800; line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 12px; }
-    .article-hero p { font-size: 14px; color: var(--muted); line-height: 1.65; }
-    .meta { display: flex; gap: 16px; margin-top: 16px; font-size: 12px; color: var(--muted); font-family: 'Fira Code', monospace; }
-    .section-title { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 28px 0 14px; font-family: 'Fira Code', monospace; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
-    .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
-    .card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-    .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-    .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; font-family: 'Fira Code', monospace; }
-    .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .quote-block { border-left: 3px solid var(--accent); padding: 16px 20px; background: rgba(0,245,196,0.04); border-radius: 0 12px 12px 0; margin: 16px 0; font-style: italic; font-size: 15px; line-height: 1.7; }
-    #cam-overlay { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; pointer-events: none; }
-    #cam-panel { position: absolute; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border); background: var(--surface); transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1), opacity 0.3s, border-color 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px rgba(0,0,0,0.4); pointer-events: all; cursor: pointer; touch-action: none; }
-    #cam-panel.hidden { transform: translateX(80px); opacity: 0; pointer-events: none; }
-    #cam-panel.active { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4); }
-    #cam-panel.detecting { border-color: var(--accent); animation: pulse-ring 1.5s ease infinite; }
-    @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(0,245,196,0.4); } 70% { box-shadow: 0 0 0 12px rgba(0,245,196,0); } 100% { box-shadow: 0 0 0 0 rgba(0,245,196,0); } }
-    #cam-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
-    #cam-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
-    #cam-placeholder .cam-emoji { font-size: 18px; }
-    #cam-placeholder .cam-label { font-size: 8px; color: var(--muted); font-family: 'Fira Code', monospace; }
-    #cam-canvas { display: none; }
-    #scroll-bar { position: fixed; right: 4px; top: 60px; bottom: 140px; width: 3px; border-radius: 2px; background: var(--surface2); z-index: 20; opacity: 0; transition: opacity 0.3s; }
-    #scroll-thumb { width: 3px; border-radius: 2px; background: var(--accent); position: absolute; top: 0; height: 40px; }
-    #direction-hint { position: fixed; right: 60px; bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-    .dir-arrow { font-size: 18px; opacity: 0.3; transition: transform 0.2s, opacity 0.2s; }
-    .dir-arrow.active { opacity: 1; transform: scale(1.4); }
-    #status-toast { position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border); border-radius: 30px; padding: 10px 20px; font-size: 12px; font-family: 'Fira Code', monospace; color: var(--muted); white-space: nowrap; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 60; }
-    #status-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #status-toast.ok { color: var(--accent); border-color: rgba(0,245,196,0.2); }
-    #status-toast.warn { color: var(--warn); border-color: rgba(255,107,53,0.2); }
-    #debug-panel { display:none; position:fixed; top:60px; left:10px; right:10px; background:rgba(0,0,0,0.92); border:1px solid #00f5c4; border-radius:12px; padding:12px; z-index:200; font-family:monospace; font-size:11px; color:#00f5c4; }
-    #settings-drawer { position: fixed; inset: 0; z-index: 100; display: none; pointer-events: none; }
-    #settings-drawer.open { display: block; pointer-events: all; }
-    .drawer-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-    .drawer-panel { position: absolute; bottom: 0; left: 0; right: 0; background: var(--surface); border-radius: 24px 24px 0 0; border-top: 1px solid var(--border); padding: 20px 24px 40px; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.34,1.2,0.64,1); max-height: 80vh; overflow-y: auto; }
-    #settings-drawer.open .drawer-panel { transform: translateY(0); }
-    .drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; cursor: pointer; }
-    .drawer-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; }
-    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); }
-    .setting-row:last-child { border-bottom: none; }
-    .setting-row.col { flex-direction: column; align-items: stretch; gap: 12px; }
-    .setting-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-    .setting-info p { font-size: 12px; color: var(--muted); }
-    .toggle { width: 50px; height: 28px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
-    .toggle.on { background: var(--accent); border-color: var(--accent); }
-    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-    .toggle.on::after { transform: translateX(22px); }
-    .slider-wrap { width: 130px; }
-    .slider-wrap input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: var(--surface2); outline: none; cursor: pointer; }
-    .slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; }
-    .slider-val { font-size: 11px; font-family: 'Fira Code', monospace; color: var(--accent); text-align: right; margin-top: 4px; }
+
+    .article-hero {
+      margin: 8px 0 28px;
+      padding: 28px 24px;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .article-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(0,245,196,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,245,196,0.2);
+      margin-bottom: 14px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .article-hero h1 {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .article-hero p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Fira Code', monospace;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 28px 0 14px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .quote-block {
+      border-left: 3px solid var(--accent);
+      padding: 16px 20px;
+      background: rgba(0,245,196,0.04);
+      border-radius: 0 12px 12px 0;
+      margin: 16px 0;
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    #cam-overlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    #cam-panel {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1), opacity 0.25s, border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      pointer-events: all;
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #cam-panel.hidden {
+      transform: translateX(90px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #cam-panel.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    #cam-panel.detecting {
+      border-color: var(--accent);
+      animation: pulse-ring 1.4s ease infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(0,245,196,0.4); }
+      70%  { box-shadow: 0 0 0 12px rgba(0,245,196,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,245,196,0); }
+    }
+
+    #cam-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: none;
+    }
+
+    #cam-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #cam-placeholder .cam-emoji {
+      font-size: 18px;
+    }
+
+    #cam-placeholder .cam-label {
+      font-size: 8px;
+      color: var(--muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    #cam-canvas {
+      display: none;
+    }
+
+    #scroll-bar {
+      position: fixed;
+      right: 4px;
+      top: 60px;
+      bottom: 140px;
+      width: 3px;
+      border-radius: 2px;
+      background: var(--surface2);
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #scroll-thumb {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+      position: absolute;
+      top: 0;
+      height: 40px;
+    }
+
+    #direction-hint {
+      position: fixed;
+      right: 64px;
+      bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    .dir-arrow {
+      font-size: 18px;
+      opacity: 0.25;
+      transform: scale(1);
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    .dir-arrow.active {
+      opacity: 1;
+      transform: scale(1.35);
+    }
+
+    #status-toast {
+      position: fixed;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 10px 20px;
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+      color: var(--muted);
+      white-space: nowrap;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 60;
+      max-width: calc(100vw - 32px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #status-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #status-toast.ok {
+      color: var(--accent);
+      border-color: rgba(0,245,196,0.2);
+    }
+
+    #status-toast.warn {
+      color: var(--warn);
+      border-color: rgba(255,107,53,0.2);
+    }
+
+    #debug-panel {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.92);
+      border: 1px solid #00f5c4;
+      border-radius: 12px;
+      padding: 12px;
+      z-index: 200;
+      font-family: monospace;
+      font-size: 11px;
+      color: #00f5c4;
+    }
+
+    #settings-drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      pointer-events: none;
+    }
+
+    #settings-drawer.open {
+      display: block;
+      pointer-events: all;
+    }
+
+    .drawer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    .drawer-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 20px 24px 40px;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    #settings-drawer.open .drawer-panel {
+      transform: translateY(0);
+    }
+
+    .drawer-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+      cursor: pointer;
+    }
+
+    .drawer-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-row.col {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .setting-info h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .setting-info p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .toggle {
+      width: 50px;
+      height: 28px;
+      border-radius: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle.on {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .toggle.on::after {
+      transform: translateX(22px);
+    }
+
+    .slider-wrap {
+      width: 130px;
+      min-width: 130px;
+    }
+
+    .slider-wrap input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .slider-wrap input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+    }
+
+    .slider-val {
+      font-size: 11px;
+      font-family: 'Fira Code', monospace;
+      color: var(--accent);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 560px) {
+      #header {
+        padding: 12px 14px;
+      }
+
+      #scroll-area {
+        padding: 0 14px 110px;
+      }
+
+      .article-hero {
+        padding: 22px 18px;
+      }
+
+      .article-hero h1 {
+        font-size: 22px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .drawer-panel {
+        padding: 18px 16px 34px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -113,36 +667,89 @@
       <div class="tag">✦ Technologie</div>
       <h1>L'interface sans contact : l'avenir de l'interaction mobile</h1>
       <p>Contrôlez votre téléphone sans le toucher — grâce à la caméra dorsale et à la détection de lumière en temps réel.</p>
-      <div class="meta"><span>📅 2025</span><span>⏱ 8 min</span><span>👁 12k vues</span></div>
+      <div class="meta"><span>📅 2026</span><span>⏱ 8 min</span><span>🧪 Prototype</span></div>
     </div>
+
     <div class="section-title">// En chiffres</div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">50ms</div><div class="stat-label">Latence</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">30fps</div><div class="stat-label">Caméra</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--warn)">2%</div><div class="stat-label">CPU</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">∞</div><div class="stat-label">Possibilités</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">15–30</div><div class="stat-label">FPS analyse</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">320×240</div><div class="stat-label">Capture</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--warn)">Local</div><div class="stat-label">Traitement</div></div>
+      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">2 zones</div><div class="stat-label">Détection</div></div>
     </div>
+
     <div class="section-title">// Comment ça marche</div>
-    <div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(0,245,196,0.1)">💡</div><div><h3>Lumière = direction</h3><p>Lumière en haut de l'objectif → descend. Lumière en bas → remonte. Noir total → arrêt.</p></div></div></div>
-    <div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div><div><h3>Vitesse = réglage</h3><p>La vitesse de défilement est définie uniquement par le curseur vitesse. La luminosité ne l'influence pas.</p></div></div></div>
-    <div class="card"><div class="card-header"><div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div><div><h3>Position = bouton rotatif</h3><p>Réglez où se trouve la lumière sur votre objectif selon la façon dont vous tenez votre téléphone.</p></div></div></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(0,245,196,0.1)">💡</div>
+        <div>
+          <h3>Lumière = direction</h3>
+          <p>Lumière dans la zone “descend” → défilement vers le bas. Lumière dans la zone “remonte” → défilement vers le haut. Noir quasi total → arrêt.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div>
+        <div>
+          <h3>Vitesse indépendante</h3>
+          <p>La vitesse dépend uniquement du curseur prévu pour cela. La détection lumineuse ne modifie pas la vitesse.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div>
+        <div>
+          <h3>Position adaptable</h3>
+          <p>Le cercle de réglage permet d’adapter les deux zones de lumière selon votre manière de tenir l’appareil.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="quote-block">« La meilleure interface est celle qui disparaît. »</div>
+
     <div class="section-title">// Confidentialité</div>
-    <div class="card"><p>✅ Aucun stockage vidéo. Traitement 100% local. Arrêt automatique en arrière-plan.</p></div>
+    <div class="card">
+      <p>✅ Aucun envoi réseau pour l’analyse vidéo. Le traitement reste local dans le navigateur. La caméra se coupe automatiquement si l’onglet passe en arrière-plan.</p>
+    </div>
+
     <div class="section-title">// Instructions</div>
-    <div class="card"><h3 style="margin-bottom:10px">📱 Comment utiliser</h3><p style="line-height:2">1. Appuyez sur 📷 pour activer la caméra<br>2. Placez votre doigt sur l'objectif dorsal<br>3. Laissez passer la lumière d'un côté<br>4. Haut = descend &nbsp; Bas = remonte<br>5. Noir total = arrêt ✨</p></div>
-    <div class="card"><p style="line-height:2">Réglez la position dans ⚙️ selon comment vous tenez votre téléphone.<br>Ajustez la vitesse et la sensibilité indépendamment.</p></div>
+    <div class="card">
+      <h3 style="margin-bottom:10px">📱 Comment utiliser</h3>
+      <p style="line-height:2">
+        1. Appuyez sur 📷 pour activer la caméra<br>
+        2. Placez votre doigt sur l’objectif dorsal<br>
+        3. Laissez passer la lumière d’un côté<br>
+        4. Zone “descend” = descend &nbsp; Zone “remonte” = remonte<br>
+        5. Noir total ou quasi total = arrêt
+      </p>
+    </div>
+
+    <div class="card">
+      <p style="line-height:2">
+        Ajustez la vitesse, la sensibilité et la position dans ⚙️.<br>
+        Double tapez dans la zone de lecture pour couper rapidement la caméra.
+      </p>
+    </div>
   </div>
 
   <div id="scroll-bar"><div id="scroll-thumb"></div></div>
+
   <div id="direction-hint">
     <div class="dir-arrow" id="arrow-up">↑</div>
     <div class="dir-arrow" id="arrow-down">↓</div>
   </div>
 
   <div id="cam-overlay">
-    <div id="cam-panel">
-      <div id="cam-placeholder"><span class="cam-emoji">📷</span><span class="cam-label">ON</span></div>
+    <div id="cam-panel" aria-label="Caméra">
+      <div id="cam-placeholder">
+        <span class="cam-emoji">📷</span>
+        <span class="cam-label">ON</span>
+      </div>
       <video id="cam-video" autoplay playsinline muted></video>
       <canvas id="cam-canvas"></canvas>
     </div>
@@ -167,46 +774,46 @@
 
       <div class="setting-row">
         <div class="setting-info"><h4>Détection caméra</h4><p>Active le défilement gestuel</p></div>
-        <div class="toggle on" data-target="camEnabled"></div>
+        <div class="toggle" data-target="camEnabled"></div>
       </div>
+
       <div class="setting-row">
         <div class="setting-info"><h4>Caméra frontale</h4><p>Selfie au lieu du dos</p></div>
         <div class="toggle" data-target="useFront"></div>
       </div>
+
       <div class="setting-row">
-        <div class="setting-info"><h4>Retour haptique</h4><p>Vibration à la détection</p></div>
-        <div class="toggle on" data-target="haptic"></div>
+        <div class="setting-info"><h4>Retour haptique</h4><p>Vibration légère à l’activation</p></div>
+        <div class="toggle" data-target="haptic"></div>
       </div>
+
       <div class="setting-row">
-        <div class="setting-info"><h4>Mode économie</h4><p>Réduit le framerate (15fps)</p></div>
+        <div class="setting-info"><h4>Mode économie</h4><p>Réduit la fréquence d’analyse</p></div>
         <div class="toggle" data-target="ecoMode"></div>
       </div>
 
-      <!-- VITESSE — indépendante -->
       <div class="setting-row">
-        <div class="setting-info"><h4>Vitesse de défilement</h4><p>Pixels scrollés par frame</p></div>
+        <div class="setting-info"><h4>Vitesse de défilement</h4><p>Pixels déplacés par frame analysée</p></div>
         <div class="slider-wrap">
           <input type="range" id="slider-speed" min="1" max="10" value="5" />
           <div class="slider-val" id="speed-val">5 — 50px</div>
         </div>
       </div>
 
-      <!-- SENSIBILITÉ — indépendante -->
       <div class="setting-row">
-        <div class="setting-info"><h4>Sensibilité</h4><p>Écart de lumière pour déclencher</p></div>
+        <div class="setting-info"><h4>Sensibilité</h4><p>Écart lumineux nécessaire pour déclencher</p></div>
         <div class="slider-wrap">
           <input type="range" id="slider-sensitivity" min="1" max="10" value="5" />
           <div class="slider-val" id="sensitivity-val">5 — 15lux</div>
         </div>
       </div>
 
-      <!-- POSITION — bouton rotatif avec 2 points indépendants -->
       <div class="setting-row col">
         <div class="setting-info">
           <h4>Position du doigt</h4>
           <p>Glissez chaque point sur le cercle</p>
         </div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
           <canvas id="knob-canvas" width="120" height="120" style="touch-action:none;flex-shrink:0;"></canvas>
           <div style="font-family:'Fira Code',monospace;font-size:12px;">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
@@ -219,7 +826,9 @@
               <span style="color:var(--muted);">⬆ Remonte</span>
               <span id="pos-up" style="color:#7b61ff;margin-left:4px;">6h00</span>
             </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">Glissez les points<br>où la lumière passe</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">
+              Glissez les points<br>où la lumière passe
+            </div>
           </div>
         </div>
       </div>
@@ -229,527 +838,831 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   FingerScroll — Algorithme lumière pure
-   Lumière haut → descend | Lumière bas → remonte
-   Noir total → arrêt
-   Vitesse, sensibilité, position = totalement indépendants
-═══════════════════════════════════════════════════ */
+(() => {
+  const STORAGE_KEY = 'fingerscroll_settings_v2';
 
-const CONFIG = {
-  camEnabled: true,
-  useFront: false,
-  haptic: true,
-  ecoMode: false,
-  speed: 5,        // 1-10 : vitesse de défilement UNIQUEMENT
-  sensitivity: 5,  // 1-10 : seuil de déclenchement UNIQUEMENT
-  angleDown: 0,    // degrés 0-360 : position secteur DESCEND (0=12h=haut)
-  angleUp: 180,    // degrés 0-360 : position secteur REMONTE (180=6h=bas)
-};
+  const DEFAULT_CONFIG = {
+    camEnabled: true,
+    useFront: false,
+    haptic: true,
+    ecoMode: false,
+    speed: 5,
+    sensitivity: 5,
+    angleDown: 0,
+    angleUp: 180
+  };
 
-// ── VITESSE : pixels scrollés par frame — rien d'autre ──
-// Cran 5=50px, cran 7=100px (×2), cran 10=250px
-const SPEED_PX = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
-const getScrollPx = () => SPEED_PX[Math.min(CONFIG.speed - 1, 9)];
+  const CONFIG = loadConfig();
 
-// ── SENSIBILITÉ : écart minimum de luminosité entre les deux secteurs ──
-// Plus le cran est élevé, plus petit est l'écart requis → plus réactif
-// Cran 1=80lux (dur), cran 5=15lux (normal), cran 10=2lux (extrême)
-const SENS_LUX = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
-const getSeuil = () => SENS_LUX[Math.min(CONFIG.sensitivity - 1, 9)];
+  const SPEED_PX = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
+  const SENS_LUX = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
 
-// ── SEUIL NOIR : en dessous = pas de doigt = arrêt ──
-const NOIR = 8; // luminosité absolue en dessous de laquelle on stoppe
+  const ACCEL_DURATION = 2000;
+  const CAMERA_SIZE = { w: 320, h: 240 };
+  const BASE_NOIR = 8;
 
-/* ── STATE ── */
-let stream = null, animFrame = null;
-let touchActive = false;       // doigt sur l'écran = pause défilement
-let selectionAllowed = false;  // sélection/copie autorisée seulement si objectif noir
-let scrollStartTime = 0;
-let currentPx = 0;
-const ACCEL_DURATION = 2000;
+  let stream = null;
+  let animFrame = null;
+  let touchActive = false;
+  let selectionAllowed = false;
+  let scrollStartTime = 0;
+  let currentPx = 0;
+  let lastProcessedAt = 0;
+  let lastArrowUpAt = 0;
+  let lastArrowDownAt = 0;
+  let localNoirThreshold = BASE_NOIR;
+  let calibrating = false;
 
-/* ── DOM ── */
-const scrollArea    = document.getElementById('scroll-area');
-const camPanel      = document.getElementById('cam-panel');
-const camVideo      = document.getElementById('cam-video');
-const camCanvas     = document.getElementById('cam-canvas');
-const camPlaceholder= document.getElementById('cam-placeholder');
-const statusToast   = document.getElementById('status-toast');
-const scrollBar     = document.getElementById('scroll-bar');
-const scrollThumb   = document.getElementById('scroll-thumb');
-const arrowUp       = document.getElementById('arrow-up');
-const arrowDown     = document.getElementById('arrow-down');
-const btnCamera     = document.getElementById('btn-camera');
-const ctx           = camCanvas.getContext('2d', { willReadFrequently: true });
+  let touchStartY = 0;
+  let isSwiping = false;
 
-let toastTimer = null;
-function showToast(msg, type='', dur=2500) {
-  clearTimeout(toastTimer);
-  statusToast.textContent = msg;
-  statusToast.className = 'show ' + type;
-  toastTimer = setTimeout(() => statusToast.className = '', dur);
-}
+  let lastTapTime = 0;
+  let tapCount = 0;
+  let tapTimer = null;
 
-function updateScrollBar() {
-  const max = scrollArea.scrollHeight - scrollArea.clientHeight;
-  if (max <= 0) return;
-  const p = scrollArea.scrollTop / max;
-  const bh = scrollBar.clientHeight;
-  const th = Math.max(30, bh * scrollArea.clientHeight / scrollArea.scrollHeight);
-  scrollThumb.style.height = th + 'px';
-  scrollThumb.style.top = p * (bh - th) + 'px';
-}
-scrollArea.addEventListener('scroll', updateScrollBar);
+  let toastTimer = null;
+  let holdTimer = null;
 
-// ── CONTRÔLE TACTILE PRIORITAIRE ──
-// Le doigt sur l'écran prend le contrôle sur la caméra
-// - Balayage : scroll normal du doigt, sans copier
-// - Posé immobile : arrêt du défilement caméra
-// - Dans les deux cas : pas de sélection/copie sauf si objectif noir
-// Dès que le doigt lâche : la caméra reprend là où elle en était
+  let panelDragStartX = 0;
+  let panelDragStartY = 0;
+  let panelDragging = false;
 
-let touchStartY = 0;
-let isSwiping = false;
+  const scrollArea = document.getElementById('scroll-area');
+  const camPanel = document.getElementById('cam-panel');
+  const camVideo = document.getElementById('cam-video');
+  const camCanvas = document.getElementById('cam-canvas');
+  const camPlaceholder = document.getElementById('cam-placeholder');
+  const statusToast = document.getElementById('status-toast');
+  const scrollBar = document.getElementById('scroll-bar');
+  const scrollThumb = document.getElementById('scroll-thumb');
+  const arrowUp = document.getElementById('arrow-up');
+  const arrowDown = document.getElementById('arrow-down');
+  const btnCamera = document.getElementById('btn-camera');
+  const btnSettings = document.getElementById('btn-settings');
+  const settingsDrawer = document.getElementById('settings-drawer');
+  const debugPanel = document.getElementById('debug-panel');
+  const debugBands = document.getElementById('debug-bands');
+  const debugInfo = document.getElementById('debug-info');
+  const sliderSpeed = document.getElementById('slider-speed');
+  const sliderSens = document.getElementById('slider-sensitivity');
+  const speedVal = document.getElementById('speed-val');
+  const sensVal = document.getElementById('sensitivity-val');
 
-// ── DOUBLE TAP pour désactiver la caméra ──
-let lastTapTime = 0;
-let tapCount = 0;
-let tapTimer = null;
+  const ctx = camCanvas.getContext('2d', { willReadFrequently: true });
 
-scrollArea.addEventListener('touchstart', (e) => {
-  touchActive = true;
-  scrollStartTime = 0;
-  currentPx = 0;
-  touchStartY = e.touches[0].clientY;
-  isSwiping = false;
-
-  if (!selectionAllowed) {
-    scrollArea.classList.add('no-select');
-  }
-
-  // Détecter double tap rapide → désactiver caméra
-  if (stream) {
-    const now = Date.now();
-    if (now - lastTapTime < 300) {
-      tapCount++;
-      if (tapCount >= 2) {
-        tapCount = 0;
-        clearTimeout(tapTimer);
-        stopCamera();
-        showToast('📷 Caméra désactivée — tap sur le rond pour réactiver', '', 3000);
-        return;
-      }
-    } else {
-      tapCount = 1;
+  function loadConfig() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { ...DEFAULT_CONFIG };
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULT_CONFIG, ...parsed };
+    } catch {
+      return { ...DEFAULT_CONFIG };
     }
-    lastTapTime = now;
-    tapTimer = setTimeout(() => tapCount = 0, 400);
   }
-}, { passive: true });
 
-scrollArea.addEventListener('touchmove', (e) => {
-  const dy = Math.abs(e.touches[0].clientY - touchStartY);
-  if (dy > 5) isSwiping = true; // c'est un balayage
-
-  if (!selectionAllowed && isSwiping) {
-    // Balayage sans sélection : laisser le scroll natif fonctionner
-    // mais bloquer long-press et sélection de texte
-    scrollArea.classList.add('no-select');
+  function saveConfig() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(CONFIG));
+    } catch {}
   }
-}, { passive: true });
 
-scrollArea.addEventListener('touchend', () => {
-  touchActive = false;
-  isSwiping = false;
-  scrollStartTime = 0; // repart depuis le début de l'accélération
-  currentPx = 0;
-  setTimeout(() => scrollArea.classList.remove('no-select'), 150);
-}, { passive: true });
+  function getScrollPx() {
+    return SPEED_PX[Math.min(Math.max(CONFIG.speed, 1) - 1, 9)];
+  }
 
-scrollArea.addEventListener('touchcancel', () => {
-  touchActive = false;
-  isSwiping = false;
-  scrollStartTime = 0;
-  currentPx = 0;
-  scrollArea.classList.remove('no-select');
-}, { passive: true });
+  function getSeuil() {
+    return SENS_LUX[Math.min(Math.max(CONFIG.sensitivity, 1) - 1, 9)];
+  }
 
-// Bloquer menu contextuel si objectif lumineux
-scrollArea.addEventListener('contextmenu', (e) => {
-  if (!selectionAllowed) e.preventDefault();
-});
+  function getTargetFPS() {
+    return CONFIG.ecoMode ? 15 : 30;
+  }
 
-// Bloquer sélection de texte par double-tap si objectif lumineux
-scrollArea.addEventListener('selectstart', (e) => {
-  if (!selectionAllowed) e.preventDefault();
-});
+  function showToast(msg, type = '', dur = 2500) {
+    clearTimeout(toastTimer);
+    statusToast.textContent = msg;
+    statusToast.className = 'show ' + type;
+    toastTimer = setTimeout(() => {
+      statusToast.className = '';
+    }, dur);
+  }
 
-function vibrate(p) { if (CONFIG.haptic && 'vibrate' in navigator) navigator.vibrate(p); }
+  function vibrate(pattern) {
+    if (CONFIG.haptic && 'vibrate' in navigator) {
+      navigator.vibrate(pattern);
+    }
+  }
 
-/* ── CAMÉRA ── */
-async function startCamera() {
-  if (stream) return;
-  const fps = CONFIG.ecoMode ? 15 : 30;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' }, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: fps } },
-      audio: false
-    });
-    camVideo.srcObject = stream;
-    await camVideo.play();
-    camCanvas.width = 320; camCanvas.height = 240;
+  function updateScrollBar() {
+    const max = scrollArea.scrollHeight - scrollArea.clientHeight;
+    if (max <= 0) {
+      scrollThumb.style.top = '0px';
+      return;
+    }
+    const p = scrollArea.scrollTop / max;
+    const bh = scrollBar.clientHeight;
+    const th = Math.max(30, bh * scrollArea.clientHeight / scrollArea.scrollHeight);
+    scrollThumb.style.height = th + 'px';
+    scrollThumb.style.top = p * (bh - th) + 'px';
+  }
+
+  function setArrow(direction) {
+    const now = performance.now();
+    if (direction === 'up') {
+      lastArrowUpAt = now;
+      arrowUp.classList.add('active');
+    } else if (direction === 'down') {
+      lastArrowDownAt = now;
+      arrowDown.classList.add('active');
+    }
+  }
+
+  function refreshArrows() {
+    const now = performance.now();
+    if (now - lastArrowUpAt > 170) arrowUp.classList.remove('active');
+    if (now - lastArrowDownAt > 170) arrowDown.classList.remove('active');
+  }
+
+  function setSelectionAllowed(value) {
+    selectionAllowed = value;
+    if (selectionAllowed) {
+      scrollArea.classList.remove('no-select');
+    } else if (touchActive || isSwiping || stream) {
+      scrollArea.classList.add('no-select');
+    }
+  }
+
+  function resetScrollMotion() {
+    currentPx = 0;
+    scrollStartTime = 0;
+  }
+
+  function resetCameraUI() {
+    camVideo.style.display = 'none';
+    camPlaceholder.style.display = 'flex';
+    camPanel.classList.remove('active', 'detecting');
+    btnCamera.classList.remove('active');
+    scrollBar.style.opacity = '0';
+    document.getElementById('direction-hint').style.opacity = '0';
+    refreshArrows();
+  }
+
+  function activateCameraUI() {
     camVideo.style.display = 'block';
     camPlaceholder.style.display = 'none';
     camPanel.classList.add('active');
     btnCamera.classList.add('active');
     scrollBar.style.opacity = '1';
     document.getElementById('direction-hint').style.opacity = '1';
-    showToast('📷 Caméra active', 'ok', 2000);
-    vibrate(30);
-    animFrame = requestAnimationFrame(detectFrame);
-  } catch(e) {
-    showToast(e.name === 'NotAllowedError' ? '⚠️ Permission refusée' : '⚠️ Caméra indisponible', 'warn', 4000);
   }
-}
 
-function stopCamera() {
-  if (!stream) return;
-  stream.getTracks().forEach(t => t.stop());
-  stream = null;
-  cancelAnimationFrame(animFrame);
-  camVideo.srcObject = null;
-  camVideo.style.display = 'none';
-  camPlaceholder.style.display = 'flex';
-  camPanel.classList.remove('active', 'detecting');
-  btnCamera.classList.remove('active');
-  scrollBar.style.opacity = '0';
-  document.getElementById('direction-hint').style.opacity = '0';
-  // Libérer complètement la sélection et le copier-coller
-  selectionAllowed = true;
-  scrollArea.classList.remove('no-select');
-  currentPx = 0;
-  scrollStartTime = 0;
-  showToast('Caméra désactivée', '', 1500);
-}
+  async function calibrateNoir(samples = 10) {
+    if (!stream || calibrating) return;
+    calibrating = true;
 
-/* ══════════════════════════════════════════════════════
-   ALGORITHME DE DÉTECTION
-   ──────────────────────────────────────────────────────
-   1. Analyser deux secteurs angulaires au bord de l'objectif
-      Secteur DOWN : position CONFIG.angleDown
-      Secteur UP   : position CONFIG.angleUp
-   2. Calculer la luminosité moyenne de chaque secteur
-   3. DÉCISION (totalement indépendante de la vitesse) :
-      - Les deux < NOIR    → arrêt (pas de doigt)
-      - lumD > lumU + seuil → descend à scrollPx px
-      - lumU > lumD + seuil → remonte à scrollPx px
-      - Sinon               → arrêt (équilibré)
-   4. scrollPx = CONFIG.speed UNIQUEMENT, jamais la luminosité
-══════════════════════════════════════════════════════ */
-function detectFrame() {
-  if (!stream) return;
-  animFrame = requestAnimationFrame(detectFrame);
-  if (camVideo.readyState < 2) return;
+    let total = 0;
+    let count = 0;
 
-  const W = camCanvas.width, H = camCanvas.height;
-  ctx.drawImage(camVideo, 0, 0, W, H);
-  const d = ctx.getImageData(0, 0, W, H).data;
+    for (let i = 0; i < samples; i++) {
+      if (!stream || camVideo.readyState < 2) break;
 
-  const cx = W/2, cy = H/2;
-  const maxR = Math.min(W,H)/2;
-  const innerR = maxR * 0.70;
-  const outerR = maxR * 0.97;
-  const SECTOR = Math.PI / 7; // ±25°
+      ctx.drawImage(camVideo, 0, 0, camCanvas.width, camCanvas.height);
+      const data = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height).data;
 
-  const toRad = deg => (deg - 90) * Math.PI / 180;
-  const radD = toRad(CONFIG.angleDown);
-  const radU = toRad(CONFIG.angleUp);
+      let sum = 0;
+      let n = 0;
 
-  let lumD = 0, nD = 0, lumU = 0, nU = 0;
+      for (let y = 0; y < camCanvas.height; y += 8) {
+        for (let x = 0; x < camCanvas.width; x += 8) {
+          const idx = (y * camCanvas.width + x) * 4;
+          const lum = data[idx] * 0.2126 + data[idx + 1] * 0.7152 + data[idx + 2] * 0.0722;
+          sum += lum;
+          n++;
+        }
+      }
 
-  for (let y = 0; y < H; y += 2) {
-    const dy = y - cy;
-    for (let x = 0; x < W; x += 2) {
-      const dx = x - cx;
-      const r = Math.sqrt(dx*dx + dy*dy);
-      if (r < innerR || r > outerR) continue;
-      const a = Math.atan2(dy, dx);
-      const i = (y*W+x)*4;
-      const lum = d[i]*0.2126 + d[i+1]*0.7152 + d[i+2]*0.0722;
+      if (n > 0) {
+        total += sum / n;
+        count++;
+      }
 
-      let dD = Math.abs(a - radD); if (dD > Math.PI) dD = 2*Math.PI - dD;
-      if (dD < SECTOR) { lumD += lum; nD++; }
+      await new Promise(r => setTimeout(r, 40));
+    }
 
-      let dU = Math.abs(a - radU); if (dU > Math.PI) dU = 2*Math.PI - dU;
-      if (dU < SECTOR) { lumU += lum; nU++; }
+    if (count > 0) {
+      const avg = total / count;
+      localNoirThreshold = Math.max(BASE_NOIR, Math.min(20, avg * 0.18));
+    } else {
+      localNoirThreshold = BASE_NOIR;
+    }
+
+    calibrating = false;
+  }
+
+  async function startCamera() {
+    if (stream || !CONFIG.camEnabled) return;
+
+    const fps = getTargetFPS();
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
+          width: { ideal: CAMERA_SIZE.w },
+          height: { ideal: CAMERA_SIZE.h },
+          frameRate: { ideal: fps, max: fps }
+        },
+        audio: false
+      });
+
+      camVideo.srcObject = stream;
+      await camVideo.play();
+
+      camCanvas.width = CAMERA_SIZE.w;
+      camCanvas.height = CAMERA_SIZE.h;
+
+      activateCameraUI();
+      resetScrollMotion();
+      setSelectionAllowed(false);
+      showToast('📷 Caméra active', 'ok', 1800);
+      vibrate(30);
+
+      await calibrateNoir(12);
+
+      lastProcessedAt = 0;
+      cancelAnimationFrame(animFrame);
+      animFrame = requestAnimationFrame(detectFrame);
+    } catch (e) {
+      console.error(e);
+      stream = null;
+      resetCameraUI();
+      showToast(
+        e && e.name === 'NotAllowedError'
+          ? '⚠️ Permission caméra refusée'
+          : '⚠️ Caméra indisponible',
+        'warn',
+        4000
+      );
     }
   }
 
-  lumD = lumD / Math.max(nD, 1);
-  lumU = lumU / Math.max(nU, 1);
+  function stopCamera(silent = false) {
+    if (animFrame) {
+      cancelAnimationFrame(animFrame);
+      animFrame = null;
+    }
 
-  // Debug
-  const dbg = document.getElementById('debug-panel');
-  if (dbg && dbg.style.display !== 'none') {
-    const db = document.getElementById('debug-bands');
-    const di = document.getElementById('debug-info');
-    if (db) db.innerHTML =
-      `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+lumD/255*46)}px;"></div>`.repeat(6) +
-      `<div style="flex:1;background:#444;height:6px;border-radius:2px;"></div>` +
-      `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+lumU/255*46)}px;"></div>`.repeat(6);
-    if (di) di.innerHTML =
-      `⬇ ${Math.round(lumD)} | ⬆ ${Math.round(lumU)} | Seuil: ${getSeuil()}<br>` +
-      `Vitesse: ${getScrollPx()}px (cran ${CONFIG.speed})<br>` +
-      `${lumD < NOIR && lumU < NOIR ? '⬛ NOIR=ARRÊT' : lumD > lumU + getSeuil() ? '⬇ DESCEND' : lumU > lumD + getSeuil() ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ'}`;
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+
+    camVideo.srcObject = null;
+    resetCameraUI();
+    setSelectionAllowed(true);
+    resetScrollMotion();
+
+    if (!silent) {
+      showToast('Caméra désactivée', '', 1500);
+    }
   }
 
-  // ── DÉCISION — 3 paramètres 100% indépendants ──
+  function toRad(deg) {
+    return (deg - 90) * Math.PI / 180;
+  }
 
-  // Doigt sur l'écran = pause immédiate
-  if (touchActive) {
-    currentPx = 0;
-    scrollStartTime = 0;
+  function deltaAngle(a, b) {
+    let d = Math.abs(a - b);
+    if (d > Math.PI) d = 2 * Math.PI - d;
+    return d;
+  }
+
+  function detectFrame(now) {
+    if (!stream) return;
+
+    animFrame = requestAnimationFrame(detectFrame);
+    refreshArrows();
+
+    if (camVideo.readyState < 2) return;
+
+    const minInterval = 1000 / getTargetFPS();
+    if (now - lastProcessedAt < minInterval) return;
+    lastProcessedAt = now;
+
+    const W = camCanvas.width;
+    const H = camCanvas.height;
+
+    ctx.drawImage(camVideo, 0, 0, W, H);
+    const data = ctx.getImageData(0, 0, W, H).data;
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const maxR = Math.min(W, H) / 2;
+    const innerR = maxR * 0.70;
+    const outerR = maxR * 0.97;
+    const SECTOR = Math.PI / 7;
+
+    const radD = toRad(CONFIG.angleDown);
+    const radU = toRad(CONFIG.angleUp);
+
+    let lumD = 0, nD = 0;
+    let lumU = 0, nU = 0;
+
+    for (let y = 0; y < H; y += 2) {
+      const dy = y - cy;
+      for (let x = 0; x < W; x += 2) {
+        const dx = x - cx;
+        const r = Math.sqrt(dx * dx + dy * dy);
+        if (r < innerR || r > outerR) continue;
+
+        const a = Math.atan2(dy, dx);
+        const i = (y * W + x) * 4;
+        const lum = data[i] * 0.2126 + data[i + 1] * 0.7152 + data[i + 2] * 0.0722;
+
+        if (deltaAngle(a, radD) < SECTOR) {
+          lumD += lum;
+          nD++;
+        }
+
+        if (deltaAngle(a, radU) < SECTOR) {
+          lumU += lum;
+          nU++;
+        }
+      }
+    }
+
+    lumD = lumD / Math.max(nD, 1);
+    lumU = lumU / Math.max(nU, 1);
+
+    if (debugPanel.style.display !== 'none') {
+      debugBands.innerHTML =
+        `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4 + lumD / 255 * 46)}px;"></div>`.repeat(6) +
+        `<div style="flex:1;background:#444;height:6px;border-radius:2px;"></div>` +
+        `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4 + lumU / 255 * 46)}px;"></div>`.repeat(6);
+
+      const status =
+        (lumD < localNoirThreshold && lumU < localNoirThreshold)
+          ? '⬛ NOIR = ARRÊT'
+          : (lumD > lumU + getSeuil())
+            ? '⬇ DESCEND'
+            : (lumU > lumD + getSeuil())
+              ? '⬆ REMONTE'
+              : '⏸ ÉQUILIBRÉ';
+
+      debugInfo.innerHTML =
+        `⬇ ${Math.round(lumD)} | ⬆ ${Math.round(lumU)} | Seuil: ${getSeuil()}<br>` +
+        `Noir local: ${Math.round(localNoirThreshold)} | Vitesse: ${getScrollPx()}px<br>` +
+        `${status}`;
+    }
+
+    if (touchActive) {
+      resetScrollMotion();
+      camPanel.classList.remove('detecting');
+      return;
+    }
+
+    const targetPx = getScrollPx();
+
+    if (lumD < localNoirThreshold && lumU < localNoirThreshold) {
+      resetScrollMotion();
+      setSelectionAllowed(true);
+      camPanel.classList.remove('detecting');
+      return;
+    }
+
+    if (lumD > lumU + getSeuil()) {
+      setSelectionAllowed(false);
+
+      if (scrollStartTime === 0) scrollStartTime = Date.now();
+
+      const elapsed = Date.now() - scrollStartTime;
+      const ratio = Math.min(elapsed / ACCEL_DURATION, 1);
+      const eased = ratio < 0.5 ? 2 * ratio * ratio : -1 + (4 - 2 * ratio) * ratio;
+      const wantedPx = Math.max(1, targetPx * eased);
+
+      currentPx = currentPx * 0.75 + wantedPx * 0.25;
+      scrollArea.scrollBy({ top: Math.round(currentPx), behavior: 'auto' });
+      updateScrollBar();
+
+      camPanel.classList.add('detecting');
+      setArrow('down');
+      return;
+    }
+
+    if (lumU > lumD + getSeuil()) {
+      setSelectionAllowed(false);
+
+      if (scrollStartTime === 0) scrollStartTime = Date.now();
+
+      const elapsed = Date.now() - scrollStartTime;
+      const ratio = Math.min(elapsed / ACCEL_DURATION, 1);
+      const eased = ratio < 0.5 ? 2 * ratio * ratio : -1 + (4 - 2 * ratio) * ratio;
+      const wantedPx = Math.max(1, targetPx * eased);
+
+      currentPx = currentPx * 0.75 + wantedPx * 0.25;
+      scrollArea.scrollBy({ top: -Math.round(currentPx), behavior: 'auto' });
+      updateScrollBar();
+
+      camPanel.classList.add('detecting');
+      setArrow('up');
+      return;
+    }
+
+    resetScrollMotion();
+    setSelectionAllowed(false);
     camPanel.classList.remove('detecting');
-    return;
   }
 
-  const targetPx = getScrollPx(); // vitesse cible définie par le réglage uniquement
+  function bindScrollPriority() {
+    scrollArea.addEventListener('scroll', updateScrollBar, { passive: true });
 
-  if (lumD < NOIR && lumU < NOIR) {
-    // Noir total = arrêt BRUTAL immédiat + sélection autorisée
-    currentPx = 0;
-    scrollStartTime = 0;
-    selectionAllowed = true;  // objectif noir = copie/sélection OK
-    camPanel.classList.remove('detecting');
+    scrollArea.addEventListener('touchstart', (e) => {
+      touchActive = true;
+      resetScrollMotion();
+      touchStartY = e.touches[0].clientY;
+      isSwiping = false;
 
-  } else if (lumD > lumU + getSeuil()) {
-    // Lumière côté DESCEND → descend
-    selectionAllowed = false; // objectif lumineux = sélection bloquée
-    if (scrollStartTime === 0) scrollStartTime = Date.now();
-    // Accélération progressive sur 2 secondes
-    const elapsed = Date.now() - scrollStartTime;
-    const ratio = Math.min(elapsed / ACCEL_DURATION, 1.0);
-    const easedRatio = ratio < 0.5 ? 2*ratio*ratio : -1+(4-2*ratio)*ratio; // easeInOut
-    const wantedPx = Math.max(1, targetPx * easedRatio);
-    // Lissage anti-sautillement : currentPx converge doucement vers wantedPx
-    currentPx = currentPx * 0.75 + wantedPx * 0.25;
-    scrollArea.scrollBy({ top: Math.round(currentPx), behavior: 'auto' });
-    updateScrollBar();
-    camPanel.classList.add('detecting');
-    arrowDown.classList.add('active');
-    setTimeout(() => arrowDown.classList.remove('active'), 200);
+      if (!selectionAllowed) {
+        scrollArea.classList.add('no-select');
+      }
 
-  } else if (lumU > lumD + getSeuil()) {
-    // Lumière côté REMONTE → remonte
-    selectionAllowed = false; // objectif lumineux = sélection bloquée
-    if (scrollStartTime === 0) scrollStartTime = Date.now();
-    const elapsed = Date.now() - scrollStartTime;
-    const ratio = Math.min(elapsed / ACCEL_DURATION, 1.0);
-    const easedRatio = ratio < 0.5 ? 2*ratio*ratio : -1+(4-2*ratio)*ratio;
-    const wantedPx = Math.max(1, targetPx * easedRatio);
-    currentPx = currentPx * 0.75 + wantedPx * 0.25;
-    scrollArea.scrollBy({ top: -Math.round(currentPx), behavior: 'auto' });
-    updateScrollBar();
-    camPanel.classList.add('detecting');
-    arrowUp.classList.add('active');
-    setTimeout(() => arrowUp.classList.remove('active'), 200);
+      if (stream) {
+        const now = Date.now();
 
-  } else {
-    // Équilibré = arrêt
-    currentPx = 0;
-    scrollStartTime = 0;
-    selectionAllowed = false;
-    camPanel.classList.remove('detecting');
-  }
-}
+        if (now - lastTapTime < 300) {
+          tapCount++;
+          if (tapCount >= 2) {
+            tapCount = 0;
+            clearTimeout(tapTimer);
+            stopCamera();
+            showToast('📷 Caméra désactivée — tap sur le rond pour réactiver', '', 3000);
+            return;
+          }
+        } else {
+          tapCount = 1;
+        }
 
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && stream) { stopCamera(); showToast('Caméra suspendue', '', 2000); }
-});
+        lastTapTime = now;
+        tapTimer = setTimeout(() => { tapCount = 0; }, 400);
+      }
+    }, { passive: true });
 
-btnCamera.addEventListener('click', () => {
-  // Réafficher le panel si caché
-  camPanel.classList.remove('hidden');
-  camPanel.style.transform = '';
-  if (stream) stopCamera();
-  else if (CONFIG.camEnabled) startCamera();
-  else showToast('Activez la caméra dans les paramètres', 'warn');
-});
-camPanel.addEventListener('click', () => { if (!stream && CONFIG.camEnabled) startCamera(); });
+    scrollArea.addEventListener('touchmove', (e) => {
+      const dy = Math.abs(e.touches[0].clientY - touchStartY);
+      if (dy > 5) isSwiping = true;
 
-// Swipe du cam-panel pour l'éjecter (vers la droite ou le bas)
-let panelDragStartX = 0, panelDragStartY = 0, panelDragging = false;
-camPanel.addEventListener('touchstart', (e) => {
-  panelDragStartX = e.touches[0].clientX;
-  panelDragStartY = e.touches[0].clientY;
-  panelDragging = false;
-  e.stopPropagation();
-}, { passive: true });
+      if (!selectionAllowed && isSwiping) {
+        scrollArea.classList.add('no-select');
+      }
+    }, { passive: true });
 
-camPanel.addEventListener('touchmove', (e) => {
-  const dx = e.touches[0].clientX - panelDragStartX;
-  const dy = e.touches[0].clientY - panelDragStartY;
-  if (Math.abs(dx) > 10 || Math.abs(dy) > 10) panelDragging = true;
-  if (panelDragging) {
-    camPanel.style.transform = `translate(${Math.max(0,dx)}px, ${Math.max(0,dy)}px)`;
-  }
-  e.stopPropagation();
-}, { passive: true });
+    scrollArea.addEventListener('touchend', () => {
+      touchActive = false;
+      isSwiping = false;
+      resetScrollMotion();
 
-camPanel.addEventListener('touchend', (e) => {
-  const dx = e.changedTouches[0].clientX - panelDragStartX;
-  const dy = e.changedTouches[0].clientY - panelDragStartY;
-  if (panelDragging && (dx > 60 || dy > 60)) {
-    // Éjecter le panel
-    camPanel.classList.add('hidden');
-    if (stream) stopCamera();
-    showToast('📷 Tap sur 📷 en haut pour réactiver', '', 3000);
-  } else {
-    // Revenir en place
-    camPanel.style.transform = '';
-    if (!stream && CONFIG.camEnabled && !panelDragging) startCamera();
-  }
-  panelDragging = false;
-  e.stopPropagation();
-}, { passive: true });
+      if (selectionAllowed) {
+        scrollArea.classList.remove('no-select');
+      } else {
+        setTimeout(() => {
+          if (!selectionAllowed) scrollArea.classList.add('no-select');
+          else scrollArea.classList.remove('no-select');
+        }, 120);
+      }
+    }, { passive: true });
 
-// Réafficher le panel quand on active la caméra
-const origStartCamera = startCamera;
+    scrollArea.addEventListener('touchcancel', () => {
+      touchActive = false;
+      isSwiping = false;
+      resetScrollMotion();
+      if (selectionAllowed) scrollArea.classList.remove('no-select');
+    }, { passive: true });
 
-// Debug : appui long 2s sur le bouton caméra
-let holdTimer = null;
-btnCamera.addEventListener('touchstart', () => { holdTimer = setTimeout(() => { document.getElementById('debug-panel').style.display='block'; showToast('Debug activé','ok'); }, 2000); });
-btnCamera.addEventListener('touchend', () => clearTimeout(holdTimer));
-btnCamera.addEventListener('mousedown', () => { holdTimer = setTimeout(() => { document.getElementById('debug-panel').style.display='block'; showToast('Debug activé','ok'); }, 2000); });
-btnCamera.addEventListener('mouseup', () => clearTimeout(holdTimer));
-document.getElementById('debug-close').addEventListener('click', () => { document.getElementById('debug-panel').style.display='none'; });
-
-/* ── SETTINGS ── */
-const settingsDrawer = document.getElementById('settings-drawer');
-document.getElementById('btn-settings').addEventListener('click', () => settingsDrawer.classList.add('open'));
-document.getElementById('drawer-backdrop').addEventListener('click', () => settingsDrawer.classList.remove('open'));
-document.getElementById('drawer-handle').addEventListener('click', () => settingsDrawer.classList.remove('open'));
-
-document.querySelectorAll('.toggle').forEach(t => {
-  const key = t.dataset.target;
-  if (CONFIG[key]) t.classList.add('on');
-  t.addEventListener('click', () => {
-    CONFIG[key] = !CONFIG[key];
-    t.classList.toggle('on', CONFIG[key]);
-    if (key === 'camEnabled' && !CONFIG[key] && stream) stopCamera();
-    if (key === 'useFront' && stream) { stopCamera(); setTimeout(startCamera, 300); }
-    if (key === 'ecoMode' && stream)  { stopCamera(); setTimeout(startCamera, 300); }
-    vibrate(20);
-  });
-});
-
-// Slider VITESSE — indépendant
-const sliderSpeed = document.getElementById('slider-speed');
-const speedVal    = document.getElementById('speed-val');
-sliderSpeed.addEventListener('input', () => {
-  CONFIG.speed = parseInt(sliderSpeed.value);
-  speedVal.textContent = `${sliderSpeed.value} — ${getScrollPx()}px`;
-});
-
-// Slider SENSIBILITÉ — indépendant
-const sliderSens = document.getElementById('slider-sensitivity');
-const sensVal    = document.getElementById('sensitivity-val');
-sliderSens.addEventListener('input', () => {
-  CONFIG.sensitivity = parseInt(sliderSens.value);
-  sensVal.textContent = `${sliderSens.value} — ${getSeuil()}lux`;
-});
-
-/* ── KNOB — deux points indépendants ── */
-(function() {
-  const canvas = document.getElementById('knob-canvas');
-  if (!canvas) return;
-  const kctx = canvas.getContext('2d');
-  const S = 120, cx = 60, cy = 60, R = 46, DR = 9;
-
-  let aD = -Math.PI/2; // vert ↓ (12h)
-  let aU =  Math.PI/2; // violet ↑ (6h)
-
-  function clockLabel(a) {
-    const n = ((a + Math.PI/2) / (2*Math.PI) + 1) % 1;
-    const t = Math.round(n * 720) % 720;
-    const h = Math.floor(t/60) || 12;
-    const m = t % 60;
-    return m ? `${h}h${m.toString().padStart(2,'0')}` : `${h}h00`;
-  }
-
-  function pos(a) { return { x: cx + Math.cos(a)*R, y: cy + Math.sin(a)*R }; }
-
-  function draw() {
-    kctx.clearRect(0,0,S,S);
-    // Fond
-    kctx.beginPath(); kctx.arc(cx,cy,R+8,0,Math.PI*2);
-    kctx.fillStyle='#1a1a2e'; kctx.fill();
-    kctx.strokeStyle='rgba(255,255,255,0.06)'; kctx.lineWidth=1; kctx.stroke();
-    // Piste
-    kctx.beginPath(); kctx.arc(cx,cy,R,0,Math.PI*2);
-    kctx.strokeStyle='rgba(255,255,255,0.12)'; kctx.lineWidth=3; kctx.stroke();
-    // Repères horloge
-    [[-Math.PI/2,'12'],[0,'3'],[Math.PI/2,'6'],[Math.PI,'9']].forEach(([a,l]) => {
-      const lx=cx+Math.cos(a)*(R+14), ly=cy+Math.sin(a)*(R+14);
-      kctx.fillStyle='rgba(255,255,255,0.2)'; kctx.font='8px sans-serif';
-      kctx.textAlign='center'; kctx.textBaseline='middle'; kctx.fillText(l,lx,ly);
+    scrollArea.addEventListener('contextmenu', (e) => {
+      if (!selectionAllowed) e.preventDefault();
     });
-    // Ligne entre les deux points
-    const pd=pos(aD), pu=pos(aU);
-    kctx.beginPath(); kctx.moveTo(pd.x,pd.y); kctx.lineTo(pu.x,pu.y);
-    kctx.strokeStyle='rgba(255,255,255,0.06)'; kctx.lineWidth=1;
-    kctx.setLineDash([3,3]); kctx.stroke(); kctx.setLineDash([]);
-    // Centre
-    kctx.beginPath(); kctx.arc(cx,cy,3,0,Math.PI*2);
-    kctx.fillStyle='rgba(255,255,255,0.15)'; kctx.fill();
-    // Point vert ↓
-    kctx.beginPath(); kctx.arc(pd.x,pd.y,DR,0,Math.PI*2);
-    kctx.fillStyle='#00f5c4'; kctx.fill();
-    kctx.fillStyle='#0a0a12'; kctx.font='bold 9px sans-serif';
-    kctx.textAlign='center'; kctx.textBaseline='middle'; kctx.fillText('↓',pd.x,pd.y);
-    // Point violet ↑
-    kctx.beginPath(); kctx.arc(pu.x,pu.y,DR,0,Math.PI*2);
-    kctx.fillStyle='#7b61ff'; kctx.fill();
-    kctx.fillStyle='#fff'; kctx.fillText('↑',pu.x,pu.y);
-    // Mettre à jour labels et CONFIG
-    document.getElementById('pos-down').textContent = clockLabel(aD);
-    document.getElementById('pos-up').textContent   = clockLabel(aU);
-    CONFIG.angleDown = Math.round(((aD+Math.PI/2)*180/Math.PI+360)%360);
-    CONFIG.angleUp   = Math.round(((aU+Math.PI/2)*180/Math.PI+360)%360);
+
+    scrollArea.addEventListener('selectstart', (e) => {
+      if (!selectionAllowed) e.preventDefault();
+    });
   }
 
-  function getA(e) {
-    const r = canvas.getBoundingClientRect();
-    const x = (e.touches?e.touches[0].clientX:e.clientX) - r.left;
-    const y = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
-    return Math.atan2((y/r.height*S)-cy, (x/r.width*S)-cx);
+  function bindCameraControls() {
+    btnCamera.addEventListener('click', async () => {
+      camPanel.classList.remove('hidden');
+      camPanel.style.transform = '';
+
+      if (stream) {
+        stopCamera();
+      } else if (CONFIG.camEnabled) {
+        await startCamera();
+      } else {
+        showToast('Activez la caméra dans les paramètres', 'warn');
+      }
+    });
+
+    camPanel.addEventListener('click', async () => {
+      if (!stream && CONFIG.camEnabled && !panelDragging) {
+        await startCamera();
+      }
+    });
+
+    camPanel.addEventListener('touchstart', (e) => {
+      panelDragStartX = e.touches[0].clientX;
+      panelDragStartY = e.touches[0].clientY;
+      panelDragging = false;
+      e.stopPropagation();
+    }, { passive: true });
+
+    camPanel.addEventListener('touchmove', (e) => {
+      const dx = e.touches[0].clientX - panelDragStartX;
+      const dy = e.touches[0].clientY - panelDragStartY;
+
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) panelDragging = true;
+
+      if (panelDragging) {
+        camPanel.style.transform = `translate(${Math.max(0, dx)}px, ${Math.max(0, dy)}px)`;
+      }
+
+      e.stopPropagation();
+    }, { passive: true });
+
+    camPanel.addEventListener('touchend', async (e) => {
+      const dx = e.changedTouches[0].clientX - panelDragStartX;
+      const dy = e.changedTouches[0].clientY - panelDragStartY;
+
+      if (panelDragging && (dx > 60 || dy > 60)) {
+        camPanel.classList.add('hidden');
+        if (stream) stopCamera(true);
+        showToast('📷 Tap sur 📷 en haut pour réactiver', '', 3000);
+      } else {
+        camPanel.style.transform = '';
+      }
+
+      panelDragging = false;
+      e.stopPropagation();
+    }, { passive: true });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && stream) {
+        stopCamera(true);
+        showToast('Caméra suspendue', '', 2000);
+      }
+    });
   }
 
-  function nearest(e) {
-    const r = canvas.getBoundingClientRect();
-    const mx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
-    const my=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
-    const px=mx/r.width*S, py=my/r.height*S;
-    const pd=pos(aD), pu=pos(aU);
-    const dD=Math.hypot(px-pd.x,py-pd.y), dU=Math.hypot(px-pu.x,py-pu.y);
-    if (dD < DR+12 && dD<=dU) return 'D';
-    if (dU < DR+12) return 'U';
-    return null;
+  function bindDebug() {
+    btnCamera.addEventListener('touchstart', () => {
+      holdTimer = setTimeout(() => {
+        debugPanel.style.display = 'block';
+        showToast('Debug activé', 'ok');
+      }, 2000);
+    }, { passive: true });
+
+    btnCamera.addEventListener('touchend', () => clearTimeout(holdTimer), { passive: true });
+    btnCamera.addEventListener('mousedown', () => {
+      holdTimer = setTimeout(() => {
+        debugPanel.style.display = 'block';
+        showToast('Debug activé', 'ok');
+      }, 2000);
+    });
+
+    btnCamera.addEventListener('mouseup', () => clearTimeout(holdTimer));
+    btnCamera.addEventListener('mouseleave', () => clearTimeout(holdTimer));
+
+    document.getElementById('debug-close').addEventListener('click', () => {
+      debugPanel.style.display = 'none';
+    });
   }
 
-  let drag = null;
-  canvas.addEventListener('mousedown', e => { drag=nearest(e); });
-  document.addEventListener('mousemove', e => { if(!drag)return; if(drag==='D')aD=getA(e); else aU=getA(e); draw(); });
-  document.addEventListener('mouseup', () => drag=null);
-  canvas.addEventListener('touchstart', e => { drag=nearest(e); e.preventDefault(); },{passive:false});
-  canvas.addEventListener('touchmove', e => { if(!drag)return; if(drag==='D')aD=getA(e); else aU=getA(e); draw(); e.preventDefault(); },{passive:false});
-  canvas.addEventListener('touchend', () => drag=null);
-  draw();
+  function bindSettings() {
+    btnSettings.addEventListener('click', () => {
+      settingsDrawer.classList.add('open');
+    });
+
+    document.getElementById('drawer-backdrop').addEventListener('click', () => {
+      settingsDrawer.classList.remove('open');
+    });
+
+    document.getElementById('drawer-handle').addEventListener('click', () => {
+      settingsDrawer.classList.remove('open');
+    });
+
+    document.querySelectorAll('.toggle').forEach(toggle => {
+      const key = toggle.dataset.target;
+      toggle.classList.toggle('on', !!CONFIG[key]);
+
+      toggle.addEventListener('click', () => {
+        CONFIG[key] = !CONFIG[key];
+        toggle.classList.toggle('on', !!CONFIG[key]);
+        saveConfig();
+        vibrate(20);
+
+        if (key === 'camEnabled' && !CONFIG[key] && stream) {
+          stopCamera();
+        }
+
+        if ((key === 'useFront' || key === 'ecoMode') && stream) {
+          stopCamera(true);
+          setTimeout(() => startCamera(), 220);
+        }
+      });
+    });
+
+    sliderSpeed.value = CONFIG.speed;
+    sliderSens.value = CONFIG.sensitivity;
+
+    function refreshSliderLabels() {
+      speedVal.textContent = `${CONFIG.speed} — ${getScrollPx()}px`;
+      sensVal.textContent = `${CONFIG.sensitivity} — ${getSeuil()}lux`;
+    }
+
+    sliderSpeed.addEventListener('input', () => {
+      CONFIG.speed = parseInt(sliderSpeed.value, 10);
+      refreshSliderLabels();
+      saveConfig();
+    });
+
+    sliderSens.addEventListener('input', () => {
+      CONFIG.sensitivity = parseInt(sliderSens.value, 10);
+      refreshSliderLabels();
+      saveConfig();
+    });
+
+    refreshSliderLabels();
+  }
+
+  function bindKnob() {
+    const canvas = document.getElementById('knob-canvas');
+    if (!canvas) return;
+
+    const kctx = canvas.getContext('2d');
+    const S = 120;
+    const cx = 60;
+    const cy = 60;
+    const R = 46;
+    const DR = 9;
+
+    let aD = ((CONFIG.angleDown - 90) * Math.PI) / 180;
+    let aU = ((CONFIG.angleUp - 90) * Math.PI) / 180;
+
+    function clockLabel(a) {
+      const n = ((a + Math.PI / 2) / (2 * Math.PI) + 1) % 1;
+      const t = Math.round(n * 720) % 720;
+      const h = Math.floor(t / 60) || 12;
+      const m = t % 60;
+      return m ? `${h}h${m.toString().padStart(2, '0')}` : `${h}h00`;
+    }
+
+    function pos(a) {
+      return {
+        x: cx + Math.cos(a) * R,
+        y: cy + Math.sin(a) * R
+      };
+    }
+
+    function draw() {
+      kctx.clearRect(0, 0, S, S);
+
+      kctx.beginPath();
+      kctx.arc(cx, cy, R + 8, 0, Math.PI * 2);
+      kctx.fillStyle = '#1a1a2e';
+      kctx.fill();
+      kctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      kctx.lineWidth = 1;
+      kctx.stroke();
+
+      kctx.beginPath();
+      kctx.arc(cx, cy, R, 0, Math.PI * 2);
+      kctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      kctx.lineWidth = 3;
+      kctx.stroke();
+
+      [[-Math.PI / 2, '12'], [0, '3'], [Math.PI / 2, '6'], [Math.PI, '9']].forEach(([a, l]) => {
+        const lx = cx + Math.cos(a) * (R + 14);
+        const ly = cy + Math.sin(a) * (R + 14);
+        kctx.fillStyle = 'rgba(255,255,255,0.2)';
+        kctx.font = '8px sans-serif';
+        kctx.textAlign = 'center';
+        kctx.textBaseline = 'middle';
+        kctx.fillText(l, lx, ly);
+      });
+
+      const pd = pos(aD);
+      const pu = pos(aU);
+
+      kctx.beginPath();
+      kctx.moveTo(pd.x, pd.y);
+      kctx.lineTo(pu.x, pu.y);
+      kctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      kctx.lineWidth = 1;
+      kctx.setLineDash([3, 3]);
+      kctx.stroke();
+      kctx.setLineDash([]);
+
+      kctx.beginPath();
+      kctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      kctx.fillStyle = 'rgba(255,255,255,0.15)';
+      kctx.fill();
+
+      kctx.beginPath();
+      kctx.arc(pd.x, pd.y, DR, 0, Math.PI * 2);
+      kctx.fillStyle = '#00f5c4';
+      kctx.fill();
+      kctx.fillStyle = '#0a0a12';
+      kctx.font = 'bold 9px sans-serif';
+      kctx.textAlign = 'center';
+      kctx.textBaseline = 'middle';
+      kctx.fillText('↓', pd.x, pd.y);
+
+      kctx.beginPath();
+      kctx.arc(pu.x, pu.y, DR, 0, Math.PI * 2);
+      kctx.fillStyle = '#7b61ff';
+      kctx.fill();
+      kctx.fillStyle = '#fff';
+      kctx.fillText('↑', pu.x, pu.y);
+
+      document.getElementById('pos-down').textContent = clockLabel(aD);
+      document.getElementById('pos-up').textContent = clockLabel(aU);
+
+      CONFIG.angleDown = Math.round(((aD + Math.PI / 2) * 180 / Math.PI + 360) % 360);
+      CONFIG.angleUp = Math.round(((aU + Math.PI / 2) * 180 / Math.PI + 360) % 360);
+      saveConfig();
+    }
+
+    function getAngle(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      return Math.atan2((y / rect.height * S) - cy, (x / rect.width * S) - cx);
+    }
+
+    function nearest(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const my = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      const px = mx / rect.width * S;
+      const py = my / rect.height * S;
+      const pd = pos(aD);
+      const pu = pos(aU);
+      const dD = Math.hypot(px - pd.x, py - pd.y);
+      const dU = Math.hypot(px - pu.x, py - pu.y);
+
+      if (dD < DR + 12 && dD <= dU) return 'D';
+      if (dU < DR + 12) return 'U';
+      return null;
+    }
+
+    let drag = null;
+
+    canvas.addEventListener('mousedown', e => {
+      drag = nearest(e);
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!drag) return;
+      if (drag === 'D') aD = getAngle(e);
+      else aU = getAngle(e);
+      draw();
+    });
+
+    document.addEventListener('mouseup', () => {
+      drag = null;
+    });
+
+    canvas.addEventListener('touchstart', e => {
+      drag = nearest(e);
+      e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+      if (!drag) return;
+      if (drag === 'D') aD = getAngle(e);
+      else aU = getAngle(e);
+      draw();
+      e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => {
+      drag = null;
+    });
+
+    draw();
+  }
+
+  function init() {
+    bindScrollPriority();
+    bindCameraControls();
+    bindDebug();
+    bindSettings();
+    bindKnob();
+    updateScrollBar();
+    showToast('👆 Appuyez sur 📷 pour démarrer', '', 3500);
+  }
+
+  init();
 })();
-
-updateScrollBar();
-setTimeout(() => showToast('👆 Appuyez sur 📷 pour démarrer', '', 4000), 500);
 </script>
 </body>
 </html>
