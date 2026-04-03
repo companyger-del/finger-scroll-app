@@ -37,9 +37,7 @@
       touch-action: manipulation;
     }
 
-    body {
-      overscroll-behavior: none;
-    }
+    body { overscroll-behavior: none; }
 
     #app {
       width: 100vw;
@@ -61,265 +59,128 @@
       flex-shrink: 0;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .logo { display: flex; align-items: center; gap: 10px; }
 
     .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
+      width: 34px; height: 34px; border-radius: 10px;
       background: linear-gradient(135deg, var(--accent2), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
     }
 
     .logo-text {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
+      font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
 
-    .header-actions {
-      display: flex;
-      gap: 10px;
-    }
+    .header-actions { display: flex; gap: 10px; }
 
     .icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      transition: all 0.2s;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+      width: 38px; height: 38px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent; user-select: none;
     }
 
-    .icon-btn:active {
-      transform: scale(0.92);
-      background: var(--surface2);
-    }
-
-    .icon-btn.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 12px rgba(0,245,196,0.2);
-    }
+    .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
+    .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
 
     #scroll-area {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
+      flex: 1; overflow-y: auto; overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       padding: 0 20px 120px;
       overscroll-behavior: contain;
     }
 
-    #scroll-area::-webkit-scrollbar {
-      display: none;
-    }
+    #scroll-area::-webkit-scrollbar { display: none; }
 
     #scroll-area.no-select {
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
     }
 
     .article-hero {
-      margin: 8px 0 28px;
-      padding: 28px 24px;
+      margin: 8px 0 28px; padding: 28px 24px;
       background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
+      border-radius: 20px; border: 1px solid var(--border);
+      position: relative; overflow: hidden;
     }
 
     .article-hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -30%;
-      width: 250px;
-      height: 250px;
+      content: ''; position: absolute; top: -50%; right: -30%;
+      width: 250px; height: 250px;
       background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%);
       pointer-events: none;
     }
 
     .tag {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      background: rgba(0,245,196,0.1);
-      color: var(--accent);
-      border: 1px solid rgba(0,245,196,0.2);
-      margin-bottom: 14px;
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      background: rgba(0,245,196,0.1); color: var(--accent);
+      border: 1px solid rgba(0,245,196,0.2); margin-bottom: 14px;
       font-family: 'Fira Code', monospace;
     }
 
-    .article-hero h1 {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.25;
-      letter-spacing: -0.5px;
-      margin-bottom: 12px;
-    }
-
-    .article-hero p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
+    .article-hero h1 { font-size: 26px; font-weight: 800; line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 12px; }
+    .article-hero p { font-size: 14px; color: var(--muted); line-height: 1.65; }
 
     .meta {
-      display: flex;
-      gap: 16px;
-      margin-top: 16px;
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'Fira Code', monospace;
-      flex-wrap: wrap;
+      display: flex; gap: 16px; margin-top: 16px;
+      font-size: 12px; color: var(--muted); font-family: 'Fira Code', monospace; flex-wrap: wrap;
     }
 
     .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 28px 0 14px;
-      font-family: 'Fira Code', monospace;
+      font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin: 28px 0 14px; font-family: 'Fira Code', monospace;
     }
 
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
     }
 
-    .card-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      margin-bottom: 10px;
-    }
+    .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
 
     .card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
     }
 
-    .card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
+    .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-    .card p {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 
     .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      text-align: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; text-align: center;
     }
 
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -1px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; font-family: 'Fira Code', monospace; }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 
     .quote-block {
-      border-left: 3px solid var(--accent);
-      padding: 16px 20px;
-      background: rgba(0,245,196,0.04);
-      border-radius: 0 12px 12px 0;
-      margin: 16px 0;
-      font-style: italic;
-      font-size: 15px;
-      line-height: 1.7;
+      border-left: 3px solid var(--accent); padding: 16px 20px;
+      background: rgba(0,245,196,0.04); border-radius: 0 12px 12px 0;
+      margin: 16px 0; font-style: italic; font-size: 15px; line-height: 1.7;
     }
 
     #cam-overlay {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 50;
-      pointer-events: none;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; pointer-events: none;
     }
 
     #cam-panel {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid var(--border);
-      background: var(--surface);
+      position: absolute; bottom: 20px; right: 20px;
+      width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
+      border: 2px solid var(--border); background: var(--surface);
       transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1), opacity 0.25s, border-color 0.2s, box-shadow 0.2s;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      pointer-events: all;
-      cursor: pointer;
-      touch-action: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+      pointer-events: all; cursor: pointer;
+      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
     }
 
-    #cam-panel.hidden {
-      transform: translateX(90px);
-      opacity: 0;
-      pointer-events: none;
-    }
+    #cam-panel.hidden { transform: translateX(90px); opacity: 0; pointer-events: none; }
 
     #cam-panel.active {
       border-color: var(--accent);
@@ -338,314 +199,145 @@
     }
 
     #cam-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
-      display: none;
+      width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;
     }
 
     #cam-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 4px;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px;
     }
 
-    #cam-placeholder .cam-emoji {
-      font-size: 18px;
-    }
+    #cam-placeholder .cam-emoji { font-size: 18px; }
+    #cam-placeholder .cam-label { font-size: 8px; color: var(--muted); font-family: 'Fira Code', monospace; }
 
-    #cam-placeholder .cam-label {
-      font-size: 8px;
-      color: var(--muted);
-      font-family: 'Fira Code', monospace;
-    }
-
-    #cam-canvas {
-      display: none;
-    }
+    #cam-canvas { display: none; }
 
     #scroll-bar {
-      position: fixed;
-      right: 4px;
-      top: 60px;
-      bottom: 140px;
-      width: 3px;
-      border-radius: 2px;
-      background: var(--surface2);
-      z-index: 20;
-      opacity: 0;
-      transition: opacity 0.3s;
+      position: fixed; right: 4px; top: 60px; bottom: 140px;
+      width: 3px; border-radius: 2px; background: var(--surface2);
+      z-index: 20; opacity: 0; transition: opacity 0.3s;
     }
 
     #scroll-thumb {
-      width: 3px;
-      border-radius: 2px;
-      background: var(--accent);
-      position: absolute;
-      top: 0;
-      height: 40px;
+      width: 3px; border-radius: 2px; background: var(--accent);
+      position: absolute; top: 0; height: 40px;
     }
 
     #direction-hint {
-      position: fixed;
-      right: 64px;
-      bottom: 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      z-index: 25;
+      position: fixed; right: 64px; bottom: 32px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 25;
     }
 
     .dir-arrow {
-      font-size: 18px;
-      opacity: 0.25;
-      transform: scale(1);
+      font-size: 18px; opacity: 0.25; transform: scale(1);
       transition: transform 0.15s, opacity 0.15s;
     }
 
-    .dir-arrow.active {
-      opacity: 1;
-      transform: scale(1.35);
-    }
+    .dir-arrow.active { opacity: 1; transform: scale(1.35); }
 
     #status-toast {
-      position: fixed;
-      bottom: 130px;
-      left: 50%;
+      position: fixed; bottom: 130px; left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 10px 20px;
-      font-size: 12px;
-      font-family: 'Fira Code', monospace;
-      color: var(--muted);
-      white-space: nowrap;
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 60;
-      max-width: calc(100vw - 32px);
-      overflow: hidden;
-      text-overflow: ellipsis;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 30px; padding: 10px 20px;
+      font-size: 12px; font-family: 'Fira Code', monospace; color: var(--muted);
+      white-space: nowrap; opacity: 0; transition: all 0.3s;
+      pointer-events: none; z-index: 60;
+      max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis;
     }
 
-    #status-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #status-toast.ok {
-      color: var(--accent);
-      border-color: rgba(0,245,196,0.2);
-    }
-
-    #status-toast.warn {
-      color: var(--warn);
-      border-color: rgba(255,107,53,0.2);
-    }
+    #status-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #status-toast.ok { color: var(--accent); border-color: rgba(0,245,196,0.2); }
+    #status-toast.warn { color: var(--warn); border-color: rgba(255,107,53,0.2); }
 
     #debug-panel {
-      display: none;
-      position: fixed;
-      top: 60px;
-      left: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.92);
-      border: 1px solid #00f5c4;
-      border-radius: 12px;
-      padding: 12px;
-      z-index: 200;
-      font-family: monospace;
-      font-size: 11px;
-      color: #00f5c4;
+      display: none; position: fixed; top: 60px; left: 10px; right: 10px;
+      background: rgba(0,0,0,0.92); border: 1px solid #00f5c4;
+      border-radius: 12px; padding: 12px; z-index: 200;
+      font-family: monospace; font-size: 11px; color: #00f5c4;
     }
 
     #settings-drawer {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      pointer-events: none;
+      position: fixed; inset: 0; z-index: 100; display: none; pointer-events: none;
     }
 
-    #settings-drawer.open {
-      display: block;
-      pointer-events: all;
-    }
+    #settings-drawer.open { display: block; pointer-events: all; }
 
     .drawer-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
     }
 
     .drawer-panel {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-radius: 24px 24px 0 0;
-      border-top: 1px solid var(--border);
-      padding: 20px 24px 40px;
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--surface); border-radius: 24px 24px 0 0;
+      border-top: 1px solid var(--border); padding: 20px 24px 40px;
       transform: translateY(100%);
       transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
-      max-height: 80vh;
-      overflow-y: auto;
+      max-height: 80vh; overflow-y: auto;
     }
 
-    #settings-drawer.open .drawer-panel {
-      transform: translateY(0);
-    }
+    #settings-drawer.open .drawer-panel { transform: translateY(0); }
 
     .drawer-handle {
-      width: 36px;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0 auto 20px;
-      cursor: pointer;
+      width: 36px; height: 4px; background: var(--border);
+      border-radius: 2px; margin: 0 auto 20px; cursor: pointer;
     }
 
-    .drawer-title {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 24px;
-      letter-spacing: -0.5px;
-    }
+    .drawer-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; }
 
     .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-      gap: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; border-bottom: 1px solid var(--border); gap: 12px;
     }
 
-    .setting-row:last-child {
-      border-bottom: none;
-    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row.col { flex-direction: column; align-items: stretch; gap: 12px; }
 
-    .setting-row.col {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
-    }
-
-    .setting-info h4 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .setting-info p {
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .setting-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .setting-info p { font-size: 12px; color: var(--muted); }
 
     .toggle {
-      width: 50px;
-      height: 28px;
-      border-radius: 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-      flex-shrink: 0;
+      width: 50px; height: 28px; border-radius: 14px;
+      background: var(--surface2); border: 1px solid var(--border);
+      position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
     }
 
-    .toggle.on {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
+    .toggle.on { background: var(--accent); border-color: var(--accent); }
 
     .toggle::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: white;
-      transition: transform 0.25s;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px; border-radius: 50%; background: white;
+      transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
     }
 
-    .toggle.on::after {
-      transform: translateX(22px);
-    }
+    .toggle.on::after { transform: translateX(22px); }
 
-    .slider-wrap {
-      width: 130px;
-      min-width: 130px;
-    }
+    .slider-wrap { width: 130px; min-width: 130px; }
 
     .slider-wrap input[type=range] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--surface2);
-      outline: none;
-      cursor: pointer;
+      -webkit-appearance: none; width: 100%; height: 4px;
+      border-radius: 2px; background: var(--surface2); outline: none; cursor: pointer;
     }
 
     .slider-wrap input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      border: none;
+      -webkit-appearance: none; width: 18px; height: 18px;
+      border-radius: 50%; background: var(--accent); cursor: pointer; border: none;
     }
 
     .slider-val {
-      font-size: 11px;
-      font-family: 'Fira Code', monospace;
-      color: var(--accent);
-      text-align: right;
-      margin-top: 4px;
+      font-size: 11px; font-family: 'Fira Code', monospace;
+      color: var(--accent); text-align: right; margin-top: 4px;
     }
 
     @media (max-width: 560px) {
-      #header {
-        padding: 12px 14px;
-      }
-
-      #scroll-area {
-        padding: 0 14px 110px;
-      }
-
-      .article-hero {
-        padding: 22px 18px;
-      }
-
-      .article-hero h1 {
-        font-size: 22px;
-      }
-
-      .card {
-        padding: 16px;
-      }
-
-      .drawer-panel {
-        padding: 18px 16px 34px;
-      }
+      #header { padding: 12px 14px; }
+      #scroll-area { padding: 0 14px 110px; }
+      .article-hero { padding: 22px 18px; }
+      .article-hero h1 { font-size: 22px; }
+      .card { padding: 16px; }
+      .drawer-panel { padding: 18px 16px 34px; }
     }
   </style>
 </head>
@@ -685,7 +377,7 @@
         <div class="card-icon" style="background:rgba(0,245,196,0.1)">💡</div>
         <div>
           <h3>Lumière = direction</h3>
-          <p>Lumière dans la zone “descend” → défilement vers le bas. Lumière dans la zone “remonte” → défilement vers le haut. Noir quasi total → arrêt.</p>
+          <p>Lumière dans la zone "descend" → défilement vers le bas. Lumière dans la zone "remonte" → défilement vers le haut. Noir quasi total → arrêt.</p>
         </div>
       </div>
     </div>
@@ -705,7 +397,7 @@
         <div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div>
         <div>
           <h3>Position adaptable</h3>
-          <p>Le cercle de réglage permet d’adapter les deux zones de lumière selon votre manière de tenir l’appareil.</p>
+          <p>Le cercle de réglage permet d'adapter les deux zones de lumière selon votre manière de tenir l'appareil.</p>
         </div>
       </div>
     </div>
@@ -714,25 +406,26 @@
 
     <div class="section-title">// Confidentialité</div>
     <div class="card">
-      <p>✅ Aucun envoi réseau pour l’analyse vidéo. Le traitement reste local dans le navigateur. La caméra se coupe automatiquement si l’onglet passe en arrière-plan.</p>
+      <p>✅ Aucun envoi réseau pour l'analyse vidéo. Le traitement reste local dans le navigateur. La caméra se coupe automatiquement si l'onglet passe en arrière-plan.</p>
     </div>
 
     <div class="section-title">// Instructions</div>
     <div class="card">
       <h3 style="margin-bottom:10px">📱 Comment utiliser</h3>
       <p style="line-height:2">
-        1. Appuyez sur 📷 pour activer la caméra<br>
-        2. Placez votre doigt sur l’objectif dorsal<br>
-        3. Laissez passer la lumière d’un côté<br>
-        4. Zone “descend” = descend &nbsp; Zone “remonte” = remonte<br>
-        5. Noir total ou quasi total = arrêt
+        1. Appuyez sur 📷 ou sur le rond en bas à droite<br>
+        2. Placez votre doigt sur l'objectif dorsal<br>
+        3. Laissez passer la lumière d'un côté<br>
+        4. Zone "descend" = descend &nbsp; Zone "remonte" = remonte<br>
+        5. Noir total = arrêt &nbsp; Double tap = coupe la caméra
       </p>
     </div>
 
     <div class="card">
       <p style="line-height:2">
         Ajustez la vitesse, la sensibilité et la position dans ⚙️.<br>
-        Double tapez dans la zone de lecture pour couper rapidement la caméra.
+        Le rond en bas à droite démarre et arrête la caméra.<br>
+        Glissez ce rond vers la droite pour le masquer.
       </p>
     </div>
   </div>
@@ -745,7 +438,7 @@
   </div>
 
   <div id="cam-overlay">
-    <div id="cam-panel" aria-label="Caméra">
+    <div id="cam-panel" aria-label="Caméra — tap pour démarrer/arrêter">
       <div id="cam-placeholder">
         <span class="cam-emoji">📷</span>
         <span class="cam-label">ON</span>
@@ -776,19 +469,16 @@
         <div class="setting-info"><h4>Détection caméra</h4><p>Active le défilement gestuel</p></div>
         <div class="toggle" data-target="camEnabled"></div>
       </div>
-
       <div class="setting-row">
         <div class="setting-info"><h4>Caméra frontale</h4><p>Selfie au lieu du dos</p></div>
         <div class="toggle" data-target="useFront"></div>
       </div>
-
       <div class="setting-row">
-        <div class="setting-info"><h4>Retour haptique</h4><p>Vibration légère à l’activation</p></div>
+        <div class="setting-info"><h4>Retour haptique</h4><p>Vibration légère à l'activation</p></div>
         <div class="toggle" data-target="haptic"></div>
       </div>
-
       <div class="setting-row">
-        <div class="setting-info"><h4>Mode économie</h4><p>Réduit la fréquence d’analyse</p></div>
+        <div class="setting-info"><h4>Mode économie</h4><p>Réduit la fréquence d'analyse</p></div>
         <div class="toggle" data-target="ecoMode"></div>
       </div>
 
@@ -826,9 +516,7 @@
               <span style="color:var(--muted);">⬆ Remonte</span>
               <span id="pos-up" style="color:#7b61ff;margin-left:4px;">6h00</span>
             </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">
-              Glissez les points<br>où la lumière passe
-            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">Glissez les points<br>où la lumière passe</div>
           </div>
         </div>
       </div>
@@ -854,119 +542,94 @@
 
   const CONFIG = loadConfig();
 
-  const SPEED_PX = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
-  const SENS_LUX = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
+  const SPEED_PX  = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
+  const SENS_LUX  = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
 
   const CAMERA_W = 320;
   const CAMERA_H = 240;
   const BASE_NOIR = 8;
 
-  // Détection caméra
   const DETECT_FPS_NORMAL = 22;
-  const DETECT_FPS_ECO = 12;
+  const DETECT_FPS_ECO    = 12;
+  const ACCEL_TIME        = 2000;  // ms pour atteindre vitesse max
+  const DECEL_TIME        = 220;   // ms pour arrêt propre
 
-  // Animation scroll
-  const ACCEL_TIME = 2000; // 2 secondes pour atteindre la vitesse max
-  const DECEL_TIME = 220;  // arrêt propre sans cassure brutale
+  let stream         = null;
+  let detectRAF      = null;
+  let motionRAF      = null;
 
-  let stream = null;
-  let detectRAF = null;
-  let motionRAF = null;
-
-  let touchActive = false;
-  let selectionAllowed = false;
+  let touchActive       = false;
+  let selectionAllowed  = false;
   let localNoirThreshold = BASE_NOIR;
-  let calibrating = false;
+  let calibrating       = false;
 
-  let touchStartY = 0;
-  let isSwiping = false;
+  let touchStartY  = 0;
+  let isSwiping    = false;
 
-  let lastTapTime = 0;
-  let tapCount = 0;
-  let tapTimer = null;
-
-  let toastTimer = null;
-  let holdTimer = null;
+  let lastTapTime  = 0;
+  let tapCount     = 0;
+  let tapTimer     = null;
+  let toastTimer   = null;
+  let holdTimer    = null;
 
   let panelDragStartX = 0;
   let panelDragStartY = 0;
-  let panelDragging = false;
+  let panelDragging   = false;
 
-  // État mouvement continu
-  let commandedDirection = 0; // -1 = up, +1 = down, 0 = stop
-  let actualVelocity = 0;     // px/sec signé
-  let lastMotionTime = 0;
-  let lastDetectTime = 0;
-
-  // Flèches
-  let lastArrowUpAt = 0;
-  let lastArrowDownAt = 0;
+  let commandedDirection = 0;   // -1 haut, +1 bas, 0 stop
+  let actualVelocity     = 0;   // px/sec
+  let lastMotionTime     = 0;
+  let lastDetectTime     = 0;
+  let lastArrowUpAt      = 0;
+  let lastArrowDownAt    = 0;
 
   // DOM
-  const scrollArea = document.getElementById('scroll-area');
-  const camPanel = document.getElementById('cam-panel');
-  const camVideo = document.getElementById('cam-video');
-  const camCanvas = document.getElementById('cam-canvas');
-  const camPlaceholder = document.getElementById('cam-placeholder');
-  const statusToast = document.getElementById('status-toast');
-  const scrollBar = document.getElementById('scroll-bar');
-  const scrollThumb = document.getElementById('scroll-thumb');
-  const arrowUp = document.getElementById('arrow-up');
-  const arrowDown = document.getElementById('arrow-down');
-  const btnCamera = document.getElementById('btn-camera');
-  const btnSettings = document.getElementById('btn-settings');
-  const settingsDrawer = document.getElementById('settings-drawer');
-  const debugPanel = document.getElementById('debug-panel');
-  const debugBands = document.getElementById('debug-bands');
-  const debugInfo = document.getElementById('debug-info');
-  const sliderSpeed = document.getElementById('slider-speed');
-  const sliderSens = document.getElementById('slider-sensitivity');
-  const speedVal = document.getElementById('speed-val');
-  const sensVal = document.getElementById('sensitivity-val');
+  const scrollArea    = document.getElementById('scroll-area');
+  const camPanel      = document.getElementById('cam-panel');
+  const camVideo      = document.getElementById('cam-video');
+  const camCanvas     = document.getElementById('cam-canvas');
+  const camPlaceholder= document.getElementById('cam-placeholder');
+  const statusToast   = document.getElementById('status-toast');
+  const scrollBar     = document.getElementById('scroll-bar');
+  const scrollThumb   = document.getElementById('scroll-thumb');
+  const arrowUp       = document.getElementById('arrow-up');
+  const arrowDown     = document.getElementById('arrow-down');
+  const btnCamera     = document.getElementById('btn-camera');
+  const btnSettings   = document.getElementById('btn-settings');
+  const settingsDrawer= document.getElementById('settings-drawer');
+  const debugPanel    = document.getElementById('debug-panel');
+  const debugBands    = document.getElementById('debug-bands');
+  const debugInfo     = document.getElementById('debug-info');
+  const sliderSpeed   = document.getElementById('slider-speed');
+  const sliderSens    = document.getElementById('slider-sensitivity');
+  const speedVal      = document.getElementById('speed-val');
+  const sensVal       = document.getElementById('sensitivity-val');
+  const ctx           = camCanvas.getContext('2d', { willReadFrequently: true });
 
-  const ctx = camCanvas.getContext('2d', { willReadFrequently: true });
-
+  // ── CONFIG ──────────────────────────────────────────────
   function loadConfig() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return { ...DEFAULT_CONFIG };
       return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
-    } catch {
-      return { ...DEFAULT_CONFIG };
-    }
+    } catch { return { ...DEFAULT_CONFIG }; }
   }
 
   function saveConfig() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(CONFIG));
-    } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(CONFIG)); } catch {}
   }
 
-  function getScrollPxPerFrame() {
-    return SPEED_PX[Math.min(Math.max(CONFIG.speed, 1) - 1, 9)];
-  }
+  function getScrollPxPerFrame() { return SPEED_PX[Math.min(Math.max(CONFIG.speed, 1) - 1, 9)]; }
+  function getTargetVelocity()   { return getScrollPxPerFrame() * 60; }
+  function getSeuil()            { return SENS_LUX[Math.min(Math.max(CONFIG.sensitivity, 1) - 1, 9)]; }
+  function getDetectInterval()   { return 1000 / (CONFIG.ecoMode ? DETECT_FPS_ECO : DETECT_FPS_NORMAL); }
 
-  // Conversion en px/sec pour animation fluide indépendante du FPS
-  function getTargetVelocity() {
-    return getScrollPxPerFrame() * 60;
-  }
-
-  function getSeuil() {
-    return SENS_LUX[Math.min(Math.max(CONFIG.sensitivity, 1) - 1, 9)];
-  }
-
-  function getDetectInterval() {
-    const fps = CONFIG.ecoMode ? DETECT_FPS_ECO : DETECT_FPS_NORMAL;
-    return 1000 / fps;
-  }
-
+  // ── UI HELPERS ───────────────────────────────────────────
   function showToast(msg, type = '', dur = 2500) {
     clearTimeout(toastTimer);
     statusToast.textContent = msg;
     statusToast.className = 'show ' + type;
-    toastTimer = setTimeout(() => {
-      statusToast.className = '';
-    }, dur);
+    toastTimer = setTimeout(() => { statusToast.className = ''; }, dur);
   }
 
   function vibrate(pattern) {
@@ -975,51 +638,40 @@
 
   function updateScrollBar() {
     const max = scrollArea.scrollHeight - scrollArea.clientHeight;
-    if (max <= 0) {
-      scrollThumb.style.top = '0px';
-      return;
-    }
-    const p = scrollArea.scrollTop / max;
+    if (max <= 0) { scrollThumb.style.top = '0px'; return; }
+    const p  = scrollArea.scrollTop / max;
     const bh = scrollBar.clientHeight;
     const th = Math.max(30, bh * scrollArea.clientHeight / scrollArea.scrollHeight);
     scrollThumb.style.height = th + 'px';
-    scrollThumb.style.top = p * (bh - th) + 'px';
+    scrollThumb.style.top    = p * (bh - th) + 'px';
   }
 
-  function setArrow(direction) {
+  function setArrow(dir) {
     const now = performance.now();
-    if (direction === 'up') {
-      lastArrowUpAt = now;
-      arrowUp.classList.add('active');
-    } else if (direction === 'down') {
-      lastArrowDownAt = now;
-      arrowDown.classList.add('active');
-    }
+    if (dir === 'up')   { lastArrowUpAt   = now; arrowUp.classList.add('active'); }
+    if (dir === 'down') { lastArrowDownAt = now; arrowDown.classList.add('active'); }
   }
 
   function refreshArrows() {
     const now = performance.now();
-    if (now - lastArrowUpAt > 140) arrowUp.classList.remove('active');
+    if (now - lastArrowUpAt   > 140) arrowUp.classList.remove('active');
     if (now - lastArrowDownAt > 140) arrowDown.classList.remove('active');
   }
 
-  function setSelectionAllowed(value) {
-    selectionAllowed = value;
-    if (selectionAllowed) {
-      scrollArea.classList.remove('no-select');
-    } else if (touchActive || isSwiping || stream) {
-      scrollArea.classList.add('no-select');
-    }
+  function setSelectionAllowed(v) {
+    selectionAllowed = v;
+    if (v) scrollArea.classList.remove('no-select');
+    else   scrollArea.classList.add('no-select');
   }
 
-  function resetMotionHard() {
+  function resetMotion() {
     commandedDirection = 0;
-    actualVelocity = 0;
-    lastMotionTime = 0;
+    actualVelocity     = 0;
+    lastMotionTime     = 0;
   }
 
   function resetCameraUI() {
-    camVideo.style.display = 'none';
+    camVideo.style.display     = 'none';
     camPlaceholder.style.display = 'flex';
     camPanel.classList.remove('active', 'detecting');
     btnCamera.classList.remove('active');
@@ -1030,7 +682,7 @@
   }
 
   function activateCameraUI() {
-    camVideo.style.display = 'block';
+    camVideo.style.display       = 'block';
     camPlaceholder.style.display = 'none';
     camPanel.classList.add('active');
     btnCamera.classList.add('active');
@@ -1038,125 +690,83 @@
     document.getElementById('direction-hint').style.opacity = '1';
   }
 
+  // ── CALIBRATION NOIR ────────────────────────────────────
   async function calibrateNoir(samples = 10) {
     if (!stream || calibrating) return;
     calibrating = true;
-
-    let total = 0;
-    let count = 0;
+    let total = 0, count = 0;
 
     for (let i = 0; i < samples; i++) {
       if (!stream || camVideo.readyState < 2) break;
-
       ctx.drawImage(camVideo, 0, 0, camCanvas.width, camCanvas.height);
       const data = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height).data;
-
-      let sum = 0;
-      let n = 0;
-
-      for (let y = 0; y < camCanvas.height; y += 8) {
+      let sum = 0, n = 0;
+      for (let y = 0; y < camCanvas.height; y += 8)
         for (let x = 0; x < camCanvas.width; x += 8) {
           const idx = (y * camCanvas.width + x) * 4;
-          const lum = data[idx] * 0.2126 + data[idx + 1] * 0.7152 + data[idx + 2] * 0.0722;
-          sum += lum;
+          sum += data[idx]*0.2126 + data[idx+1]*0.7152 + data[idx+2]*0.0722;
           n++;
         }
-      }
-
-      if (n > 0) {
-        total += sum / n;
-        count++;
-      }
-
+      if (n > 0) { total += sum / n; count++; }
       await new Promise(r => setTimeout(r, 35));
     }
 
-    if (count > 0) {
-      const avg = total / count;
-      localNoirThreshold = Math.max(BASE_NOIR, Math.min(20, avg * 0.18));
-    } else {
-      localNoirThreshold = BASE_NOIR;
-    }
-
+    localNoirThreshold = count > 0
+      ? Math.max(BASE_NOIR, Math.min(20, (total / count) * 0.18))
+      : BASE_NOIR;
     calibrating = false;
   }
 
+  // ── CAMÉRA ──────────────────────────────────────────────
   async function startCamera() {
     if (stream || !CONFIG.camEnabled) return;
-
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
-          width: { ideal: CAMERA_W },
-          height: { ideal: CAMERA_H },
+          width: { ideal: CAMERA_W }, height: { ideal: CAMERA_H },
           frameRate: { ideal: 30, max: 30 }
         },
         audio: false
       });
-
       camVideo.srcObject = stream;
       await camVideo.play();
-
-      camCanvas.width = CAMERA_W;
+      camCanvas.width  = CAMERA_W;
       camCanvas.height = CAMERA_H;
-
       activateCameraUI();
       setSelectionAllowed(false);
-      resetMotionHard();
-
+      resetMotion();
       showToast('📷 Caméra active', 'ok', 1800);
       vibrate(30);
-
       await calibrateNoir(12);
-
       lastDetectTime = 0;
       cancelAnimationFrame(detectRAF);
       detectRAF = requestAnimationFrame(detectLoop);
-
       cancelAnimationFrame(motionRAF);
       motionRAF = requestAnimationFrame(motionLoop);
     } catch (e) {
-      console.error(e);
       stream = null;
       resetCameraUI();
       showToast(
-        e && e.name === 'NotAllowedError'
-          ? '⚠️ Permission caméra refusée'
-          : '⚠️ Caméra indisponible',
-        'warn',
-        4000
+        e && e.name === 'NotAllowedError' ? '⚠️ Permission caméra refusée' : '⚠️ Caméra indisponible',
+        'warn', 4000
       );
     }
   }
 
   function stopCamera(silent = false) {
-    if (detectRAF) {
-      cancelAnimationFrame(detectRAF);
-      detectRAF = null;
-    }
-
-    if (motionRAF) {
-      cancelAnimationFrame(motionRAF);
-      motionRAF = null;
-    }
-
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-    }
-
+    if (detectRAF) { cancelAnimationFrame(detectRAF); detectRAF = null; }
+    if (motionRAF) { cancelAnimationFrame(motionRAF); motionRAF = null; }
+    if (stream)    { stream.getTracks().forEach(t => t.stop()); stream = null; }
     camVideo.srcObject = null;
     resetCameraUI();
     setSelectionAllowed(true);
-    resetMotionHard();
-
+    resetMotion();
     if (!silent) showToast('Caméra désactivée', '', 1500);
   }
 
-  function toRad(deg) {
-    return (deg - 90) * Math.PI / 180;
-  }
+  // ── DÉTECTION ───────────────────────────────────────────
+  function toRad(deg) { return (deg - 90) * Math.PI / 180; }
 
   function deltaAngle(a, b) {
     let d = Math.abs(a - b);
@@ -1173,15 +783,12 @@
     if (now - lastDetectTime < getDetectInterval()) return;
     lastDetectTime = now;
 
-    const W = camCanvas.width;
-    const H = camCanvas.height;
-
+    const W = camCanvas.width, H = camCanvas.height;
     ctx.drawImage(camVideo, 0, 0, W, H);
     const data = ctx.getImageData(0, 0, W, H).data;
 
-    const cx = W / 2;
-    const cy = H / 2;
-    const maxR = Math.min(W, H) / 2;
+    const cx = W / 2, cy = H / 2;
+    const maxR   = Math.min(W, H) / 2;
     const innerR = maxR * 0.70;
     const outerR = maxR * 0.97;
     const SECTOR = Math.PI / 7;
@@ -1189,62 +796,50 @@
     const radD = toRad(CONFIG.angleDown);
     const radU = toRad(CONFIG.angleUp);
 
-    let lumD = 0, nD = 0;
-    let lumU = 0, nU = 0;
+    let lumD = 0, nD = 0, lumU = 0, nU = 0;
 
     for (let y = 0; y < H; y += 2) {
       const dy = y - cy;
       for (let x = 0; x < W; x += 2) {
         const dx = x - cx;
-        const r = Math.sqrt(dx * dx + dy * dy);
+        const r  = Math.sqrt(dx*dx + dy*dy);
         if (r < innerR || r > outerR) continue;
-
         const a = Math.atan2(dy, dx);
         const i = (y * W + x) * 4;
-        const lum = data[i] * 0.2126 + data[i + 1] * 0.7152 + data[i + 2] * 0.0722;
-
-        if (deltaAngle(a, radD) < SECTOR) {
-          lumD += lum;
-          nD++;
-        }
-        if (deltaAngle(a, radU) < SECTOR) {
-          lumU += lum;
-          nU++;
-        }
+        const lum = data[i]*0.2126 + data[i+1]*0.7152 + data[i+2]*0.0722;
+        if (deltaAngle(a, radD) < SECTOR) { lumD += lum; nD++; }
+        if (deltaAngle(a, radU) < SECTOR) { lumU += lum; nU++; }
       }
     }
 
     lumD = lumD / Math.max(nD, 1);
     lumU = lumU / Math.max(nU, 1);
 
+    // Debug
     if (debugPanel.style.display !== 'none') {
       debugBands.innerHTML =
-        `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4 + lumD / 255 * 46)}px;"></div>`.repeat(6) +
+        `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+lumD/255*46)}px;"></div>`.repeat(6) +
         `<div style="flex:1;background:#444;height:6px;border-radius:2px;"></div>` +
-        `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4 + lumU / 255 * 46)}px;"></div>`.repeat(6);
+        `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+lumU/255*46)}px;"></div>`.repeat(6);
 
-      const status =
-        (lumD < localNoirThreshold && lumU < localNoirThreshold)
-          ? '⬛ NOIR = ARRÊT'
-          : (lumD > lumU + getSeuil())
-            ? '⬇ DESCEND'
-            : (lumU > lumD + getSeuil())
-              ? '⬆ REMONTE'
-              : '⏸ ÉQUILIBRÉ';
+      const status = (lumD < localNoirThreshold && lumU < localNoirThreshold) ? '⬛ NOIR = ARRÊT'
+                   : lumD > lumU + getSeuil() ? '⬇ DESCEND'
+                   : lumU > lumD + getSeuil() ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ';
 
       debugInfo.innerHTML =
         `⬇ ${Math.round(lumD)} | ⬆ ${Math.round(lumU)} | Seuil: ${getSeuil()}<br>` +
-        `Noir local: ${Math.round(localNoirThreshold)} | Vitesse cible: ${Math.round(getTargetVelocity())} px/s<br>` +
-        `${status}`;
+        `Noir: ${Math.round(localNoirThreshold)} | Cible: ${Math.round(getTargetVelocity())}px/s<br>` +
+        status;
     }
 
-    // Priorité absolue au doigt sur l'écran
+    // Doigt sur l'écran = priorité absolue
     if (touchActive) {
       commandedDirection = 0;
       camPanel.classList.remove('detecting');
       return;
     }
 
+    // Noir = arrêt + sélection autorisée
     if (lumD < localNoirThreshold && lumU < localNoirThreshold) {
       commandedDirection = 0;
       setSelectionAllowed(true);
@@ -1252,6 +847,7 @@
       return;
     }
 
+    // Descend
     if (lumD > lumU + getSeuil()) {
       commandedDirection = 1;
       setSelectionAllowed(false);
@@ -1260,6 +856,7 @@
       return;
     }
 
+    // Remonte
     if (lumU > lumD + getSeuil()) {
       commandedDirection = -1;
       setSelectionAllowed(false);
@@ -1268,188 +865,143 @@
       return;
     }
 
+    // Équilibré = pause
     commandedDirection = 0;
-    setSelectionAllowed(false);
     camPanel.classList.remove('detecting');
   }
 
+  // ── MOTION LOOP (animation fluide) ──────────────────────
   function motionLoop(now) {
     motionRAF = requestAnimationFrame(motionLoop);
     refreshArrows();
-
     if (!stream) return;
 
-    if (!lastMotionTime) {
-      lastMotionTime = now;
-      return;
-    }
-
-    let dt = (now - lastMotionTime) / 1000;
+    if (!lastMotionTime) { lastMotionTime = now; return; }
+    let dt = Math.min((now - lastMotionTime) / 1000, 0.05);
     lastMotionTime = now;
-
-    if (dt > 0.05) dt = 0.05;
 
     const targetVelocity = commandedDirection * getTargetVelocity();
 
-    if (touchActive) {
-      actualVelocity = 0;
-      return;
-    }
+    if (touchActive) { actualVelocity = 0; return; }
 
     if (targetVelocity !== 0) {
-      const accel = getTargetVelocity() / ACCEL_TIME;
-      if (actualVelocity < targetVelocity) {
-        actualVelocity = Math.min(actualVelocity + accel * dt * ACCEL_TIME, targetVelocity);
-      } else if (actualVelocity > targetVelocity) {
-        actualVelocity = Math.max(actualVelocity - accel * dt * ACCEL_TIME, targetVelocity);
-      }
-
-      // rampe progressive exacte sur 2 secondes environ
-      const step = getTargetVelocity() / ACCEL_TIME;
-      if (actualVelocity < targetVelocity) {
-        actualVelocity = Math.min(actualVelocity + step * dt * ACCEL_TIME, targetVelocity);
-      } else if (actualVelocity > targetVelocity) {
-        actualVelocity = Math.max(actualVelocity - step * dt * ACCEL_TIME, targetVelocity);
-      }
+      // Accélération progressive sur ACCEL_TIME
+      const step = getTargetVelocity() / (ACCEL_TIME / 1000);
+      if (actualVelocity < targetVelocity)
+        actualVelocity = Math.min(actualVelocity + step * dt, targetVelocity);
+      else if (actualVelocity > targetVelocity)
+        actualVelocity = Math.max(actualVelocity - step * dt, targetVelocity);
     } else {
-      const decel = getTargetVelocity() / DECEL_TIME;
-      if (actualVelocity > 0) {
-        actualVelocity = Math.max(0, actualVelocity - decel * dt * DECEL_TIME);
-      } else if (actualVelocity < 0) {
-        actualVelocity = Math.min(0, actualVelocity + decel * dt * DECEL_TIME);
-      }
+      // Décélération rapide sur DECEL_TIME
+      const decel = getTargetVelocity() / (DECEL_TIME / 1000);
+      if (actualVelocity > 0)      actualVelocity = Math.max(0, actualVelocity - decel * dt);
+      else if (actualVelocity < 0) actualVelocity = Math.min(0, actualVelocity + decel * dt);
     }
 
-    if (Math.abs(actualVelocity) < 0.5) {
-      actualVelocity = 0;
-      return;
-    }
+    if (Math.abs(actualVelocity) < 0.5) { actualVelocity = 0; return; }
 
     const delta = actualVelocity * dt;
-    if (delta !== 0) {
-      scrollArea.scrollTop += delta;
-      updateScrollBar();
-    }
+    if (delta !== 0) { scrollArea.scrollTop += delta; updateScrollBar(); }
   }
 
+  // ── INTERACTIONS SCROLL AREA ─────────────────────────────
   function bindScrollPriority() {
     scrollArea.addEventListener('scroll', updateScrollBar, { passive: true });
 
     scrollArea.addEventListener('touchstart', (e) => {
-      touchActive = true;
+      touchActive  = true;
       actualVelocity = 0;
-      touchStartY = e.touches[0].clientY;
-      isSwiping = false;
+      touchStartY  = e.touches[0].clientY;
+      isSwiping    = false;
+      if (!selectionAllowed) scrollArea.classList.add('no-select');
 
-      if (!selectionAllowed) {
-        scrollArea.classList.add('no-select');
-      }
-
+      // Double tap = couper caméra
       if (stream) {
         const now = Date.now();
-
         if (now - lastTapTime < 300) {
           tapCount++;
           if (tapCount >= 2) {
             tapCount = 0;
             clearTimeout(tapTimer);
             stopCamera();
-            showToast('📷 Caméra désactivée — tap sur le rond pour réactiver', '', 3000);
+            showToast('📷 Double tap — caméra coupée', '', 2500);
             return;
           }
         } else {
           tapCount = 1;
         }
-
         lastTapTime = now;
         tapTimer = setTimeout(() => { tapCount = 0; }, 400);
       }
     }, { passive: true });
 
     scrollArea.addEventListener('touchmove', (e) => {
-      const dy = Math.abs(e.touches[0].clientY - touchStartY);
-      if (dy > 5) isSwiping = true;
-
-      if (!selectionAllowed && isSwiping) {
-        scrollArea.classList.add('no-select');
-      }
+      if (Math.abs(e.touches[0].clientY - touchStartY) > 5) isSwiping = true;
+      if (!selectionAllowed && isSwiping) scrollArea.classList.add('no-select');
     }, { passive: true });
 
     scrollArea.addEventListener('touchend', () => {
-      touchActive = false;
-      isSwiping = false;
+      touchActive  = false;
+      isSwiping    = false;
       actualVelocity = 0;
-
-      if (selectionAllowed) {
-        scrollArea.classList.remove('no-select');
-      } else {
-        setTimeout(() => {
-          if (!selectionAllowed) scrollArea.classList.add('no-select');
-          else scrollArea.classList.remove('no-select');
-        }, 120);
-      }
+      if (selectionAllowed) scrollArea.classList.remove('no-select');
+      else setTimeout(() => {
+        if (!selectionAllowed) scrollArea.classList.add('no-select');
+        else scrollArea.classList.remove('no-select');
+      }, 120);
     }, { passive: true });
 
     scrollArea.addEventListener('touchcancel', () => {
-      touchActive = false;
-      isSwiping = false;
-      actualVelocity = 0;
+      touchActive = false; isSwiping = false; actualVelocity = 0;
       if (selectionAllowed) scrollArea.classList.remove('no-select');
     }, { passive: true });
 
-    scrollArea.addEventListener('contextmenu', (e) => {
-      if (!selectionAllowed) e.preventDefault();
-    });
-
-    scrollArea.addEventListener('selectstart', (e) => {
-      if (!selectionAllowed) e.preventDefault();
-    });
+    scrollArea.addEventListener('contextmenu',  (e) => { if (!selectionAllowed) e.preventDefault(); });
+    scrollArea.addEventListener('selectstart',  (e) => { if (!selectionAllowed) e.preventDefault(); });
   }
 
+  // ── CONTRÔLES CAMÉRA ────────────────────────────────────
   function bindCameraControls() {
+
+    // Bouton 📷 header
     btnCamera.addEventListener('click', async () => {
       camPanel.classList.remove('hidden');
       camPanel.style.transform = '';
-
-      if (stream) {
-        stopCamera();
-      } else if (CONFIG.camEnabled) {
-        await startCamera();
-      } else {
-        showToast('Activez la caméra dans les paramètres', 'warn');
-      }
+      if (stream) stopCamera();
+      else if (CONFIG.camEnabled) await startCamera();
+      else showToast('Activez la caméra dans les paramètres', 'warn');
     });
 
+    // ── Petit rond : tap = démarrer OU arrêter ──
     camPanel.addEventListener('click', async () => {
-      if (!stream && CONFIG.camEnabled && !panelDragging) {
-        await startCamera();
+      if (panelDragging) return;   // ignorer si c'était un glissement
+      if (stream) {
+        stopCamera();              // caméra active → on l'arrête
+      } else if (CONFIG.camEnabled) {
+        await startCamera();       // caméra inactive → on la démarre
       }
     });
 
+    // Swipe du rond pour l'éjecter
     camPanel.addEventListener('touchstart', (e) => {
       panelDragStartX = e.touches[0].clientX;
       panelDragStartY = e.touches[0].clientY;
-      panelDragging = false;
+      panelDragging   = false;
       e.stopPropagation();
     }, { passive: true });
 
     camPanel.addEventListener('touchmove', (e) => {
       const dx = e.touches[0].clientX - panelDragStartX;
       const dy = e.touches[0].clientY - panelDragStartY;
-
       if (Math.abs(dx) > 10 || Math.abs(dy) > 10) panelDragging = true;
-
-      if (panelDragging) {
-        camPanel.style.transform = `translate(${Math.max(0, dx)}px, ${Math.max(0, dy)}px)`;
-      }
-
+      if (panelDragging)
+        camPanel.style.transform = `translate(${Math.max(0,dx)}px, ${Math.max(0,dy)}px)`;
       e.stopPropagation();
     }, { passive: true });
 
     camPanel.addEventListener('touchend', (e) => {
       const dx = e.changedTouches[0].clientX - panelDragStartX;
       const dy = e.changedTouches[0].clientY - panelDragStartY;
-
       if (panelDragging && (dx > 60 || dy > 60)) {
         camPanel.classList.add('hidden');
         if (stream) stopCamera(true);
@@ -1457,70 +1009,51 @@
       } else {
         camPanel.style.transform = '';
       }
-
-      panelDragging = false;
+      // reset après un court délai pour que le click ne se déclenche pas
+      setTimeout(() => { panelDragging = false; }, 50);
       e.stopPropagation();
     }, { passive: true });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && stream) {
-        stopCamera(true);
-        showToast('Caméra suspendue', '', 2000);
-      }
+      if (document.hidden && stream) { stopCamera(true); showToast('Caméra suspendue', '', 2000); }
     });
   }
 
+  // ── DEBUG ────────────────────────────────────────────────
   function bindDebug() {
-    btnCamera.addEventListener('touchstart', () => {
-      holdTimer = setTimeout(() => {
-        debugPanel.style.display = 'block';
-        showToast('Debug activé', 'ok');
-      }, 2000);
-    }, { passive: true });
-
-    btnCamera.addEventListener('touchend', () => clearTimeout(holdTimer), { passive: true });
-    btnCamera.addEventListener('mousedown', () => {
-      holdTimer = setTimeout(() => {
-        debugPanel.style.display = 'block';
-        showToast('Debug activé', 'ok');
-      }, 2000);
+    ['touchstart', 'mousedown'].forEach(evt => {
+      btnCamera.addEventListener(evt, () => {
+        holdTimer = setTimeout(() => {
+          debugPanel.style.display = 'block';
+          showToast('Debug activé', 'ok');
+        }, 2000);
+      }, { passive: true });
     });
 
-    btnCamera.addEventListener('mouseup', () => clearTimeout(holdTimer));
-    btnCamera.addEventListener('mouseleave', () => clearTimeout(holdTimer));
+    ['touchend', 'mouseup', 'mouseleave'].forEach(evt => {
+      btnCamera.addEventListener(evt, () => clearTimeout(holdTimer), { passive: true });
+    });
 
     document.getElementById('debug-close').addEventListener('click', () => {
       debugPanel.style.display = 'none';
     });
   }
 
+  // ── PARAMÈTRES ──────────────────────────────────────────
   function bindSettings() {
-    btnSettings.addEventListener('click', () => {
-      settingsDrawer.classList.add('open');
-    });
-
-    document.getElementById('drawer-backdrop').addEventListener('click', () => {
-      settingsDrawer.classList.remove('open');
-    });
-
-    document.getElementById('drawer-handle').addEventListener('click', () => {
-      settingsDrawer.classList.remove('open');
-    });
+    btnSettings.addEventListener('click', () => settingsDrawer.classList.add('open'));
+    document.getElementById('drawer-backdrop').addEventListener('click', () => settingsDrawer.classList.remove('open'));
+    document.getElementById('drawer-handle').addEventListener('click',   () => settingsDrawer.classList.remove('open'));
 
     document.querySelectorAll('.toggle').forEach(toggle => {
       const key = toggle.dataset.target;
       toggle.classList.toggle('on', !!CONFIG[key]);
-
       toggle.addEventListener('click', () => {
         CONFIG[key] = !CONFIG[key];
         toggle.classList.toggle('on', !!CONFIG[key]);
         saveConfig();
         vibrate(20);
-
-        if (key === 'camEnabled' && !CONFIG[key] && stream) {
-          stopCamera();
-        }
-
+        if (key === 'camEnabled' && !CONFIG[key] && stream) stopCamera();
         if ((key === 'useFront' || key === 'ecoMode') && stream) {
           stopCamera(true);
           setTimeout(() => startCamera(), 220);
@@ -1529,123 +1062,82 @@
     });
 
     sliderSpeed.value = CONFIG.speed;
-    sliderSens.value = CONFIG.sensitivity;
+    sliderSens.value  = CONFIG.sensitivity;
 
-    function refreshSliderLabels() {
+    function refreshLabels() {
       speedVal.textContent = `${CONFIG.speed} — ${getScrollPxPerFrame()}px`;
-      sensVal.textContent = `${CONFIG.sensitivity} — ${getSeuil()}lux`;
+      sensVal.textContent  = `${CONFIG.sensitivity} — ${getSeuil()}lux`;
     }
 
     sliderSpeed.addEventListener('input', () => {
-      CONFIG.speed = parseInt(sliderSpeed.value, 10);
-      refreshSliderLabels();
-      saveConfig();
+      CONFIG.speed = parseInt(sliderSpeed.value, 10); refreshLabels(); saveConfig();
     });
-
     sliderSens.addEventListener('input', () => {
-      CONFIG.sensitivity = parseInt(sliderSens.value, 10);
-      refreshSliderLabels();
-      saveConfig();
+      CONFIG.sensitivity = parseInt(sliderSens.value, 10); refreshLabels(); saveConfig();
     });
 
-    refreshSliderLabels();
+    refreshLabels();
   }
 
+  // ── KNOB ────────────────────────────────────────────────
   function bindKnob() {
     const canvas = document.getElementById('knob-canvas');
     if (!canvas) return;
-
     const kctx = canvas.getContext('2d');
-    const S = 120;
-    const cx = 60;
-    const cy = 60;
-    const R = 46;
-    const DR = 9;
+    const S = 120, cx = 60, cy = 60, R = 46, DR = 9;
 
     let aD = ((CONFIG.angleDown - 90) * Math.PI) / 180;
-    let aU = ((CONFIG.angleUp - 90) * Math.PI) / 180;
+    let aU = ((CONFIG.angleUp   - 90) * Math.PI) / 180;
 
     function clockLabel(a) {
-      const n = ((a + Math.PI / 2) / (2 * Math.PI) + 1) % 1;
+      const n = ((a + Math.PI/2) / (2*Math.PI) + 1) % 1;
       const t = Math.round(n * 720) % 720;
-      const h = Math.floor(t / 60) || 12;
+      const h = Math.floor(t/60) || 12;
       const m = t % 60;
-      return m ? `${h}h${m.toString().padStart(2, '0')}` : `${h}h00`;
+      return m ? `${h}h${m.toString().padStart(2,'0')}` : `${h}h00`;
     }
 
-    function pos(a) {
-      return {
-        x: cx + Math.cos(a) * R,
-        y: cy + Math.sin(a) * R
-      };
-    }
+    function pos(a) { return { x: cx + Math.cos(a)*R, y: cy + Math.sin(a)*R }; }
 
     function draw() {
       kctx.clearRect(0, 0, S, S);
 
-      kctx.beginPath();
-      kctx.arc(cx, cy, R + 8, 0, Math.PI * 2);
-      kctx.fillStyle = '#1a1a2e';
-      kctx.fill();
-      kctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      kctx.lineWidth = 1;
-      kctx.stroke();
+      kctx.beginPath(); kctx.arc(cx, cy, R+8, 0, Math.PI*2);
+      kctx.fillStyle = '#1a1a2e'; kctx.fill();
+      kctx.strokeStyle = 'rgba(255,255,255,0.06)'; kctx.lineWidth = 1; kctx.stroke();
 
-      kctx.beginPath();
-      kctx.arc(cx, cy, R, 0, Math.PI * 2);
-      kctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      kctx.lineWidth = 3;
-      kctx.stroke();
+      kctx.beginPath(); kctx.arc(cx, cy, R, 0, Math.PI*2);
+      kctx.strokeStyle = 'rgba(255,255,255,0.12)'; kctx.lineWidth = 3; kctx.stroke();
 
-      [[-Math.PI / 2, '12'], [0, '3'], [Math.PI / 2, '6'], [Math.PI, '9']].forEach(([a, l]) => {
-        const lx = cx + Math.cos(a) * (R + 14);
-        const ly = cy + Math.sin(a) * (R + 14);
-        kctx.fillStyle = 'rgba(255,255,255,0.2)';
-        kctx.font = '8px sans-serif';
-        kctx.textAlign = 'center';
-        kctx.textBaseline = 'middle';
-        kctx.fillText(l, lx, ly);
+      [[-Math.PI/2,'12'],[0,'3'],[Math.PI/2,'6'],[Math.PI,'9']].forEach(([a,l]) => {
+        const lx = cx + Math.cos(a)*(R+14), ly = cy + Math.sin(a)*(R+14);
+        kctx.fillStyle = 'rgba(255,255,255,0.2)'; kctx.font = '8px sans-serif';
+        kctx.textAlign = 'center'; kctx.textBaseline = 'middle'; kctx.fillText(l, lx, ly);
       });
 
-      const pd = pos(aD);
-      const pu = pos(aU);
+      const pd = pos(aD), pu = pos(aU);
 
-      kctx.beginPath();
-      kctx.moveTo(pd.x, pd.y);
-      kctx.lineTo(pu.x, pu.y);
-      kctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      kctx.lineWidth = 1;
-      kctx.setLineDash([3, 3]);
-      kctx.stroke();
-      kctx.setLineDash([]);
+      kctx.beginPath(); kctx.moveTo(pd.x, pd.y); kctx.lineTo(pu.x, pu.y);
+      kctx.strokeStyle = 'rgba(255,255,255,0.06)'; kctx.lineWidth = 1;
+      kctx.setLineDash([3,3]); kctx.stroke(); kctx.setLineDash([]);
 
-      kctx.beginPath();
-      kctx.arc(cx, cy, 3, 0, Math.PI * 2);
-      kctx.fillStyle = 'rgba(255,255,255,0.15)';
-      kctx.fill();
+      kctx.beginPath(); kctx.arc(cx, cy, 3, 0, Math.PI*2);
+      kctx.fillStyle = 'rgba(255,255,255,0.15)'; kctx.fill();
 
-      kctx.beginPath();
-      kctx.arc(pd.x, pd.y, DR, 0, Math.PI * 2);
-      kctx.fillStyle = '#00f5c4';
-      kctx.fill();
-      kctx.fillStyle = '#0a0a12';
-      kctx.font = 'bold 9px sans-serif';
-      kctx.textAlign = 'center';
-      kctx.textBaseline = 'middle';
-      kctx.fillText('↓', pd.x, pd.y);
+      kctx.beginPath(); kctx.arc(pd.x, pd.y, DR, 0, Math.PI*2);
+      kctx.fillStyle = '#00f5c4'; kctx.fill();
+      kctx.fillStyle = '#0a0a12'; kctx.font = 'bold 9px sans-serif';
+      kctx.textAlign = 'center'; kctx.textBaseline = 'middle'; kctx.fillText('↓', pd.x, pd.y);
 
-      kctx.beginPath();
-      kctx.arc(pu.x, pu.y, DR, 0, Math.PI * 2);
-      kctx.fillStyle = '#7b61ff';
-      kctx.fill();
-      kctx.fillStyle = '#fff';
-      kctx.fillText('↑', pu.x, pu.y);
+      kctx.beginPath(); kctx.arc(pu.x, pu.y, DR, 0, Math.PI*2);
+      kctx.fillStyle = '#7b61ff'; kctx.fill();
+      kctx.fillStyle = '#fff'; kctx.fillText('↑', pu.x, pu.y);
 
       document.getElementById('pos-down').textContent = clockLabel(aD);
-      document.getElementById('pos-up').textContent = clockLabel(aU);
+      document.getElementById('pos-up').textContent   = clockLabel(aU);
 
-      CONFIG.angleDown = Math.round(((aD + Math.PI / 2) * 180 / Math.PI + 360) % 360);
-      CONFIG.angleUp = Math.round(((aU + Math.PI / 2) * 180 / Math.PI + 360) % 360);
+      CONFIG.angleDown = Math.round(((aD + Math.PI/2)*180/Math.PI + 360) % 360);
+      CONFIG.angleUp   = Math.round(((aU + Math.PI/2)*180/Math.PI + 360) % 360);
       saveConfig();
     }
 
@@ -1653,62 +1145,36 @@
       const rect = canvas.getBoundingClientRect();
       const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
       const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      return Math.atan2((y / rect.height * S) - cy, (x / rect.width * S) - cx);
+      return Math.atan2((y/rect.height*S) - cy, (x/rect.width*S) - cx);
     }
 
     function nearest(e) {
       const rect = canvas.getBoundingClientRect();
       const mx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
       const my = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      const px = mx / rect.width * S;
-      const py = my / rect.height * S;
-      const pd = pos(aD);
-      const pu = pos(aU);
-      const dD = Math.hypot(px - pd.x, py - pd.y);
-      const dU = Math.hypot(px - pu.x, py - pu.y);
-
-      if (dD < DR + 12 && dD <= dU) return 'D';
-      if (dU < DR + 12) return 'U';
+      const px = mx/rect.width*S, py = my/rect.height*S;
+      const pd = pos(aD), pu = pos(aU);
+      const dD = Math.hypot(px-pd.x, py-pd.y);
+      const dU = Math.hypot(px-pu.x, py-pu.y);
+      if (dD < DR+12 && dD <= dU) return 'D';
+      if (dU < DR+12) return 'U';
       return null;
     }
 
     let drag = null;
 
-    canvas.addEventListener('mousedown', e => {
-      drag = nearest(e);
-    });
+    canvas.addEventListener('mousedown',  e => { drag = nearest(e); });
+    document.addEventListener('mousemove', e => { if (!drag) return; if (drag==='D') aD=getAngle(e); else aU=getAngle(e); draw(); });
+    document.addEventListener('mouseup',   () => { drag = null; });
 
-    document.addEventListener('mousemove', e => {
-      if (!drag) return;
-      if (drag === 'D') aD = getAngle(e);
-      else aU = getAngle(e);
-      draw();
-    });
-
-    document.addEventListener('mouseup', () => {
-      drag = null;
-    });
-
-    canvas.addEventListener('touchstart', e => {
-      drag = nearest(e);
-      e.preventDefault();
-    }, { passive: false });
-
-    canvas.addEventListener('touchmove', e => {
-      if (!drag) return;
-      if (drag === 'D') aD = getAngle(e);
-      else aU = getAngle(e);
-      draw();
-      e.preventDefault();
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', () => {
-      drag = null;
-    });
+    canvas.addEventListener('touchstart', e => { drag = nearest(e); e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchmove',  e => { if (!drag) return; if (drag==='D') aD=getAngle(e); else aU=getAngle(e); draw(); e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchend',   () => { drag = null; });
 
     draw();
   }
 
+  // ── INIT ────────────────────────────────────────────────
   function init() {
     bindScrollPriority();
     bindCameraControls();
@@ -1716,7 +1182,7 @@
     bindSettings();
     bindKnob();
     updateScrollBar();
-    showToast('👆 Appuyez sur 📷 pour démarrer', '', 3500);
+    showToast('👆 Tap sur 📷 ou le rond pour démarrer', '', 3500);
   }
 
   init();
