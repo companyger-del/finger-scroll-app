@@ -1,1192 +1,1280 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0a0a12" />
-  <title>FingerScroll</title>
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Fira+Code:wght@300;400&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a12;
-      --surface: #12121e;
-      --surface2: #1a1a2e;
-      --accent: #00f5c4;
-      --accent2: #7b61ff;
-      --warn: #ff6b35;
-      --text: #e8e8f0;
-      --muted: #6b6b8a;
-      --border: rgba(255,255,255,0.07);
-      --radius: 16px;
-    }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-      touch-action: manipulation;
-    }
-
-    body { overscroll-behavior: none; }
-
-    #app {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-
-    #header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      background: linear-gradient(to bottom, rgba(10,10,18,0.98), transparent);
-      position: relative;
-      z-index: 10;
-      flex-shrink: 0;
-    }
-
-    .logo { display: flex; align-items: center; gap: 10px; }
-
-    .logo-icon {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      display: flex; align-items: center; justify-content: center; font-size: 16px;
-    }
-
-    .logo-text {
-      font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-
-    .header-actions { display: flex; gap: 10px; }
-
-    .icon-btn {
-      width: 38px; height: 38px; border-radius: 12px;
-      background: var(--surface); border: 1px solid var(--border);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 16px; transition: all 0.2s;
-      -webkit-tap-highlight-color: transparent; user-select: none;
-    }
-
-    .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
-    .icon-btn.active { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,245,196,0.2); }
-
-    #scroll-area {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      padding: 0 20px 120px;
-      overscroll-behavior: contain;
-    }
-
-    #scroll-area::-webkit-scrollbar { display: none; }
-
-    #scroll-area.no-select {
-      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-    }
-
-    .article-hero {
-      margin: 8px 0 28px; padding: 28px 24px;
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-      border-radius: 20px; border: 1px solid var(--border);
-      position: relative; overflow: hidden;
-    }
-
-    .article-hero::before {
-      content: ''; position: absolute; top: -50%; right: -30%;
-      width: 250px; height: 250px;
-      background: radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .tag {
-      display: inline-block; padding: 4px 12px; border-radius: 20px;
-      font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-      background: rgba(0,245,196,0.1); color: var(--accent);
-      border: 1px solid rgba(0,245,196,0.2); margin-bottom: 14px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    .article-hero h1 { font-size: 26px; font-weight: 800; line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 12px; }
-    .article-hero p { font-size: 14px; color: var(--muted); line-height: 1.65; }
-
-    .meta {
-      display: flex; gap: 16px; margin-top: 16px;
-      font-size: 12px; color: var(--muted); font-family: 'Fira Code', monospace; flex-wrap: wrap;
-    }
-
-    .section-title {
-      font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--muted); margin: 28px 0 14px; font-family: 'Fira Code', monospace;
-    }
-
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
-    }
-
-    .card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
-
-    .card-icon {
-      width: 44px; height: 44px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-
-    .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px; text-align: center;
-    }
-
-    .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; font-family: 'Fira Code', monospace; }
-    .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .quote-block {
-      border-left: 3px solid var(--accent); padding: 16px 20px;
-      background: rgba(0,245,196,0.04); border-radius: 0 12px 12px 0;
-      margin: 16px 0; font-style: italic; font-size: 15px; line-height: 1.7;
-    }
-
-    #cam-overlay {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; pointer-events: none;
-    }
-
-    #cam-panel {
-      position: absolute; bottom: 20px; right: 20px;
-      width: 52px; height: 52px; border-radius: 50%; overflow: hidden;
-      border: 2px solid var(--border); background: var(--surface);
-      transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1), opacity 0.25s, border-color 0.2s, box-shadow 0.2s;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      pointer-events: all; cursor: pointer;
-      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
-    }
-
-    #cam-panel.hidden { transform: translateX(90px); opacity: 0; pointer-events: none; }
-
-    #cam-panel.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(0,245,196,0.1), 0 8px 32px rgba(0,0,0,0.4);
-    }
-
-    #cam-panel.detecting {
-      border-color: var(--accent);
-      animation: pulse-ring 1.4s ease infinite;
-    }
-
-    @keyframes pulse-ring {
-      0%   { box-shadow: 0 0 0 0 rgba(0,245,196,0.4); }
-      70%  { box-shadow: 0 0 0 12px rgba(0,245,196,0); }
-      100% { box-shadow: 0 0 0 0 rgba(0,245,196,0); }
-    }
-
-    #cam-video {
-      width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none;
-    }
-
-    #cam-placeholder {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px;
-    }
-
-    #cam-placeholder .cam-emoji { font-size: 18px; }
-    #cam-placeholder .cam-label { font-size: 8px; color: var(--muted); font-family: 'Fira Code', monospace; }
-
-    #cam-canvas { display: none; }
-
-    #scroll-bar {
-      position: fixed; right: 4px; top: 60px; bottom: 140px;
-      width: 3px; border-radius: 2px; background: var(--surface2);
-      z-index: 20; opacity: 0; transition: opacity 0.3s;
-    }
-
-    #scroll-thumb {
-      width: 3px; border-radius: 2px; background: var(--accent);
-      position: absolute; top: 0; height: 40px;
-    }
-
-    #direction-hint {
-      position: fixed; right: 64px; bottom: 32px;
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-      opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 25;
-    }
-
-    .dir-arrow {
-      font-size: 18px; opacity: 0.25; transform: scale(1);
-      transition: transform 0.15s, opacity 0.15s;
-    }
-
-    .dir-arrow.active { opacity: 1; transform: scale(1.35); }
-
-    #status-toast {
-      position: fixed; bottom: 130px; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 30px; padding: 10px 20px;
-      font-size: 12px; font-family: 'Fira Code', monospace; color: var(--muted);
-      white-space: nowrap; opacity: 0; transition: all 0.3s;
-      pointer-events: none; z-index: 60;
-      max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis;
-    }
-
-    #status-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #status-toast.ok { color: var(--accent); border-color: rgba(0,245,196,0.2); }
-    #status-toast.warn { color: var(--warn); border-color: rgba(255,107,53,0.2); }
-
-    #debug-panel {
-      display: none; position: fixed; top: 60px; left: 10px; right: 10px;
-      background: rgba(0,0,0,0.92); border: 1px solid #00f5c4;
-      border-radius: 12px; padding: 12px; z-index: 200;
-      font-family: monospace; font-size: 11px; color: #00f5c4;
-    }
-
-    #settings-drawer {
-      position: fixed; inset: 0; z-index: 100; display: none; pointer-events: none;
-    }
-
-    #settings-drawer.open { display: block; pointer-events: all; }
-
-    .drawer-backdrop {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-    }
-
-    .drawer-panel {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: var(--surface); border-radius: 24px 24px 0 0;
-      border-top: 1px solid var(--border); padding: 20px 24px 40px;
-      transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
-      max-height: 80vh; overflow-y: auto;
-    }
-
-    #settings-drawer.open .drawer-panel { transform: translateY(0); }
-
-    .drawer-handle {
-      width: 36px; height: 4px; background: var(--border);
-      border-radius: 2px; margin: 0 auto 20px; cursor: pointer;
-    }
-
-    .drawer-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.5px; }
-
-    .setting-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 0; border-bottom: 1px solid var(--border); gap: 12px;
-    }
-
-    .setting-row:last-child { border-bottom: none; }
-    .setting-row.col { flex-direction: column; align-items: stretch; gap: 12px; }
-
-    .setting-info h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-    .setting-info p { font-size: 12px; color: var(--muted); }
-
-    .toggle {
-      width: 50px; height: 28px; border-radius: 14px;
-      background: var(--surface2); border: 1px solid var(--border);
-      position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
-    }
-
-    .toggle.on { background: var(--accent); border-color: var(--accent); }
-
-    .toggle::after {
-      content: ''; position: absolute; top: 3px; left: 3px;
-      width: 20px; height: 20px; border-radius: 50%; background: white;
-      transition: transform 0.25s; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-
-    .toggle.on::after { transform: translateX(22px); }
-
-    .slider-wrap { width: 130px; min-width: 130px; }
-
-    .slider-wrap input[type=range] {
-      -webkit-appearance: none; width: 100%; height: 4px;
-      border-radius: 2px; background: var(--surface2); outline: none; cursor: pointer;
-    }
-
-    .slider-wrap input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 18px; height: 18px;
-      border-radius: 50%; background: var(--accent); cursor: pointer; border: none;
-    }
-
-    .slider-val {
-      font-size: 11px; font-family: 'Fira Code', monospace;
-      color: var(--accent); text-align: right; margin-top: 4px;
-    }
-
-    @media (max-width: 560px) {
-      #header { padding: 12px 14px; }
-      #scroll-area { padding: 0 14px 110px; }
-      .article-hero { padding: 22px 18px; }
-      .article-hero h1 { font-size: 22px; }
-      .card { padding: 16px; }
-      .drawer-panel { padding: 18px 16px 34px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GestControl — Système de contrôle gestuel</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #080c10;
+    --surface: #0d1520;
+    --surface2: #111d2e;
+    --accent: #00e5ff;
+    --accent2: #7c4dff;
+    --accent3: #00e676;
+    --warn: #ff6d00;
+    --danger: #ff1744;
+    --text: #cfd8dc;
+    --text2: #78909c;
+    --border: rgba(0,229,255,0.15);
+    --glow: rgba(0,229,255,0.3);
+    --mono: 'Share Tech Mono', monospace;
+    --body: 'Exo 2', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* ÉCRAN PRINCIPAL */
+  #app {
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+  }
+
+  /* FOND GRILLE */
+  #app::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* ZONE CAMÉRA CACHÉE */
+  #video-container {
+    position: absolute;
+    width: 1px; height: 1px;
+    opacity: 0; pointer-events: none;
+    top: 0; left: 0;
+  }
+  video, canvas { width: 100%; height: 100%; }
+
+  /* HEADER */
+  #header {
+    position: relative; z-index: 10;
+    padding: 12px 16px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,12,16,0.9);
+    backdrop-filter: blur(10px);
+  }
+
+  #logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  #logo span { color: var(--text2); }
+
+  #status-bar {
+    display: flex; gap: 8px; align-items: center;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text2);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .status-dot.active {
+    background: var(--accent3);
+    box-shadow: 0 0 8px var(--accent3);
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  .status-dot.warn { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  /* ZONE PRINCIPALE */
+  #main {
+    flex: 1;
+    display: flex; flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ZONE DE DÉFILEMENT SIMULÉE */
+  #scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    scroll-behavior: smooth;
+    position: relative;
+  }
+
+  .content-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+  }
+
+  .content-block h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .content-block p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text2);
+    font-weight: 300;
+  }
+
+  .content-block.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,229,255,0.1);
+  }
+
+  /* INDICATEUR DE DÉFILEMENT */
+  #scroll-indicator {
+    position: absolute;
+    right: 4px; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 60px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  #scroll-thumb {
+    width: 100%; height: 20px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: top 0.1s;
+    position: absolute;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* PANNEAU DE COMMANDES ACTIVES */
+  #command-panel {
+    position: relative; z-index: 10;
+    background: rgba(8,12,16,0.95);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    padding: 10px 12px;
+    min-height: 80px;
+  }
+
+  #last-command {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  #command-display {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--accent);
+    min-height: 28px;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  #command-display.flash {
+    color: var(--accent3);
+    text-shadow: 0 0 20px var(--accent3);
+  }
+
+  /* INDICATEURS CAPTEURS */
+  #sensors {
+    display: flex; gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .sensor-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    background: var(--surface);
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .sensor-badge.on {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(0,230,118,0.08);
+    box-shadow: 0 0 8px rgba(0,230,118,0.2);
+  }
+
+  .sensor-badge.triggered {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.1);
+    box-shadow: 0 0 12px var(--glow);
+    animation: badge-flash 0.4s ease-out;
+  }
+
+  @keyframes badge-flash {
+    0% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* ZONES DE BORD TACTILES (invisibles mais actives) */
+  .edge-zone {
+    position: fixed;
+    z-index: 100;
+    background: transparent;
+  }
+
+  #edge-left  { left: 0; top: 0; width: 12px; height: 100vh; }
+  #edge-right { right: 0; top: 0; width: 12px; height: 100vh; }
+  #edge-top   { top: 0; left: 0; width: 100vw; height: 12px; }
+  #edge-bottom{ bottom: 0; left: 0; width: 100vw; height: 12px; }
+
+  /* Visualisation bord actif */
+  .edge-active {
+    background: linear-gradient(90deg, rgba(0,229,255,0.4), transparent) !important;
+    transition: background 0.1s;
+  }
+  #edge-right.edge-active  { background: linear-gradient(270deg, rgba(0,229,255,0.4), transparent) !important; }
+  #edge-top.edge-active    { background: linear-gradient(180deg, rgba(0,229,255,0.4), transparent) !important; }
+  #edge-bottom.edge-active { background: linear-gradient(0deg, rgba(0,229,255,0.4), transparent) !important; }
+
+  /* OVERLAY COMMANDE */
+  #cmd-overlay {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 200;
+    font-family: var(--mono);
+    font-size: 28px;
+    color: var(--accent);
+    text-align: center;
+    pointer-events: none;
+    transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    opacity: 0;
+    text-shadow: 0 0 30px var(--accent);
+    letter-spacing: 2px;
+  }
+
+  #cmd-overlay.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  #cmd-overlay .cmd-icon { font-size: 48px; display: block; margin-bottom: 8px; }
+  #cmd-overlay .cmd-text { font-size: 14px; letter-spacing: 3px; color: var(--text2); }
+
+  /* PANNEAU JEUX */
+  #game-panel {
+    display: none;
+    position: fixed;
+    inset: 0; z-index: 150;
+    background: rgba(8,12,16,0.97);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  #game-panel.show { display: flex; }
+
+  #game-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent2);
+    text-transform: uppercase;
+  }
+
+  #game-display {
+    font-size: 80px;
+    line-height: 1;
+  }
+
+  #game-result {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--accent3);
+    letter-spacing: 2px;
+    min-height: 24px;
+  }
+
+  #game-score {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    letter-spacing: 2px;
+  }
+
+  #game-instruction {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 300;
+    text-align: center;
+    line-height: 1.6;
+    max-width: 280px;
+  }
+
+  .game-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--accent);
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  /* PANNEAU ALERTES */
+  #alert-panel {
+    display: none;
+    position: fixed;
+    inset: 0; z-index: 160;
+    background: rgba(255,23,68,0.15);
+    border: 2px solid var(--danger);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    animation: alert-pulse 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes alert-pulse {
+    0% { background: rgba(255,23,68,0.1); }
+    100% { background: rgba(255,23,68,0.25); }
+  }
+
+  #alert-panel.show { display: flex; }
+
+  #alert-icon { font-size: 64px; }
+  #alert-text {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--danger);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  #alert-sub {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 300;
+  }
+
+  /* BOUTON DÉMARRAGE */
+  #start-screen {
+    position: fixed;
+    inset: 0; z-index: 300;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  #start-logo {
+    font-family: var(--mono);
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 6px;
+    text-align: center;
+    text-shadow: 0 0 30px var(--glow);
+  }
+
+  #start-sub {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 300;
+    text-align: center;
+    line-height: 1.8;
+    max-width: 300px;
+    letter-spacing: 0.5px;
+  }
+
+  #start-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 3px;
+    padding: 16px 40px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(0,229,255,0.1);
+  }
+
+  #start-btn:active {
+    background: rgba(0,229,255,0.1);
+    box-shadow: 0 0 30px var(--glow);
+  }
+
+  #features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text2);
+    font-weight: 300;
+  }
+
+  .feature-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    flex-shrink: 0;
+  }
+
+  /* LOG */
+  #log-panel {
+    position: fixed;
+    bottom: 90px; left: 12px; right: 12px;
+    background: rgba(13,21,32,0.95);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    display: none;
+    z-index: 50;
+  }
+
+  #log-panel.show { display: block; }
+
+  .log-entry {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .log-entry.important { color: var(--accent); }
+
+  /* BOUTON LOG */
+  #log-btn {
+    position: fixed;
+    top: 56px; right: 12px;
+    z-index: 60;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  /* JAUGE DÉFILEMENT */
+  #scroll-speed {
+    position: fixed;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 120px;
+    background: var(--surface2);
+    border-radius: 2px;
+    z-index: 20;
+  }
+
+  #scroll-speed-fill {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    background: var(--accent2);
+    border-radius: 2px;
+    transition: height 0.1s;
+    box-shadow: 0 0 6px var(--accent2);
+  }
+
+  /* ANIMATION HAPTIQUE VISUELLE */
+  #haptic-flash {
+    position: fixed;
+    inset: 0; z-index: 250;
+    background: rgba(0,229,255,0.05);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  #haptic-flash.flash { opacity: 1; }
+</style>
 </head>
 <body>
+
+<!-- ÉLÉMENTS CACHÉS CAMÉRA -->
+<div id="video-container">
+  <video id="video" playsinline></video>
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- FLASH HAPTIQUE VISUEL -->
+<div id="haptic-flash"></div>
+
+<!-- ÉCRAN DE DÉMARRAGE -->
+<div id="start-screen">
+  <div id="start-logo">GESTCONTROL<br><span style="font-size:11px;color:var(--text2);letter-spacing:3px">v1.0 — système gestuel</span></div>
+
+  <div id="features-list">
+    <div class="feature-item"><div class="feature-dot"></div>Défilement par caméra frontale</div>
+    <div class="feature-item"><div class="feature-dot"></div>Zones de bord tactiles (12px)</div>
+    <div class="feature-item"><div class="feature-dot"></div>Clignement des yeux gauche / droit</div>
+    <div class="feature-item"><div class="feature-dot"></div>Expressions faciales (sourcils, sourire)</div>
+    <div class="feature-item"><div class="feature-dot"></div>Signaux micro (sifflement, souffle)</div>
+    <div class="feature-item"><div class="feature-dot"></div>Pierre Feuille Ciseaux</div>
+    <div class="feature-item"><div class="feature-dot"></div>Signe d'alerte main</div>
+    <div class="feature-item"><div class="feature-dot" style="background:var(--accent3)"></div>Retour haptique uniquement — zéro son</div>
+  </div>
+
+  <div id="start-sub">Autorisez l'accès à la caméra et au microphone pour activer tous les capteurs.</div>
+
+  <button id="start-btn" onclick="startSystem()">INITIALISER LE SYSTÈME</button>
+</div>
+
+<!-- APP PRINCIPALE -->
 <div id="app">
+
+  <!-- ZONES DE BORD TACTILES -->
+  <div id="edge-left"   class="edge-zone"></div>
+  <div id="edge-right"  class="edge-zone"></div>
+  <div id="edge-top"    class="edge-zone"></div>
+  <div id="edge-bottom" class="edge-zone"></div>
+
+  <!-- HEADER -->
   <div id="header">
-    <div class="logo">
-      <div class="logo-icon">👆</div>
-      <span class="logo-text">FingerScroll</span>
-    </div>
-    <div class="header-actions">
-      <div class="icon-btn" id="btn-camera">📷</div>
-      <div class="icon-btn" id="btn-settings">⚙️</div>
-    </div>
-  </div>
-
-  <div id="scroll-area">
-    <div class="article-hero">
-      <div class="tag">✦ Technologie</div>
-      <h1>L'interface sans contact : l'avenir de l'interaction mobile</h1>
-      <p>Contrôlez votre téléphone sans le toucher — grâce à la caméra dorsale et à la détection de lumière en temps réel.</p>
-      <div class="meta"><span>📅 2026</span><span>⏱ 8 min</span><span>🧪 Prototype</span></div>
-    </div>
-
-    <div class="section-title">// En chiffres</div>
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">15–30</div><div class="stat-label">FPS analyse</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">320×240</div><div class="stat-label">Capture</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--warn)">Local</div><div class="stat-label">Traitement</div></div>
-      <div class="stat-card"><div class="stat-value" style="color:var(--accent)">2 zones</div><div class="stat-label">Détection</div></div>
-    </div>
-
-    <div class="section-title">// Comment ça marche</div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(0,245,196,0.1)">💡</div>
-        <div>
-          <h3>Lumière = direction</h3>
-          <p>Lumière dans la zone "descend" → défilement vers le bas. Lumière dans la zone "remonte" → défilement vers le haut. Noir quasi total → arrêt.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(123,97,255,0.1)">⚡</div>
-        <div>
-          <h3>Vitesse indépendante</h3>
-          <p>La vitesse dépend uniquement du curseur prévu pour cela. La détection lumineuse ne modifie pas la vitesse.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-icon" style="background:rgba(255,107,53,0.1)">🎯</div>
-        <div>
-          <h3>Position adaptable</h3>
-          <p>Le cercle de réglage permet d'adapter les deux zones de lumière selon votre manière de tenir l'appareil.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="quote-block">« La meilleure interface est celle qui disparaît. »</div>
-
-    <div class="section-title">// Confidentialité</div>
-    <div class="card">
-      <p>✅ Aucun envoi réseau pour l'analyse vidéo. Le traitement reste local dans le navigateur. La caméra se coupe automatiquement si l'onglet passe en arrière-plan.</p>
-    </div>
-
-    <div class="section-title">// Instructions</div>
-    <div class="card">
-      <h3 style="margin-bottom:10px">📱 Comment utiliser</h3>
-      <p style="line-height:2">
-        1. Appuyez sur 📷 ou sur le rond en bas à droite<br>
-        2. Placez votre doigt sur l'objectif dorsal<br>
-        3. Laissez passer la lumière d'un côté<br>
-        4. Zone "descend" = descend &nbsp; Zone "remonte" = remonte<br>
-        5. Noir total = arrêt &nbsp; Double tap = coupe la caméra
-      </p>
-    </div>
-
-    <div class="card">
-      <p style="line-height:2">
-        Ajustez la vitesse, la sensibilité et la position dans ⚙️.<br>
-        Le rond en bas à droite démarre et arrête la caméra.<br>
-        Glissez ce rond vers la droite pour le masquer.
-      </p>
+    <div id="logo">GEST<span>CTRL</span></div>
+    <div id="status-bar">
+      <div class="status-dot" id="dot-cam"   title="Caméra"></div>
+      <div class="status-dot" id="dot-face"  title="Visage"></div>
+      <div class="status-dot" id="dot-hand"  title="Main"></div>
+      <div class="status-dot" id="dot-mic"   title="Micro"></div>
+      <div class="status-dot" id="dot-edge"  title="Bords"></div>
     </div>
   </div>
 
-  <div id="scroll-bar"><div id="scroll-thumb"></div></div>
+  <!-- CONTENU DÉFILABLE -->
+  <div id="main">
+    <div id="scroll-speed"><div id="scroll-speed-fill" style="height:0%"></div></div>
 
-  <div id="direction-hint">
-    <div class="dir-arrow" id="arrow-up">↑</div>
-    <div class="dir-arrow" id="arrow-down">↓</div>
-  </div>
-
-  <div id="cam-overlay">
-    <div id="cam-panel" aria-label="Caméra — tap pour démarrer/arrêter">
-      <div id="cam-placeholder">
-        <span class="cam-emoji">📷</span>
-        <span class="cam-label">ON</span>
+    <div id="scroll-area">
+      <div class="content-block">
+        <h3>Mode actif</h3>
+        <p>Système de contrôle gestuel opérationnel. Déplacez votre main devant la caméra frontale pour faire défiler ce contenu. Utilisez les bords de l'écran pour activer les fonctions avancées.</p>
       </div>
-      <video id="cam-video" autoplay playsinline muted></video>
-      <canvas id="cam-canvas"></canvas>
+      <div class="content-block">
+        <h3>Clignement des yeux</h3>
+        <p>Clignez de l'œil gauche pour aller à l'onglet précédent. Clignez de l'œil droit pour aller au suivant. Double clignement pour pause. Clignement long pour ouvrir le menu.</p>
+      </div>
+      <div class="content-block">
+        <h3>Expressions faciales</h3>
+        <p>Froncez les sourcils pour activer le mode avancé. Souriez pour confirmer une action. Plissez le nez pour fermeture rapide et discrète du contenu sensible.</p>
+      </div>
+      <div class="content-block">
+        <h3>Signaux microphone</h3>
+        <p>Sifflez doucement pour déclencher une action. Soufflez vers le micro pour une commande alternative. Claquement de langue pour validation rapide. Tout se fait en silence absolu pour l'entourage.</p>
+      </div>
+      <div class="content-block">
+        <h3>Pierre Feuille Ciseaux</h3>
+        <p>Montrez poing fermé (pierre) pour stopper le défilement. Main ouverte (feuille) pour défilement libre. Deux doigts écartés (ciseaux) pour sélection. Activez via le bord bas.</p>
+      </div>
+      <div class="content-block">
+        <h3>Zones de bord</h3>
+        <p>Bord gauche : activation mode expression faciale. Bord droit : vitesse de défilement. Bord haut : menu principal. Bord bas : mode Pierre Feuille Ciseaux et jeu.</p>
+      </div>
+      <div class="content-block">
+        <h3>Signe d'alerte</h3>
+        <p>Main ouverte puis poing fermé rapidement devant la caméra dorsale déclenche silencieusement une alerte d'urgence. Aucun son — confirmation uniquement par haptique.</p>
+      </div>
+      <div class="content-block">
+        <h3>Accessibilité universelle</h3>
+        <p>Ce système fonctionne pour tous — aveugles (clignements), sourds-muets (langue des signes + sourire + haptique), mobilité réduite (micro). Zéro son de validation. Zéro exclusion.</p>
+      </div>
+      <div class="content-block">
+        <h3>Identification par doigt</h3>
+        <p>Caméra dorsale — objectif macro synchronisé au flash. Chaque doigt donne accès à un espace différent. La paume et ses lignes constituent un identifiant biométrique unique et non intrusif.</p>
+      </div>
+      <div class="content-block" style="margin-bottom:40px">
+        <h3>Version 1.0</h3>
+        <p>Base opérationnelle. Testez chaque fonctionnalité et notez vos retours pour la prochaine session d'amélioration. Le système apprend de votre usage.</p>
+      </div>
     </div>
+
+    <div id="scroll-indicator"><div id="scroll-thumb"></div></div>
   </div>
 
-  <div id="status-toast"></div>
-
-  <div id="debug-panel">
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-      <span style="font-weight:bold">📊 DEBUG</span>
-      <span id="debug-close" style="cursor:pointer;color:#ff6b35;font-size:16px;">✕</span>
-    </div>
-    <div id="debug-bands" style="display:flex;align-items:flex-end;gap:2px;height:50px;margin-bottom:8px;background:rgba(255,255,255,0.05);border-radius:6px;padding:4px;"></div>
-    <div id="debug-info" style="line-height:2;color:#e8e8f0;font-size:12px;"></div>
-  </div>
-
-  <div id="settings-drawer">
-    <div class="drawer-backdrop" id="drawer-backdrop"></div>
-    <div class="drawer-panel">
-      <div class="drawer-handle" id="drawer-handle"></div>
-      <div class="drawer-title">Paramètres</div>
-
-      <div class="setting-row">
-        <div class="setting-info"><h4>Détection caméra</h4><p>Active le défilement gestuel</p></div>
-        <div class="toggle" data-target="camEnabled"></div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><h4>Caméra frontale</h4><p>Selfie au lieu du dos</p></div>
-        <div class="toggle" data-target="useFront"></div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><h4>Retour haptique</h4><p>Vibration légère à l'activation</p></div>
-        <div class="toggle" data-target="haptic"></div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><h4>Mode économie</h4><p>Réduit la fréquence d'analyse</p></div>
-        <div class="toggle" data-target="ecoMode"></div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info"><h4>Vitesse de défilement</h4><p>Pixels déplacés par frame analysée</p></div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-speed" min="1" max="10" value="5" />
-          <div class="slider-val" id="speed-val">5 — 50px</div>
-        </div>
-      </div>
-
-      <div class="setting-row">
-        <div class="setting-info"><h4>Sensibilité</h4><p>Écart lumineux nécessaire pour déclencher</p></div>
-        <div class="slider-wrap">
-          <input type="range" id="slider-sensitivity" min="1" max="10" value="5" />
-          <div class="slider-val" id="sensitivity-val">5 — 15lux</div>
-        </div>
-      </div>
-
-      <div class="setting-row col">
-        <div class="setting-info">
-          <h4>Position du doigt</h4>
-          <p>Glissez chaque point sur le cercle</p>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
-          <canvas id="knob-canvas" width="120" height="120" style="touch-action:none;flex-shrink:0;"></canvas>
-          <div style="font-family:'Fira Code',monospace;font-size:12px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#00f5c4;display:inline-block;"></span>
-              <span style="color:var(--muted);">⬇ Descend</span>
-              <span id="pos-down" style="color:#00f5c4;margin-left:4px;">12h00</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="width:10px;height:10px;border-radius:50%;background:#7b61ff;display:inline-block;"></span>
-              <span style="color:var(--muted);">⬆ Remonte</span>
-              <span id="pos-up" style="color:#7b61ff;margin-left:4px;">6h00</span>
-            </div>
-            <div style="font-size:10px;color:var(--muted);margin-top:12px;line-height:1.6;">Glissez les points<br>où la lumière passe</div>
-          </div>
-        </div>
-      </div>
-
+  <!-- PANNEAU COMMANDES -->
+  <div id="command-panel">
+    <div id="last-command">DERNIÈRE COMMANDE DÉTECTÉE</div>
+    <div id="command-display">— en attente —</div>
+    <div id="sensors">
+      <div class="sensor-badge" id="badge-cam">CAM</div>
+      <div class="sensor-badge" id="badge-eye-l">ŒIL G</div>
+      <div class="sensor-badge" id="badge-eye-r">ŒIL D</div>
+      <div class="sensor-badge" id="badge-brow">SOURCILS</div>
+      <div class="sensor-badge" id="badge-smile">SOURIRE</div>
+      <div class="sensor-badge" id="badge-nose">NEZ</div>
+      <div class="sensor-badge" id="badge-hand">MAIN</div>
+      <div class="sensor-badge" id="badge-mic">MICRO</div>
+      <div class="sensor-badge" id="badge-edge">BORD</div>
     </div>
   </div>
 </div>
 
-<script>
-(() => {
-  const STORAGE_KEY = 'fingerscroll_settings_v3';
+<!-- OVERLAY COMMANDE -->
+<div id="cmd-overlay">
+  <span class="cmd-icon" id="cmd-icon"></span>
+  <span id="cmd-label"></span>
+  <span class="cmd-text" id="cmd-text"></span>
+</div>
 
-  const DEFAULT_CONFIG = {
-    camEnabled: true,
-    useFront: false,
-    haptic: true,
-    ecoMode: false,
-    speed: 5,
-    sensitivity: 5,
-    angleDown: 0,
-    angleUp: 180
+<!-- PANNEAU JEU -->
+<div id="game-panel">
+  <div id="game-title">PIERRE · FEUILLE · CISEAUX</div>
+  <div id="game-display">✊</div>
+  <div id="game-result"></div>
+  <div id="game-score">Victoires : <span id="win-count">0</span> | Défaites : <span id="lose-count">0</span></div>
+  <div id="game-instruction">Montrez Pierre ✊, Feuille 🖐 ou Ciseaux ✌️ devant la caméra</div>
+  <button class="game-btn" onclick="closeGame()">FERMER</button>
+</div>
+
+<!-- PANNEAU ALERTE -->
+<div id="alert-panel">
+  <div id="alert-icon">🚨</div>
+  <div id="alert-text">ALERTE ACTIVÉE</div>
+  <div id="alert-sub">Signal d'urgence envoyé silencieusement</div>
+  <button class="game-btn" style="border-color:var(--danger);color:var(--danger)" onclick="closeAlert()">ANNULER L'ALERTE</button>
+</div>
+
+<!-- LOG -->
+<div id="log-panel"></div>
+<button id="log-btn" onclick="toggleLog()">LOG</button>
+
+<script>
+// ============================================================
+// ÉTAT GLOBAL
+// ============================================================
+const STATE = {
+  running: false,
+  scrolling: false,
+  scrollSpeed: 0,
+  scrollDir: 0,
+  edgeActive: null,
+  faceMode: false,
+  gameMode: false,
+  alertSent: false,
+  lastBlink: { left: 0, right: 0, both: 0 },
+  blinkCooldown: 800,
+  lastExpression: { brow: 0, smile: 0, nose: 0 },
+  expressionCooldown: 1200,
+  lastGesture: 0,
+  gestureCooldown: 1000,
+  lastMic: 0,
+  micCooldown: 1500,
+  lastCommand: '',
+  wins: 0,
+  losses: 0,
+  logVisible: false,
+  prevHandPos: null,
+  handScrollActive: false,
+};
+
+// ============================================================
+// HAPTIQUE
+// ============================================================
+function haptic(pattern = 'light') {
+  if (!navigator.vibrate) return;
+  const patterns = {
+    light:    [30],
+    medium:   [60],
+    heavy:    [120],
+    double:   [40, 60, 40],
+    triple:   [30, 50, 30, 50, 30],
+    long:     [200],
+    alert:    [100, 80, 100, 80, 200],
+    success:  [50, 40, 100],
+    error:    [200, 100, 200],
+    sequence: [30, 30, 30, 30, 30, 30, 60],
+  };
+  navigator.vibrate(patterns[pattern] || [30]);
+
+  // Flash visuel haptique
+  const flash = document.getElementById('haptic-flash');
+  flash.classList.add('flash');
+  setTimeout(() => flash.classList.remove('flash'), 100);
+}
+
+// ============================================================
+// COMMANDE
+// ============================================================
+function triggerCommand(icon, label, desc, hapticType = 'medium', badgeId = null) {
+  const now = Date.now();
+  const key = label + icon;
+  if (STATE.lastCommand === key && now - STATE.lastCommandTime < 500) return;
+  STATE.lastCommand = key;
+  STATE.lastCommandTime = now;
+
+  haptic(hapticType);
+  addLog(`${icon} ${label}`, true);
+
+  // Overlay
+  const overlay = document.getElementById('cmd-overlay');
+  document.getElementById('cmd-icon').textContent = icon;
+  document.getElementById('cmd-label').textContent = label;
+  document.getElementById('cmd-text').textContent = desc;
+  overlay.classList.add('show');
+  setTimeout(() => overlay.classList.remove('show'), 1200);
+
+  // Panel
+  const disp = document.getElementById('command-display');
+  disp.textContent = `${icon}  ${label}`;
+  disp.classList.add('flash');
+  setTimeout(() => disp.classList.remove('flash'), 400);
+
+  // Badge
+  if (badgeId) {
+    const badge = document.getElementById(badgeId);
+    if (badge) {
+      badge.classList.add('triggered');
+      setTimeout(() => badge.classList.remove('triggered'), 600);
+    }
+  }
+}
+
+// ============================================================
+// LOG
+// ============================================================
+function addLog(msg, important = false) {
+  const panel = document.getElementById('log-panel');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry' + (important ? ' important' : '');
+  const t = new Date().toTimeString().slice(0, 8);
+  entry.textContent = `[${t}] ${msg}`;
+  panel.insertBefore(entry, panel.firstChild);
+  if (panel.children.length > 50) panel.removeChild(panel.lastChild);
+}
+
+function toggleLog() {
+  STATE.logVisible = !STATE.logVisible;
+  document.getElementById('log-panel').classList.toggle('show', STATE.logVisible);
+}
+
+// ============================================================
+// DÉFILEMENT
+// ============================================================
+const scrollArea = document.getElementById('scroll-area');
+
+function updateScroll() {
+  if (!STATE.handScrollActive) return;
+  const speed = STATE.scrollSpeed * STATE.scrollDir;
+  scrollArea.scrollTop += speed;
+
+  // Thumb scroll indicator
+  const maxScroll = scrollArea.scrollHeight - scrollArea.clientHeight;
+  const pct = maxScroll > 0 ? (scrollArea.scrollTop / maxScroll) * 80 : 0;
+  document.getElementById('scroll-thumb').style.top = pct + '%';
+
+  // Jauge vitesse
+  const pctSpeed = Math.min(Math.abs(STATE.scrollSpeed) / 15 * 100, 100);
+  document.getElementById('scroll-speed-fill').style.height = pctSpeed + '%';
+
+  requestAnimationFrame(updateScroll);
+}
+
+// ============================================================
+// BORDS TACTILES
+// ============================================================
+function setupEdges() {
+  const edges = {
+    'edge-left':   () => activateEdge('gauche', () => { STATE.faceMode = !STATE.faceMode; triggerCommand('👁', STATE.faceMode ? 'MODE VISAGE ACTIVÉ' : 'MODE VISAGE DÉSACTIVÉ', 'Expressions faciales', 'medium', 'badge-edge'); }),
+    'edge-right':  () => activateEdge('droite',  () => triggerCommand('⚡', 'VITESSE +', 'Augmentation vitesse défilement', 'light', 'badge-edge')),
+    'edge-top':    () => activateEdge('haut',    () => triggerCommand('☰', 'MENU PRINCIPAL', 'Ouverture menu', 'medium', 'badge-edge')),
+    'edge-bottom': () => activateEdge('bas',     () => openGame()),
   };
 
-  const CONFIG = loadConfig();
+  Object.entries(edges).forEach(([id, handler]) => {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      el.classList.add('edge-active');
+      document.getElementById('dot-edge').classList.add('active');
+      handler();
+    }, { passive: false });
 
-  const SPEED_PX  = [5, 12, 25, 35, 50, 70, 100, 140, 190, 250];
-  const SENS_LUX  = [80, 55, 38, 25, 15, 10, 6, 4, 2, 1];
+    el.addEventListener('touchend', () => {
+      el.classList.remove('edge-active');
+      document.getElementById('dot-edge').classList.remove('active');
+      STATE.edgeActive = null;
+    });
+  });
 
-  const CAMERA_W = 320;
-  const CAMERA_H = 240;
-  const BASE_NOIR = 8;
+  addLog('Zones de bord initialisées');
+}
 
-  const DETECT_FPS_NORMAL = 22;
-  const DETECT_FPS_ECO    = 12;
-  const ACCEL_TIME        = 2000;  // ms pour atteindre vitesse max
-  const DECEL_TIME        = 220;   // ms pour arrêt propre
+function activateEdge(side, callback) {
+  if (STATE.edgeActive === side) return;
+  STATE.edgeActive = side;
+  haptic('light');
+  addLog(`Bord ${side} touché`);
+  callback();
+}
 
-  let stream         = null;
-  let detectRAF      = null;
-  let motionRAF      = null;
+// ============================================================
+// DÉFILEMENT TACTILE ÉCRAN PRINCIPAL
+// ============================================================
+function setupTouchScroll() {
+  let startY = 0;
+  scrollArea.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; });
+  scrollArea.addEventListener('touchmove', (e) => {
+    const dy = startY - e.touches[0].clientY;
+    scrollArea.scrollTop += dy * 0.5;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+}
 
-  let touchActive       = false;
-  let selectionAllowed  = false;
-  let localNoirThreshold = BASE_NOIR;
-  let calibrating       = false;
+// ============================================================
+// MEDIAPIPE FACE MESH
+// ============================================================
+function setupFaceMesh(videoEl) {
+  const faceMesh = new FaceMesh({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}` });
+  faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.7,
+  });
 
-  let touchStartY  = 0;
-  let isSwiping    = false;
+  faceMesh.onResults(onFaceResults);
 
-  let lastTapTime  = 0;
-  let tapCount     = 0;
-  let tapTimer     = null;
-  let toastTimer   = null;
-  let holdTimer    = null;
+  const camera = new Camera(videoEl, {
+    onFrame: async () => { await faceMesh.send({ image: videoEl }); },
+    width: 320, height: 240,
+    facingMode: 'user',
+  });
+  camera.start().then(() => {
+    document.getElementById('dot-cam').classList.add('active');
+    document.getElementById('badge-cam').classList.add('on');
+    addLog('Caméra frontale active');
+  });
 
-  let panelDragStartX = 0;
-  let panelDragStartY = 0;
-  let panelDragging   = false;
+  return faceMesh;
+}
 
-  let commandedDirection = 0;   // -1 haut, +1 bas, 0 stop
-  let actualVelocity     = 0;   // px/sec
-  let lastMotionTime     = 0;
-  let lastDetectTime     = 0;
-  let lastArrowUpAt      = 0;
-  let lastArrowDownAt    = 0;
+function eyeAspectRatio(landmarks, indices) {
+  const [p1, p2, p3, p4, p5, p6] = indices.map(i => landmarks[i]);
+  const v1 = Math.hypot(p2.x - p6.x, p2.y - p6.y);
+  const v2 = Math.hypot(p3.x - p5.x, p3.y - p5.y);
+  const h  = Math.hypot(p1.x - p4.x, p1.y - p4.y);
+  return (v1 + v2) / (2 * h);
+}
 
-  // DOM
-  const scrollArea    = document.getElementById('scroll-area');
-  const camPanel      = document.getElementById('cam-panel');
-  const camVideo      = document.getElementById('cam-video');
-  const camCanvas     = document.getElementById('cam-canvas');
-  const camPlaceholder= document.getElementById('cam-placeholder');
-  const statusToast   = document.getElementById('status-toast');
-  const scrollBar     = document.getElementById('scroll-bar');
-  const scrollThumb   = document.getElementById('scroll-thumb');
-  const arrowUp       = document.getElementById('arrow-up');
-  const arrowDown     = document.getElementById('arrow-down');
-  const btnCamera     = document.getElementById('btn-camera');
-  const btnSettings   = document.getElementById('btn-settings');
-  const settingsDrawer= document.getElementById('settings-drawer');
-  const debugPanel    = document.getElementById('debug-panel');
-  const debugBands    = document.getElementById('debug-bands');
-  const debugInfo     = document.getElementById('debug-info');
-  const sliderSpeed   = document.getElementById('slider-speed');
-  const sliderSens    = document.getElementById('slider-sensitivity');
-  const speedVal      = document.getElementById('speed-val');
-  const sensVal       = document.getElementById('sensitivity-val');
-  const ctx           = camCanvas.getContext('2d', { willReadFrequently: true });
+function onFaceResults(results) {
+  if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+    document.getElementById('dot-face').classList.remove('active');
+    return;
+  }
+  document.getElementById('dot-face').classList.add('active');
 
-  // ── CONFIG ──────────────────────────────────────────────
-  function loadConfig() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { ...DEFAULT_CONFIG };
-      return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
-    } catch { return { ...DEFAULT_CONFIG }; }
+  const lm = results.multiFaceLandmarks[0];
+  const now = Date.now();
+
+  // --- DÉFILEMENT PAR POSITION DE LA TÊTE ---
+  const nose = lm[1];
+  const noseY = nose.y;
+  if (noseY < 0.35) {
+    STATE.scrollDir = -1;
+    STATE.scrollSpeed = (0.35 - noseY) * 40;
+    if (!STATE.handScrollActive) { STATE.handScrollActive = true; requestAnimationFrame(updateScroll); }
+    document.getElementById('badge-cam').classList.add('triggered');
+  } else if (noseY > 0.65) {
+    STATE.scrollDir = 1;
+    STATE.scrollSpeed = (noseY - 0.65) * 40;
+    if (!STATE.handScrollActive) { STATE.handScrollActive = true; requestAnimationFrame(updateScroll); }
+    document.getElementById('badge-cam').classList.add('triggered');
+  } else {
+    STATE.handScrollActive = false;
+    STATE.scrollSpeed = 0;
+    document.getElementById('scroll-speed-fill').style.height = '0%';
+    document.getElementById('badge-cam').classList.remove('triggered');
   }
 
-  function saveConfig() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(CONFIG)); } catch {}
+  // --- CLIGNEMENTS ---
+  // Indices yeux MediaPipe
+  const leftEAR  = eyeAspectRatio(lm, [362,385,387,263,373,380]);
+  const rightEAR = eyeAspectRatio(lm, [33,160,158,133,153,144]);
+  const EAR_THRESH = 0.22;
+
+  const leftClosed  = leftEAR  < EAR_THRESH;
+  const rightClosed = rightEAR < EAR_THRESH;
+
+  if (leftClosed && rightClosed && now - STATE.lastBlink.both > STATE.blinkCooldown) {
+    STATE.lastBlink.both = now;
+    triggerCommand('😑', 'DOUBLE CLIGNEMENT', 'Pause / reprise défilement', 'double', 'badge-eye-l');
+    STATE.handScrollActive = !STATE.handScrollActive;
+  } else if (leftClosed && !rightClosed && now - STATE.lastBlink.left > STATE.blinkCooldown) {
+    STATE.lastBlink.left = now;
+    triggerCommand('😉', 'ŒEIL GAUCHE', 'Onglet précédent', 'light', 'badge-eye-l');
+  } else if (rightClosed && !leftClosed && now - STATE.lastBlink.right > STATE.blinkCooldown) {
+    STATE.lastBlink.right = now;
+    triggerCommand('😉', 'ŒEIL DROIT', 'Onglet suivant', 'light', 'badge-eye-r');
   }
 
-  function getScrollPxPerFrame() { return SPEED_PX[Math.min(Math.max(CONFIG.speed, 1) - 1, 9)]; }
-  function getTargetVelocity()   { return getScrollPxPerFrame() * 60; }
-  function getSeuil()            { return SENS_LUX[Math.min(Math.max(CONFIG.sensitivity, 1) - 1, 9)]; }
-  function getDetectInterval()   { return 1000 / (CONFIG.ecoMode ? DETECT_FPS_ECO : DETECT_FPS_NORMAL); }
+  if (!STATE.faceMode) return; // Expressions désactivées sauf si mode actif
 
-  // ── UI HELPERS ───────────────────────────────────────────
-  function showToast(msg, type = '', dur = 2500) {
-    clearTimeout(toastTimer);
-    statusToast.textContent = msg;
-    statusToast.className = 'show ' + type;
-    toastTimer = setTimeout(() => { statusToast.className = ''; }, dur);
+  // --- SOURCILS FRONCÉS ---
+  const browL = lm[70].y;  const browR = lm[300].y;
+  const eyeL  = lm[386].y; const eyeR  = lm[159].y;
+  const browDist = ((eyeL - browL) + (eyeR - browR)) / 2;
+  if (browDist < 0.025 && now - STATE.lastExpression.brow > STATE.expressionCooldown) {
+    STATE.lastExpression.brow = now;
+    triggerCommand('😠', 'SOURCILS FRONCÉS', 'Mode avancé activé', 'medium', 'badge-brow');
   }
 
-  function vibrate(pattern) {
-    if (CONFIG.haptic && 'vibrate' in navigator) navigator.vibrate(pattern);
+  // --- SOURIRE ---
+  const mouthL  = lm[61]; const mouthR = lm[291];
+  const mouthW  = Math.hypot(mouthR.x - mouthL.x, mouthR.y - mouthL.y);
+  const jawW    = Math.hypot(lm[234].x - lm[454].x, lm[234].y - lm[454].y);
+  const smileR  = mouthW / jawW;
+  if (smileR > 0.52 && now - STATE.lastExpression.smile > STATE.expressionCooldown) {
+    STATE.lastExpression.smile = now;
+    triggerCommand('😊', 'SOURIRE', 'Action confirmée', 'success', 'badge-smile');
   }
 
-  function updateScrollBar() {
-    const max = scrollArea.scrollHeight - scrollArea.clientHeight;
-    if (max <= 0) { scrollThumb.style.top = '0px'; return; }
-    const p  = scrollArea.scrollTop / max;
-    const bh = scrollBar.clientHeight;
-    const th = Math.max(30, bh * scrollArea.clientHeight / scrollArea.scrollHeight);
-    scrollThumb.style.height = th + 'px';
-    scrollThumb.style.top    = p * (bh - th) + 'px';
+  // --- PLISSEMENT NEZ ---
+  const noseW = Math.hypot(lm[48].x - lm[278].x, lm[48].y - lm[278].y);
+  if (noseW > 0.065 && now - STATE.lastExpression.nose > STATE.expressionCooldown) {
+    STATE.lastExpression.nose = now;
+    triggerCommand('😤', 'NEZ PLISSÉ', 'Fermeture rapide discrète', 'heavy', 'badge-nose');
   }
+}
 
-  function setArrow(dir) {
-    const now = performance.now();
-    if (dir === 'up')   { lastArrowUpAt   = now; arrowUp.classList.add('active'); }
-    if (dir === 'down') { lastArrowDownAt = now; arrowDown.classList.add('active'); }
+// ============================================================
+// MEDIAPIPE HANDS
+// ============================================================
+function setupHands(videoEl) {
+  const hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}` });
+  hands.setOptions({
+    maxNumHands: 1,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.7,
+  });
+  hands.onResults(onHandResults);
+
+  // On réutilise la même caméra via un second envoi
+  // Note : En production on gérerait mieux le partage
+  addLog('Module mains initialisé');
+  return hands;
+}
+
+function classifyGesture(landmarks) {
+  const tips    = [4, 8, 12, 16, 20];
+  const middles = [3, 6, 10, 14, 18];
+
+  const extended = tips.map((tip, i) => {
+    if (i === 0) return landmarks[tip].x < landmarks[middles[i]].x;
+    return landmarks[tip].y < landmarks[middles[i]].y;
+  });
+
+  const count = extended.filter(Boolean).length;
+
+  if (count === 0) return 'pierre';
+  if (count >= 4) return 'feuille';
+  if (extended[1] && extended[2] && !extended[3] && !extended[4]) return 'ciseaux';
+  if (extended[1] && !extended[2] && !extended[3] && !extended[4]) return 'index';
+  if (count >= 4 && extended[0]) return 'paume';
+  return 'autre';
+}
+
+let handsModule = null;
+
+function onHandResults(results) {
+  if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+    document.getElementById('dot-hand').classList.remove('active');
+    return;
   }
+  document.getElementById('dot-hand').classList.add('active');
+  document.getElementById('badge-hand').classList.add('on');
 
-  function refreshArrows() {
-    const now = performance.now();
-    if (now - lastArrowUpAt   > 140) arrowUp.classList.remove('active');
-    if (now - lastArrowDownAt > 140) arrowDown.classList.remove('active');
-  }
+  const lm  = results.multiHandLandmarks[0];
+  const now = Date.now();
 
-  function setSelectionAllowed(v) {
-    selectionAllowed = v;
-    if (v) scrollArea.classList.remove('no-select');
-    else   scrollArea.classList.add('no-select');
-  }
+  if (now - STATE.lastGesture < STATE.gestureCooldown) return;
 
-  function resetMotion() {
-    commandedDirection = 0;
-    actualVelocity     = 0;
-    lastMotionTime     = 0;
-  }
+  const gesture = classifyGesture(lm);
 
-  function resetCameraUI() {
-    camVideo.style.display     = 'none';
-    camPlaceholder.style.display = 'flex';
-    camPanel.classList.remove('active', 'detecting');
-    btnCamera.classList.remove('active');
-    scrollBar.style.opacity = '0';
-    document.getElementById('direction-hint').style.opacity = '0';
-    arrowUp.classList.remove('active');
-    arrowDown.classList.remove('active');
-  }
-
-  function activateCameraUI() {
-    camVideo.style.display       = 'block';
-    camPlaceholder.style.display = 'none';
-    camPanel.classList.add('active');
-    btnCamera.classList.add('active');
-    scrollBar.style.opacity = '1';
-    document.getElementById('direction-hint').style.opacity = '1';
-  }
-
-  // ── CALIBRATION NOIR ────────────────────────────────────
-  async function calibrateNoir(samples = 10) {
-    if (!stream || calibrating) return;
-    calibrating = true;
-    let total = 0, count = 0;
-
-    for (let i = 0; i < samples; i++) {
-      if (!stream || camVideo.readyState < 2) break;
-      ctx.drawImage(camVideo, 0, 0, camCanvas.width, camCanvas.height);
-      const data = ctx.getImageData(0, 0, camCanvas.width, camCanvas.height).data;
-      let sum = 0, n = 0;
-      for (let y = 0; y < camCanvas.height; y += 8)
-        for (let x = 0; x < camCanvas.width; x += 8) {
-          const idx = (y * camCanvas.width + x) * 4;
-          sum += data[idx]*0.2126 + data[idx+1]*0.7152 + data[idx+2]*0.0722;
-          n++;
-        }
-      if (n > 0) { total += sum / n; count++; }
-      await new Promise(r => setTimeout(r, 35));
-    }
-
-    localNoirThreshold = count > 0
-      ? Math.max(BASE_NOIR, Math.min(20, (total / count) * 0.18))
-      : BASE_NOIR;
-    calibrating = false;
-  }
-
-  // ── CAMÉRA ──────────────────────────────────────────────
-  async function startCamera() {
-    if (stream || !CONFIG.camEnabled) return;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: CONFIG.useFront ? 'user' : { ideal: 'environment' },
-          width: { ideal: CAMERA_W }, height: { ideal: CAMERA_H },
-          frameRate: { ideal: 30, max: 30 }
-        },
-        audio: false
-      });
-      camVideo.srcObject = stream;
-      await camVideo.play();
-      camCanvas.width  = CAMERA_W;
-      camCanvas.height = CAMERA_H;
-      activateCameraUI();
-      setSelectionAllowed(false);
-      resetMotion();
-      showToast('📷 Caméra active', 'ok', 1800);
-      vibrate(30);
-      await calibrateNoir(12);
-      lastDetectTime = 0;
-      cancelAnimationFrame(detectRAF);
-      detectRAF = requestAnimationFrame(detectLoop);
-      cancelAnimationFrame(motionRAF);
-      motionRAF = requestAnimationFrame(motionLoop);
-    } catch (e) {
-      stream = null;
-      resetCameraUI();
-      showToast(
-        e && e.name === 'NotAllowedError' ? '⚠️ Permission caméra refusée' : '⚠️ Caméra indisponible',
-        'warn', 4000
-      );
-    }
-  }
-
-  function stopCamera(silent = false) {
-    if (detectRAF) { cancelAnimationFrame(detectRAF); detectRAF = null; }
-    if (motionRAF) { cancelAnimationFrame(motionRAF); motionRAF = null; }
-    if (stream)    { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    camVideo.srcObject = null;
-    resetCameraUI();
-    setSelectionAllowed(true);
-    resetMotion();
-    if (!silent) showToast('Caméra désactivée', '', 1500);
-  }
-
-  // ── DÉTECTION ───────────────────────────────────────────
-  function toRad(deg) { return (deg - 90) * Math.PI / 180; }
-
-  function deltaAngle(a, b) {
-    let d = Math.abs(a - b);
-    if (d > Math.PI) d = 2 * Math.PI - d;
-    return d;
-  }
-
-  function detectLoop(now) {
-    if (!stream) return;
-    detectRAF = requestAnimationFrame(detectLoop);
-    refreshArrows();
-
-    if (camVideo.readyState < 2) return;
-    if (now - lastDetectTime < getDetectInterval()) return;
-    lastDetectTime = now;
-
-    const W = camCanvas.width, H = camCanvas.height;
-    ctx.drawImage(camVideo, 0, 0, W, H);
-    const data = ctx.getImageData(0, 0, W, H).data;
-
-    const cx = W / 2, cy = H / 2;
-    const maxR   = Math.min(W, H) / 2;
-    const innerR = maxR * 0.70;
-    const outerR = maxR * 0.97;
-    const SECTOR = Math.PI / 7;
-
-    const radD = toRad(CONFIG.angleDown);
-    const radU = toRad(CONFIG.angleUp);
-
-    let lumD = 0, nD = 0, lumU = 0, nU = 0;
-
-    for (let y = 0; y < H; y += 2) {
-      const dy = y - cy;
-      for (let x = 0; x < W; x += 2) {
-        const dx = x - cx;
-        const r  = Math.sqrt(dx*dx + dy*dy);
-        if (r < innerR || r > outerR) continue;
-        const a = Math.atan2(dy, dx);
-        const i = (y * W + x) * 4;
-        const lum = data[i]*0.2126 + data[i+1]*0.7152 + data[i+2]*0.0722;
-        if (deltaAngle(a, radD) < SECTOR) { lumD += lum; nD++; }
-        if (deltaAngle(a, radU) < SECTOR) { lumU += lum; nU++; }
-      }
-    }
-
-    lumD = lumD / Math.max(nD, 1);
-    lumU = lumU / Math.max(nU, 1);
-
-    // Debug
-    if (debugPanel.style.display !== 'none') {
-      debugBands.innerHTML =
-        `<div style="flex:1;background:#00f5c4;border-radius:2px;height:${Math.round(4+lumD/255*46)}px;"></div>`.repeat(6) +
-        `<div style="flex:1;background:#444;height:6px;border-radius:2px;"></div>` +
-        `<div style="flex:1;background:#7b61ff;border-radius:2px;height:${Math.round(4+lumU/255*46)}px;"></div>`.repeat(6);
-
-      const status = (lumD < localNoirThreshold && lumU < localNoirThreshold) ? '⬛ NOIR = ARRÊT'
-                   : lumD > lumU + getSeuil() ? '⬇ DESCEND'
-                   : lumU > lumD + getSeuil() ? '⬆ REMONTE' : '⏸ ÉQUILIBRÉ';
-
-      debugInfo.innerHTML =
-        `⬇ ${Math.round(lumD)} | ⬆ ${Math.round(lumU)} | Seuil: ${getSeuil()}<br>` +
-        `Noir: ${Math.round(localNoirThreshold)} | Cible: ${Math.round(getTargetVelocity())}px/s<br>` +
-        status;
-    }
-
-    // Doigt sur l'écran = priorité absolue
-    if (touchActive) {
-      commandedDirection = 0;
-      camPanel.classList.remove('detecting');
-      return;
-    }
-
-    // Noir = arrêt + sélection autorisée
-    if (lumD < localNoirThreshold && lumU < localNoirThreshold) {
-      commandedDirection = 0;
-      setSelectionAllowed(true);
-      camPanel.classList.remove('detecting');
-      return;
-    }
-
-    // Descend
-    if (lumD > lumU + getSeuil()) {
-      commandedDirection = 1;
-      setSelectionAllowed(false);
-      camPanel.classList.add('detecting');
-      setArrow('down');
-      return;
-    }
-
-    // Remonte
-    if (lumU > lumD + getSeuil()) {
-      commandedDirection = -1;
-      setSelectionAllowed(false);
-      camPanel.classList.add('detecting');
-      setArrow('up');
-      return;
-    }
-
-    // Équilibré = pause
-    commandedDirection = 0;
-    camPanel.classList.remove('detecting');
-  }
-
-  // ── MOTION LOOP (animation fluide) ──────────────────────
-  function motionLoop(now) {
-    motionRAF = requestAnimationFrame(motionLoop);
-    refreshArrows();
-    if (!stream) return;
-
-    if (!lastMotionTime) { lastMotionTime = now; return; }
-    let dt = Math.min((now - lastMotionTime) / 1000, 0.05);
-    lastMotionTime = now;
-
-    const targetVelocity = commandedDirection * getTargetVelocity();
-
-    if (touchActive) { actualVelocity = 0; return; }
-
-    if (targetVelocity !== 0) {
-      // Accélération progressive sur ACCEL_TIME
-      const step = getTargetVelocity() / (ACCEL_TIME / 1000);
-      if (actualVelocity < targetVelocity)
-        actualVelocity = Math.min(actualVelocity + step * dt, targetVelocity);
-      else if (actualVelocity > targetVelocity)
-        actualVelocity = Math.max(actualVelocity - step * dt, targetVelocity);
+  // Défilement par position main (mode alternatif)
+  const palmY = lm[9].y;
+  if (!STATE.faceMode) {
+    if (palmY < 0.3) {
+      STATE.scrollDir = -1; STATE.scrollSpeed = (0.3 - palmY) * 50;
+      if (!STATE.handScrollActive) { STATE.handScrollActive = true; requestAnimationFrame(updateScroll); }
+    } else if (palmY > 0.7) {
+      STATE.scrollDir = 1; STATE.scrollSpeed = (palmY - 0.7) * 50;
+      if (!STATE.handScrollActive) { STATE.handScrollActive = true; requestAnimationFrame(updateScroll); }
     } else {
-      // Décélération rapide sur DECEL_TIME
-      const decel = getTargetVelocity() / (DECEL_TIME / 1000);
-      if (actualVelocity > 0)      actualVelocity = Math.max(0, actualVelocity - decel * dt);
-      else if (actualVelocity < 0) actualVelocity = Math.min(0, actualVelocity + decel * dt);
+      STATE.handScrollActive = false; STATE.scrollSpeed = 0;
     }
-
-    if (Math.abs(actualVelocity) < 0.5) { actualVelocity = 0; return; }
-
-    const delta = actualVelocity * dt;
-    if (delta !== 0) { scrollArea.scrollTop += delta; updateScrollBar(); }
   }
 
-  // ── INTERACTIONS SCROLL AREA ─────────────────────────────
-  function bindScrollPriority() {
-    scrollArea.addEventListener('scroll', updateScrollBar, { passive: true });
+  // Jeu Pierre Feuille Ciseaux
+  if (STATE.gameMode) {
+    if (['pierre', 'feuille', 'ciseaux'].includes(gesture)) {
+      STATE.lastGesture = now;
+      playGame(gesture);
+    }
+    return;
+  }
 
-    scrollArea.addEventListener('touchstart', (e) => {
-      touchActive  = true;
-      actualVelocity = 0;
-      touchStartY  = e.touches[0].clientY;
-      isSwiping    = false;
-      if (!selectionAllowed) scrollArea.classList.add('no-select');
+  // Commandes par geste
+  if (gesture === 'pierre' && STATE.edgeActive) {
+    STATE.lastGesture = now;
+    triggerCommand('✊', 'PIERRE — STOP', 'Défilement arrêté', 'medium', 'badge-hand');
+    STATE.handScrollActive = false;
+  } else if (gesture === 'feuille' && STATE.edgeActive) {
+    STATE.lastGesture = now;
+    triggerCommand('🖐', 'FEUILLE — LIBRE', 'Défilement activé', 'light', 'badge-hand');
+    STATE.handScrollActive = true;
+  } else if (gesture === 'ciseaux') {
+    STATE.lastGesture = now;
+    triggerCommand('✌️', 'CISEAUX — SÉLECTION', 'Sélection activée', 'light', 'badge-hand');
+  }
 
-      // Double tap = couper caméra
-      if (stream) {
-        const now = Date.now();
-        if (now - lastTapTime < 300) {
-          tapCount++;
-          if (tapCount >= 2) {
-            tapCount = 0;
-            clearTimeout(tapTimer);
-            stopCamera();
-            showToast('📷 Double tap — caméra coupée', '', 2500);
-            return;
-          }
-        } else {
-          tapCount = 1;
-        }
-        lastTapTime = now;
-        tapTimer = setTimeout(() => { tapCount = 0; }, 400);
+  // Signe d'alerte : paume puis poing
+  if (gesture === 'paume' && STATE.prevGesture !== 'paume') {
+    STATE.alertTimer = setTimeout(() => {
+      if (STATE.currentGesture === 'pierre') triggerAlert();
+    }, 800);
+  }
+  STATE.prevGesture = gesture;
+  STATE.currentGesture = gesture;
+}
+
+// ============================================================
+// JEU PIERRE FEUILLE CISEAUX
+// ============================================================
+function openGame() {
+  if (STATE.gameMode) return;
+  STATE.gameMode = true;
+  document.getElementById('game-panel').classList.add('show');
+  document.getElementById('game-result').textContent = 'Montrez votre geste !';
+  triggerCommand('🎮', 'JEU ACTIVÉ', 'Pierre Feuille Ciseaux', 'sequence');
+  addLog('Jeu Pierre Feuille Ciseaux ouvert');
+}
+
+function closeGame() {
+  STATE.gameMode = false;
+  document.getElementById('game-panel').classList.remove('show');
+  haptic('light');
+}
+
+function playGame(playerGesture) {
+  const choices  = ['pierre', 'feuille', 'ciseaux'];
+  const icons    = { pierre: '✊', feuille: '🖐', ciseaux: '✌️' };
+  const aiChoice = choices[Math.floor(Math.random() * 3)];
+
+  document.getElementById('game-display').textContent = `${icons[playerGesture]} vs ${icons[aiChoice]}`;
+
+  let result;
+  if (playerGesture === aiChoice) {
+    result = 'ÉGALITÉ !'; haptic('double');
+  } else if (
+    (playerGesture === 'pierre'  && aiChoice === 'ciseaux') ||
+    (playerGesture === 'feuille' && aiChoice === 'pierre')  ||
+    (playerGesture === 'ciseaux' && aiChoice === 'feuille')
+  ) {
+    result = 'GAGNÉ ! 🎉'; STATE.wins++;
+    document.getElementById('win-count').textContent = STATE.wins;
+    haptic('success');
+  } else {
+    result = 'PERDU...'; STATE.losses++;
+    document.getElementById('lose-count').textContent = STATE.losses;
+    haptic('error');
+  }
+
+  document.getElementById('game-result').textContent = result;
+  addLog(`Jeu: ${icons[playerGesture]} vs ${icons[aiChoice]} — ${result}`);
+}
+
+// ============================================================
+// ALERTE
+// ============================================================
+function triggerAlert() {
+  if (STATE.alertSent) return;
+  STATE.alertSent = true;
+  haptic('alert');
+  document.getElementById('alert-panel').classList.add('show');
+  addLog('⚠️ ALERTE DÉCLENCHÉE', true);
+}
+
+function closeAlert() {
+  STATE.alertSent = false;
+  document.getElementById('alert-panel').classList.remove('show');
+  haptic('double');
+  addLog('Alerte annulée');
+}
+
+// ============================================================
+// MICROPHONE
+// ============================================================
+async function setupMicrophone() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx    = new (window.AudioContext || window.webkitAudioContext)();
+    const source = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray    = new Uint8Array(bufferLength);
+    const freqArray    = new Float32Array(bufferLength);
+
+    document.getElementById('dot-mic').classList.add('active');
+    document.getElementById('badge-mic').classList.add('on');
+    addLog('Microphone actif');
+
+    function analyzeMic() {
+      requestAnimationFrame(analyzeMic);
+      const now = Date.now();
+      if (now - STATE.lastMic < STATE.micCooldown) return;
+
+      analyser.getByteTimeDomainData(dataArray);
+      analyser.getFloatFrequencyData(freqArray);
+
+      // Volume RMS
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const v = (dataArray[i] - 128) / 128;
+        sum += v * v;
       }
-    }, { passive: true });
+      const rms = Math.sqrt(sum / bufferLength);
 
-    scrollArea.addEventListener('touchmove', (e) => {
-      if (Math.abs(e.touches[0].clientY - touchStartY) > 5) isSwiping = true;
-      if (!selectionAllowed && isSwiping) scrollArea.classList.add('no-select');
-    }, { passive: true });
+      // Détection souffle (volume modéré, basses fréquences)
+      const lowFreq  = freqArray.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
+      // Détection sifflement (hautes fréquences)
+      const highFreq = freqArray.slice(80, 150).reduce((a, b) => a + b, 0) / 70;
+      // Détection claquement (pic bref)
+      const midFreq  = freqArray.slice(20, 60).reduce((a, b) => a + b, 0) / 40;
 
-    scrollArea.addEventListener('touchend', () => {
-      touchActive  = false;
-      isSwiping    = false;
-      actualVelocity = 0;
-      if (selectionAllowed) scrollArea.classList.remove('no-select');
-      else setTimeout(() => {
-        if (!selectionAllowed) scrollArea.classList.add('no-select');
-        else scrollArea.classList.remove('no-select');
-      }, 120);
-    }, { passive: true });
-
-    scrollArea.addEventListener('touchcancel', () => {
-      touchActive = false; isSwiping = false; actualVelocity = 0;
-      if (selectionAllowed) scrollArea.classList.remove('no-select');
-    }, { passive: true });
-
-    scrollArea.addEventListener('contextmenu',  (e) => { if (!selectionAllowed) e.preventDefault(); });
-    scrollArea.addEventListener('selectstart',  (e) => { if (!selectionAllowed) e.preventDefault(); });
-  }
-
-  // ── CONTRÔLES CAMÉRA ────────────────────────────────────
-  function bindCameraControls() {
-
-    // Bouton 📷 header
-    btnCamera.addEventListener('click', async () => {
-      camPanel.classList.remove('hidden');
-      camPanel.style.transform = '';
-      if (stream) stopCamera();
-      else if (CONFIG.camEnabled) await startCamera();
-      else showToast('Activez la caméra dans les paramètres', 'warn');
-    });
-
-    // ── Petit rond : tap = démarrer OU arrêter ──
-    camPanel.addEventListener('click', async () => {
-      if (panelDragging) return;   // ignorer si c'était un glissement
-      if (stream) {
-        stopCamera();              // caméra active → on l'arrête
-      } else if (CONFIG.camEnabled) {
-        await startCamera();       // caméra inactive → on la démarre
+      if (rms > 0.15 && highFreq > -30) {
+        STATE.lastMic = now;
+        triggerCommand('🎵', 'SIFFLEMENT', 'Commande sifflement détectée', 'light', 'badge-mic');
+        addLog(`Micro: sifflement RMS=${rms.toFixed(3)}`);
+      } else if (rms > 0.08 && lowFreq > -40 && highFreq < -45) {
+        STATE.lastMic = now;
+        triggerCommand('💨', 'SOUFFLE', 'Commande souffle détectée', 'light', 'badge-mic');
+        addLog(`Micro: souffle RMS=${rms.toFixed(3)}`);
+      } else if (rms > 0.25 && midFreq > -20) {
+        STATE.lastMic = now;
+        triggerCommand('👅', 'CLAQUEMENT', 'Claquement de langue détecté', 'medium', 'badge-mic');
+        addLog(`Micro: claquement RMS=${rms.toFixed(3)}`);
       }
+    }
+
+    analyzeMic();
+  } catch (e) {
+    addLog('Micro : accès refusé');
+    document.getElementById('dot-mic').classList.add('warn');
+  }
+}
+
+// ============================================================
+// DÉMARRAGE SYSTÈME
+// ============================================================
+async function startSystem() {
+  document.getElementById('start-screen').style.display = 'none';
+  addLog('Initialisation du système...');
+
+  setupEdges();
+  setupTouchScroll();
+
+  try {
+    const videoEl = document.getElementById('video');
+    const stream  = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: 320, height: 240 },
+      audio: false,
     });
+    videoEl.srcObject = stream;
+    videoEl.play();
 
-    // Swipe du rond pour l'éjecter
-    camPanel.addEventListener('touchstart', (e) => {
-      panelDragStartX = e.touches[0].clientX;
-      panelDragStartY = e.touches[0].clientY;
-      panelDragging   = false;
-      e.stopPropagation();
-    }, { passive: true });
+    // Face Mesh
+    setupFaceMesh(videoEl);
 
-    camPanel.addEventListener('touchmove', (e) => {
-      const dx = e.touches[0].clientX - panelDragStartX;
-      const dy = e.touches[0].clientY - panelDragStartY;
-      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) panelDragging = true;
-      if (panelDragging)
-        camPanel.style.transform = `translate(${Math.max(0,dx)}px, ${Math.max(0,dy)}px)`;
-      e.stopPropagation();
-    }, { passive: true });
+    // Hands (même flux)
+    handsModule = setupHands(videoEl);
 
-    camPanel.addEventListener('touchend', (e) => {
-      const dx = e.changedTouches[0].clientX - panelDragStartX;
-      const dy = e.changedTouches[0].clientY - panelDragStartY;
-      if (panelDragging && (dx > 60 || dy > 60)) {
-        camPanel.classList.add('hidden');
-        if (stream) stopCamera(true);
-        showToast('📷 Tap sur 📷 en haut pour réactiver', '', 3000);
-      } else {
-        camPanel.style.transform = '';
+    // Envoyer images aux mains aussi via boucle séparée
+    setInterval(async () => {
+      if (handsModule && videoEl.readyState >= 2) {
+        await handsModule.send({ image: videoEl });
       }
-      // reset après un court délai pour que le click ne se déclenche pas
-      setTimeout(() => { panelDragging = false; }, 50);
-      e.stopPropagation();
-    }, { passive: true });
+    }, 200); // 5fps pour les mains — économise la batterie
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && stream) { stopCamera(true); showToast('Caméra suspendue', '', 2000); }
-    });
+  } catch (e) {
+    addLog('Caméra : ' + e.message);
+    document.getElementById('dot-cam').classList.add('warn');
   }
 
-  // ── DEBUG ────────────────────────────────────────────────
-  function bindDebug() {
-    ['touchstart', 'mousedown'].forEach(evt => {
-      btnCamera.addEventListener(evt, () => {
-        holdTimer = setTimeout(() => {
-          debugPanel.style.display = 'block';
-          showToast('Debug activé', 'ok');
-        }, 2000);
-      }, { passive: true });
-    });
+  await setupMicrophone();
 
-    ['touchend', 'mouseup', 'mouseleave'].forEach(evt => {
-      btnCamera.addEventListener(evt, () => clearTimeout(holdTimer), { passive: true });
-    });
+  STATE.running = true;
+  addLog('Système opérationnel ✓', true);
+  haptic('sequence');
 
-    document.getElementById('debug-close').addEventListener('click', () => {
-      debugPanel.style.display = 'none';
-    });
-  }
+  document.getElementById('command-display').textContent = '✓ Système actif';
+}
 
-  // ── PARAMÈTRES ──────────────────────────────────────────
-  function bindSettings() {
-    btnSettings.addEventListener('click', () => settingsDrawer.classList.add('open'));
-    document.getElementById('drawer-backdrop').addEventListener('click', () => settingsDrawer.classList.remove('open'));
-    document.getElementById('drawer-handle').addEventListener('click',   () => settingsDrawer.classList.remove('open'));
-
-    document.querySelectorAll('.toggle').forEach(toggle => {
-      const key = toggle.dataset.target;
-      toggle.classList.toggle('on', !!CONFIG[key]);
-      toggle.addEventListener('click', () => {
-        CONFIG[key] = !CONFIG[key];
-        toggle.classList.toggle('on', !!CONFIG[key]);
-        saveConfig();
-        vibrate(20);
-        if (key === 'camEnabled' && !CONFIG[key] && stream) stopCamera();
-        if ((key === 'useFront' || key === 'ecoMode') && stream) {
-          stopCamera(true);
-          setTimeout(() => startCamera(), 220);
-        }
-      });
-    });
-
-    sliderSpeed.value = CONFIG.speed;
-    sliderSens.value  = CONFIG.sensitivity;
-
-    function refreshLabels() {
-      speedVal.textContent = `${CONFIG.speed} — ${getScrollPxPerFrame()}px`;
-      sensVal.textContent  = `${CONFIG.sensitivity} — ${getSeuil()}lux`;
-    }
-
-    sliderSpeed.addEventListener('input', () => {
-      CONFIG.speed = parseInt(sliderSpeed.value, 10); refreshLabels(); saveConfig();
-    });
-    sliderSens.addEventListener('input', () => {
-      CONFIG.sensitivity = parseInt(sliderSens.value, 10); refreshLabels(); saveConfig();
-    });
-
-    refreshLabels();
-  }
-
-  // ── KNOB ────────────────────────────────────────────────
-  function bindKnob() {
-    const canvas = document.getElementById('knob-canvas');
-    if (!canvas) return;
-    const kctx = canvas.getContext('2d');
-    const S = 120, cx = 60, cy = 60, R = 46, DR = 9;
-
-    let aD = ((CONFIG.angleDown - 90) * Math.PI) / 180;
-    let aU = ((CONFIG.angleUp   - 90) * Math.PI) / 180;
-
-    function clockLabel(a) {
-      const n = ((a + Math.PI/2) / (2*Math.PI) + 1) % 1;
-      const t = Math.round(n * 720) % 720;
-      const h = Math.floor(t/60) || 12;
-      const m = t % 60;
-      return m ? `${h}h${m.toString().padStart(2,'0')}` : `${h}h00`;
-    }
-
-    function pos(a) { return { x: cx + Math.cos(a)*R, y: cy + Math.sin(a)*R }; }
-
-    function draw() {
-      kctx.clearRect(0, 0, S, S);
-
-      kctx.beginPath(); kctx.arc(cx, cy, R+8, 0, Math.PI*2);
-      kctx.fillStyle = '#1a1a2e'; kctx.fill();
-      kctx.strokeStyle = 'rgba(255,255,255,0.06)'; kctx.lineWidth = 1; kctx.stroke();
-
-      kctx.beginPath(); kctx.arc(cx, cy, R, 0, Math.PI*2);
-      kctx.strokeStyle = 'rgba(255,255,255,0.12)'; kctx.lineWidth = 3; kctx.stroke();
-
-      [[-Math.PI/2,'12'],[0,'3'],[Math.PI/2,'6'],[Math.PI,'9']].forEach(([a,l]) => {
-        const lx = cx + Math.cos(a)*(R+14), ly = cy + Math.sin(a)*(R+14);
-        kctx.fillStyle = 'rgba(255,255,255,0.2)'; kctx.font = '8px sans-serif';
-        kctx.textAlign = 'center'; kctx.textBaseline = 'middle'; kctx.fillText(l, lx, ly);
-      });
-
-      const pd = pos(aD), pu = pos(aU);
-
-      kctx.beginPath(); kctx.moveTo(pd.x, pd.y); kctx.lineTo(pu.x, pu.y);
-      kctx.strokeStyle = 'rgba(255,255,255,0.06)'; kctx.lineWidth = 1;
-      kctx.setLineDash([3,3]); kctx.stroke(); kctx.setLineDash([]);
-
-      kctx.beginPath(); kctx.arc(cx, cy, 3, 0, Math.PI*2);
-      kctx.fillStyle = 'rgba(255,255,255,0.15)'; kctx.fill();
-
-      kctx.beginPath(); kctx.arc(pd.x, pd.y, DR, 0, Math.PI*2);
-      kctx.fillStyle = '#00f5c4'; kctx.fill();
-      kctx.fillStyle = '#0a0a12'; kctx.font = 'bold 9px sans-serif';
-      kctx.textAlign = 'center'; kctx.textBaseline = 'middle'; kctx.fillText('↓', pd.x, pd.y);
-
-      kctx.beginPath(); kctx.arc(pu.x, pu.y, DR, 0, Math.PI*2);
-      kctx.fillStyle = '#7b61ff'; kctx.fill();
-      kctx.fillStyle = '#fff'; kctx.fillText('↑', pu.x, pu.y);
-
-      document.getElementById('pos-down').textContent = clockLabel(aD);
-      document.getElementById('pos-up').textContent   = clockLabel(aU);
-
-      CONFIG.angleDown = Math.round(((aD + Math.PI/2)*180/Math.PI + 360) % 360);
-      CONFIG.angleUp   = Math.round(((aU + Math.PI/2)*180/Math.PI + 360) % 360);
-      saveConfig();
-    }
-
-    function getAngle(e) {
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      return Math.atan2((y/rect.height*S) - cy, (x/rect.width*S) - cx);
-    }
-
-    function nearest(e) {
-      const rect = canvas.getBoundingClientRect();
-      const mx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-      const my = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      const px = mx/rect.width*S, py = my/rect.height*S;
-      const pd = pos(aD), pu = pos(aU);
-      const dD = Math.hypot(px-pd.x, py-pd.y);
-      const dU = Math.hypot(px-pu.x, py-pu.y);
-      if (dD < DR+12 && dD <= dU) return 'D';
-      if (dU < DR+12) return 'U';
-      return null;
-    }
-
-    let drag = null;
-
-    canvas.addEventListener('mousedown',  e => { drag = nearest(e); });
-    document.addEventListener('mousemove', e => { if (!drag) return; if (drag==='D') aD=getAngle(e); else aU=getAngle(e); draw(); });
-    document.addEventListener('mouseup',   () => { drag = null; });
-
-    canvas.addEventListener('touchstart', e => { drag = nearest(e); e.preventDefault(); }, { passive: false });
-    canvas.addEventListener('touchmove',  e => { if (!drag) return; if (drag==='D') aD=getAngle(e); else aU=getAngle(e); draw(); e.preventDefault(); }, { passive: false });
-    canvas.addEventListener('touchend',   () => { drag = null; });
-
-    draw();
-  }
-
-  // ── INIT ────────────────────────────────────────────────
-  function init() {
-    bindScrollPriority();
-    bindCameraControls();
-    bindDebug();
-    bindSettings();
-    bindKnob();
-    updateScrollBar();
-    showToast('👆 Tap sur 📷 ou le rond pour démarrer', '', 3500);
-  }
-
-  init();
-})();
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  addLog('GestControl v1.0 chargé');
+  addLog('Appuyez sur INITIALISER pour démarrer');
+});
 </script>
 </body>
 </html>
